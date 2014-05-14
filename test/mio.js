@@ -182,6 +182,24 @@ describe('Model', function() {
       });
       Model.should.have.property('test', 1);
     });
+
+    it('does not pollute other models', function(done) {
+      var User = mio.createModel('user');
+      var Post = mio.createModel('post');
+
+      User.use('find', function(query, callback) {
+        callback(null, {foo: 'bar'});
+      });
+
+      Post.find({}, function(err, model) {
+        expect(model).to.be(undefined);
+
+        User.find({}, function (err, model) {
+          expect(model).to.have.property('foo', 'bar');
+          done();
+        });
+      });
+    });
   });
 
   describe('.browser()', function() {
