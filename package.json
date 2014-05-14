@@ -2,6 +2,7 @@
   "name": "mio",
   "description": "Modern idiomatic models for the browser and node.js.",
   "version": "0.7.4",
+  "homepage": "https://github.com/mio/mio",
   "repository": {
     "type": "git",
     "url": "git://github.com/mio/mio.git"
