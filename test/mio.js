@@ -509,6 +509,14 @@ describe('Model', function() {
       model.id = 1;
       model.isDirty().should.equal(true);
     });
+
+    it('returns whether attribute is changed/dirty', function() {
+      var Model = mio.createModel('user')
+        .attr('id', { primary: true })
+        .attr('name', { required: true });
+
+      Model.create({ name: 'alex' }).isDirty('name').should.equal(false);
+    });
   });
 
   describe('#changed()', function() {
