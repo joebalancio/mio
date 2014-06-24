@@ -8,14 +8,12 @@
 
 Modern idiomatic models for the browser and node.js.
 
-* Promise and co/generator support
-* Restrict enumerable properties to defined model attributes.
-* Events emitted for initialization, attribute changes, errors, etc.
-* Attribute validators and defaults.
-* Computed properties (accessors) and sealed models.
-* Usable seamlessly across the browser and server.
-* Plugins specific to environment.
-* Tests and MIT license.
+* **Simple**: Plain enumerable attributes using ECMAScript getters and setters.
+* **Observable**: Events emitted for initialization, attribute changes, etc.
+* **Extensible**: Simple API for extending model prototypes with support
+  for browser or server specific plugins.
+* **Browser or Node.js**: Reuse code across the browser and server.
+* **Tested and open-source**: MIT licensed with full test coverage.
 
 ## Installation
 
@@ -62,25 +60,11 @@ var user = new User({ name: 'alex' });
 
 Create new model constructor with given `name` and `options`.
 
-Options:
-
-- `thunks` If true, wraps methods to return thunks for
-  use with visionmedia/co (default:false).
-- `promises` Use function to wrap methods to return promises (default: false).
-
 ```javascript
 var User = require('mio').createModel('user');
 ```
 
-With promises using [then/promise](https://github.com/then/promise):
-
-```javascript
-Var User = require('mio').createModel('user', {
-  promisify: function(fn) {
-    return require('promise).denodeify(fn);
-  }
-});
-```
+## Static Methods
 
 ### Model.attr(name[, options])
 
@@ -117,27 +101,6 @@ User
   });
 ```
 
-### Model.browser(fn)
-
-Called when installed using bower or component.
-
-### Model.server(fn)
-
-Called when installed using npm.
-
-### Model.type
-
-```javascript
-var User = mio.createModel('user');
-
-console.log(User.type);
-// => "User"
-```
-
-### Model.options
-
-Plugins should use this object to store options.
-
 ### Model.find(id|query, callback)
 
 ```javascript
@@ -145,6 +108,8 @@ User.find(123, function(err, user) {
   // ...
 });
 ```
+
+This method is also accessible using the `Model.get` alias.
 
 ### Model.findAll(query, callback)
 
@@ -157,6 +122,8 @@ User.findAll({
 });
 ```
 
+This method is also accessible using the `Model.all` alias.
+
 ### Model.count(query, callback)
 
 ```javascript
@@ -165,6 +132,37 @@ User.count(function(err, count) {
   // => 47
 });
 ```
+
+### Model.browser(fn)
+
+Called when installed using bower or component.
+
+### Model.server(fn)
+
+Called when installed using npm.
+
+### Model.before(ev)
+
+Wrapper for `Model.on('before ev', fn)`.
+
+### Model.after(ev)
+
+Wrapper for `Model.on('after ev', fn)`.
+
+### Model.type
+
+```javascript
+var User = mio.createModel('user');
+
+console.log(User.type);
+// => "User"
+```
+
+### Model.options
+
+## Instance methods
+
+Plugins should use this object to store options.
 
 ### Model#save(callback)
 
@@ -181,6 +179,8 @@ user.remove(function(err) {
   // ...
 });
 ```
+
+This method is also accessible using the `Model#destroy` alias.
 
 ### Model#[attr]
 
@@ -200,61 +200,73 @@ Return attributes changed since last save.
 
 A mutable object for saving extra information pertaining to the model instance.
 
-### Plugins
+## Persistence
 
-Plugins are any function registered using `Model.use()`, `Model.browser()`, or `Model.server()`.
-Functions are invoked with the Model as both context and argument.
+See [mio-ajax][1] and [mio-mysql][3] for examples of implementing a
+persistent storage plugin.
+
+Asynchronous events are used to implement storage adapters, as shown in the
+following example.
 
 ```javascript
-User.use(function() {
-  this.prototype.customModelMethod = function() {
-    // ...
-  };
+var User = mio.createModel('user').attr('id', { primary: true });
+
+User.before('save', function(user, changed, next) {
+  if (user.isNew()) {
+    Database.insert('user', changed, function(err, id) {
+      if (id) user.id = id;
+      next(err);
+    });
+  }
+  else {
+    Database.update('user', user.id, changed, next);
+  }
 });
 ```
 
-### Stores
-
-Stores are plugins that persist models to storage layer(s).
-
-If querying for model(s), each store method is called until the model is found.
-Conversely, for save and remove methods each store method is called unless an
-error occurs.
-
-See [mio-ajax][1] and [mio-mysql][3] for examples of implementing a storage plugin.
-
-#### Model.use(method, fn)
-
-Use store `fn` for given model `method`.
-
-Valid methods are `"findAll"`, `"find"`, `"count"`, `"save"`, and `"remove"`.
-
 ### Events
+
+All asynchronous events receive a `next` function as the last argument,
+which must be called to continue.
 
 #### Model events
 
-`after remove`  
-`after save`  
-`attribute`     Receives arguments `name` and `params`.  
-`before remove`  
-`before save`  
-`change`        Receives arguments `model`, `name`, `value`, and `prev`.  
-`change:[attr]` Receives arguments `model`, `value`, and `prev`.  
-`initializing`  Receives arguments `model` and `attributes`.  
-`initialized`   Receives argument `model`.  
-`setting`       Receives arguments `model` and `attributes`.  
-`error`         Receives arguments `model` and `error`.  
+##### Asynchronous
+
+`before find`    Receives arguments `query` and `next(err, result)`.  
+`before findAll` Receives arguments `query` and `next(err, result)`.  
+`before count`   Receives arguments `query` and `next(err, result)`.  
+`before remove`  Receives arguments `model` and `next(err)`.  
+`before save`    Receives arguments `model`, `changed`, and `next(err)`.  
+
+##### Synchronous
+
+`after find`     Receives argument `model`.  
+`after findAll`  Receives argument `collection`.  
+`after count`    Receives argument `count`.  
+`after remove`   Receives argument `model`.  
+`after save`     Receives arguments `model` and `changed`.  
+`attribute`      Receives arguments `name` and `params`.  
+`change`         Receives arguments `model`, `name`, `value`, and `prev`.  
+`change:[attr]`  Receives arguments `model`, `value`, and `prev`.  
+`initializing`   Receives arguments `model` and `attributes`.  
+`initialized`    Receives argument `model`.  
+`setting`        Receives arguments `model` and `attributes`.  
 
 #### Instance events
 
+##### Asynchronous
+
+`before remove`  Receives argument `next(err)`.  
+`before save`    Receives arguments `changed` and `next(err)`.  
+
+##### Synchronous
+
+`after save`     Receives argument `changed`.  
 `after remove`  
-`after save`  
-`before remove`  
-`before save`  
-`change`        Receives arguments `name`, `value`, and `prev`.  
-`change:[attr]` Receives arguments `value`, and `prev`.  
-`error`        Receives argument `error`.  
-`setting`      Receives argument `attributes`.  
+`change`         Receives arguments `name`, `value`, and `prev`.  
+`change:[attr]`  Receives arguments `value`, and `prev`.  
+`setting`        Receives argument `attributes`.  
 
 ## MIT Licensed
 

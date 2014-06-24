@@ -12,6 +12,13 @@ describe('mio', function() {
 });
 
 describe('Model', function() {
+  it('is instanceof exports.Model', function() {
+    var User = mio.createModel('user');
+    var user = new User();
+    expect(user).to.be.a(User);
+    expect(user).to.be.a(mio.Model);
+  });
+
   it('inherits from EventEmitter', function() {
     var Model = mio.createModel('user');
     expect(Model).to.have.property('emit');
@@ -87,44 +94,6 @@ describe('Model', function() {
 
     // Is not enumerable
     expect(Object.keys(user).indexOf('extras')).to.equal(-1);
-  });
-
-  it('wraps callback methods to return thunks', function(done) {
-    var User = mio.createModel('user', {
-      thunks: true
-    })
-    .attr('id', { primary: true });
-
-    var Post = mio.createModel('post', {
-      thunks: true
-    })
-    .attr('id', { primary: true }).attr('user_id');
-
-    var user = new User({ id: 1 });
-    var thunk = user.save();
-    should.exist(thunk);
-    thunk.should.have.type('function');
-    thunk(function(err) {
-      if (err) return done(err);
-      done();
-    });
-  });
-
-  it('wraps callback methods to return promises', function(done) {
-    var User = mio.createModel('User', {
-      promisify: function(fn) {
-        return require('promise').denodeify(fn);
-      }
-    }).attr('id');
-
-    User.use('findAll', function(query, cb) {
-      cb(null, new User({id: 1}));
-    });
-
-    User.findAll(1).then(function(user) {
-      expect(user).to.eql({id: 1});
-      done();
-    });
   });
 
   describe('.primary', function() {
@@ -515,7 +484,7 @@ describe('Model', function() {
         .attr('id', { primary: true })
         .attr('name', { required: true });
 
-      Model.create({ name: 'alex' }).isDirty('name').should.equal(false);
+      Model.create({ name: 'alex' }).isDirty('name').should.equal(true);
     });
   });
 
@@ -534,11 +503,11 @@ describe('Model', function() {
     it("calls each store's save method", function(done) {
       var Model = mio.createModel('user')
         .attr('id', { primary: true, required: true })
-        .use('save', function(changed, cb) {
+        .use('save', function(model, changed, cb) {
           should(changed).have.property('id', 1);
           cb();
         })
-        .use('save', function(changed, cb) {
+        .use('save', function(model, changed, cb) {
           should(changed).have.property('id', 1);
           cb();
         });
@@ -555,7 +524,7 @@ describe('Model', function() {
     it("passes error from adapter to callback", function(done) {
       var Model = mio.createModel('user')
         .attr('id', { primary: true })
-        .use('save', function(changed, cb) {
+        .use('save', function(model, changed, cb) {
           cb(new Error("test"));
         });
 
@@ -570,10 +539,11 @@ describe('Model', function() {
 
     it('emits "before save" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
-      Model.on('before save', function(model, changed) {
+      Model.on('before save', function(model, changed, next) {
         should.exist(model);
         model.constructor.should.equal(Model);
         should.exist(changed);
+        next();
       });
       var model = Model.create({ id: 1 });
       model.on('before save', function(changed) {
@@ -584,7 +554,7 @@ describe('Model', function() {
 
     it('emits "after save" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
-      Model.on('after save', function(model) {
+      Model.on('after save', function(model, changed) {
         should.exist(model);
       });
       var model = Model.create({ id: 1 });
@@ -592,30 +562,16 @@ describe('Model', function() {
         done();
       }).save(function(err) { });
     });
-
-    it('executes callback immediately if not changed', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
-
-      Model.use('save', function(changed, cb) {
-        should.not.exist(changed);
-        should.not.exist(cb);
-      });
-
-      var model = Model.create({ id: 1 });
-
-      model.dirtyAttributes.length = 0;
-      model.save(done);
-    });
   });
 
   describe('#remove()', function() {
     it("calls each store's remove method", function(done) {
       var Model = mio.createModel('user')
         .attr('id', { primary: true, required: true })
-        .use('remove', function(cb) {
+        .use('remove', function(model, cb) {
           cb();
         })
-        .use('remove', function(cb) {
+        .use('remove', function(model, cb) {
           cb();
         });
       var model = Model.create({ id: 1 });
@@ -629,7 +585,7 @@ describe('Model', function() {
     it("passes error from adapter to callback", function(done) {
       var Model = mio.createModel('user')
         .attr('id', { primary: true, required: true })
-        .use('remove', function(cb) {
+        .use('remove', function(model, cb) {
           cb(new Error('test'));
         });
       var model = Model.create({ id: 1 });
@@ -642,9 +598,10 @@ describe('Model', function() {
 
     it('emits "before remove" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
-      Model.on('before remove', function(model) {
+      Model.on('before remove', function(model, next) {
         should.exist(model);
         model.constructor.should.equal(Model);
+        next();
       });
       var model = Model.create({ id: 1 });
       model.on('before remove', function() {
