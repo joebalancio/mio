@@ -12,8 +12,7 @@
     "store"
   ],
   "dependencies": {
-    "component/emitter": "*",
-    "ForbesLindesay/is-browser": "*"
+    "component/emitter": "*"
   },
   "main": "./lib/model.js",
   "scripts": [
