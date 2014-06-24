@@ -15,9 +15,6 @@
     "sync",
     "store"
   ],
-  "dependencies": {
-    "emitter-component": "~1.1.1"
-  },
   "devDependencies": {
     "expect.js": "^0.3.1",
     "promise": "^4.0.0",
@@ -38,7 +35,7 @@
     "clean": "./node_modules/gulp/bin/gulp.js clean"
   },
   "engines": {
-    "node": ">= 0.9"
+    "node": ">= 0.10"
   },
   "license": "MIT"
 }

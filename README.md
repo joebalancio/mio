@@ -8,6 +8,7 @@
 
 Modern idiomatic models for the browser and node.js.
 
+* **Small**: No dependencies and only ~500 SLOC.
 * **Simple**: Plain enumerable attributes using ECMAScript getters and setters.
 * **Observable**: Events emitted for initialization, attribute changes, etc.
 * **Extensible**: Simple API for extending model prototypes with support

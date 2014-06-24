@@ -21,8 +21,5 @@
     "test"
   ],
   "main": "./lib/model.js",
-  "dependencies": {
-    "emitter": "component/emitter"
-  },
   "license": "MIT"
 }
