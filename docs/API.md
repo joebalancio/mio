@@ -29,7 +29,7 @@ User.attr('created_at', {
 - `get` getter function returning attribute value
 - `primary` use this attribute as primary key/id (must be unique)
 
-### Model.use(fn)
+### Model.use(fn|obj)
 
 Use a plugin function that extends the model. Function is called with `Model` as
 the context and `Model` as the argument.
@@ -43,6 +43,17 @@ User
   .server(function() {
     this.use(serverPlugin);
   });
+```
+
+You can also extend the model by passing a map of prototype methods to add:
+
+```javascript
+Order.use({
+  total: function() { ... }
+});
+
+var order = new Order();
+order.total();
 ```
 
 ### Model.find(id|query, callback)
@@ -74,6 +85,16 @@ This method is also accessible using the `Model.all` alias.
 User.count(function(err, count) {
   console.log(count);
   // => 47
+});
+```
+
+### Model.removeAll(query, callback)
+
+```javascript
+User.removeAll({
+  created_at: { $lt: (new Date()) }
+}, function(err) {
+  // ...
 });
 ```
 

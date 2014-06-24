@@ -416,6 +416,74 @@ describe('Model', function() {
     });
   });
 
+  describe('.removeAll()', function() {
+    it('removes models using query', function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+      Model.removeAll(function(err) {
+        if (err) return done(err);
+        Model.removeAll({ id: 1 }, function(err) {
+          done();
+        });
+      });
+    });
+
+    it("calls each store's removeAll method", function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+
+      Model
+        .use('removeAll', function(query, cb) {
+          cb();
+        })
+        .use('removeAll', function(query, cb) {
+          cb();
+        });
+
+      Model.removeAll(function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "before removeAll" event', function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+      Model.on('before removeAll', function(query) {
+        should.exist(query);
+        done();
+      });
+      Model.removeAll({ id: 1 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "after removeAll" event', function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+      Model.on('after removeAll', function() {
+        done();
+      });
+      Model.removeAll({ id: 1 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+
+      Model
+        .use('removeAll', function(query, cb) {
+          cb();
+        })
+        .use('removeAll', function(query, cb) {
+          cb(new Error('test'));
+        });
+
+      Model.removeAll(function(err) {
+        should.exist(err);
+        err.should.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
   describe('#isNew()', function() {
     it('checks whether primary attribute is set', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
