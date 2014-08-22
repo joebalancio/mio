@@ -32,7 +32,12 @@ Using [bower](http://bower.io/):
 bower install --save mio
 ```
 
-When using as a browser global Mio is accessible as `window.mio`.
+Using browser script tag and global (UMD wrapper):
+
+```html
+// Available via window.mio
+<script src="dist/mio.js"></script>
+```
 
 ## Overview
 
