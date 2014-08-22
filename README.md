@@ -84,18 +84,23 @@ cat.meow();
 Persist data by utilizing asynchronous events:
 
 ```javascript
-var User = mio.createModel('user').attr('id', { primary: true });
+var mio = require('mio');
+var MongoClient = require('mongodb').MongoClient;
+var User = mio.createModel('user');
+
+User
+  .attr('id', { primary: true })
+  .attr('name');
 
 User.before('save', function(user, changed, next) {
-  if (user.isNew()) {
-    Database.insert('user', changed, function(err, id) {
-      if (id) user.id = id;
+  MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
+    if (!user.isNew()) changed._id = user.primary;
+
+    db.collection('user').save(changed, function(err, docs) {
+      if (docs) user.primary = docs[0]._id;
       next(err);
     });
-  }
-  else {
-    Database.update('user', user.id, changed, next);
-  }
+  });
 });
 ```
 
