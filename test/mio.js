@@ -1,6 +1,6 @@
+var expect = require('chai').expect;
+
 var mio = process.env.JSCOV ? require('../lib-cov/model') : require('../lib/model');
-var expect = require('expect.js');
-var should = require('should');
 
 describe('mio', function() {
   describe('.createModel()', function() {
@@ -15,8 +15,8 @@ describe('Model', function() {
   it('is instanceof exports.Model', function() {
     var User = mio.createModel('user');
     var user = new User();
-    expect(user).to.be.a(User);
-    expect(user).to.be.a(mio.Model);
+    expect(user).to.be.an.instanceOf(User);
+    expect(user).to.be.an.instanceOf(mio.Model);
   });
 
   it('inherits from EventEmitter', function() {
@@ -28,9 +28,8 @@ describe('Model', function() {
   it('emits "initializing" event', function(done) {
     var Model = mio.createModel('user')
       .on('initializing', function(model, attrs) {
-        should.exist(model);
-        model.should.have.property('constructor', Model);
-        should.exist(attrs);
+        expect(model).to.have.property('constructor', Model);
+        expect(attrs).to.be.an('object');
         done();
       });
     new Model();
@@ -77,9 +76,8 @@ describe('Model', function() {
     });
     var model = new Model({ id: 1 });
     expect(model.active).to.equal(true);
-    expect(model.created_at).to.be.a(Date);
+    expect(model.created_at).to.be.an.instanceOf(Date);
   });
-
 
   it('provides mutable extras attribute', function() {
     var User = mio.createModel('user').attr('id');
@@ -100,24 +98,24 @@ describe('Model', function() {
     var Model = mio.createModel('user').attr('id');
 
     it('throws error on get if primary key is undefined', function() {
-      (function() {
+      expect(function() {
         var model = new Model({ id: 1 });
         var id = model.primary;
-      }).should.throw('Primary key has not been defined.');
+      }).to.throw('Primary key has not been defined.');
     });
 
     it('throws error on set if primary key is undefined', function() {
-      (function() {
+      expect(function() {
         var model = new Model({ id: 1 });
         model.primary = 1;
-      }).should.throw('Primary key has not been defined.');
+      }).to.throw('Primary key has not been defined.');
     });
 
     it('sets primary key attribute', function() {
       Model = mio.createModel('user').attr('id', { primary: true });
       var model = new Model();
       model.primary = 3;
-      model.id.should.equal(3);
+      expect(model.id).to.equal(3);
     });
   });
 
@@ -125,18 +123,17 @@ describe('Model', function() {
     it('throws error if defining two primary keys', function() {
       var Model = mio.createModel('user');
       Model.attr('id', { primary: true });
-      (function() {
+      expect(function() {
         Model.attr('_id', { primary: true });
-      }).should.throw('Primary attribute already exists: id');
+      }).to.throw('Primary attribute already exists: id');
     });
 
     it('emits "attribute" event', function(done) {
       var Model = mio.createModel('user')
         .on('attribute', function(name, params) {
-          should.exist(name);
-          name.should.equal('id');
-          should.exist(params);
-          params.should.have.property('primary', true);
+          expect(name).to.equal('id');
+          expect(params).to.be.an('object');
+          expect(params).to.have.property('primary', true);
           done();
         });
       Model.attr('id', { primary: true });
@@ -149,7 +146,7 @@ describe('Model', function() {
       Model.use(function() {
         this.test = 1;
       });
-      Model.should.have.property('test', 1);
+      expect(Model).to.have.property('test', 1);
     });
 
     it('does not pollute other models', function(done) {
@@ -161,7 +158,7 @@ describe('Model', function() {
       });
 
       Post.find({}, function(err, model) {
-        expect(model).to.be(undefined);
+        expect(model).to.equal(undefined);
 
         User.find({}, function (err, model) {
           expect(model).to.have.property('foo', 'bar');
@@ -193,14 +190,13 @@ describe('Model', function() {
     it('creates new models', function() {
       var Model = mio.createModel('user');
       var model = Model.create();
-      should.exist(model);
-      model.should.be.instanceOf(Model);
+      expect(model).to.be.an.instanceOf(Model);
     });
 
     it('hydrates model from existing object', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
       var model = Model.create({ id: 1 });
-      model.should.have.property('id', 1);
+      expect(model).to.have.property('id', 1);
     });
   });
 
@@ -226,8 +222,7 @@ describe('Model', function() {
 
       Model.find(1, function(err, model) {
         if (err) return done(err);
-        should.exist(model);
-        model.should.have.property('id', 1);
+        expect(model).to.have.property('id', 1);
         done();
       });
     });
@@ -235,7 +230,7 @@ describe('Model', function() {
     it('emits "before find" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('before find', function(query) {
-        should.exist(query);
+        expect(query).to.be.an('object');
         done();
       });
       Model.find(1, function(err, model) {
@@ -247,7 +242,7 @@ describe('Model', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
 
       Model.on('after find', function(model) {
-        should.exist(model);
+        expect(model).to.be.an.instanceOf(Model);
         done();
       });
 
@@ -268,8 +263,7 @@ describe('Model', function() {
       });
 
       Model.find(1, function(err, model) {
-        should.exist(err);
-        err.should.have.property('message', 'test')
+        expect(err).to.have.property('message', 'test')
         done();
       });
     });
@@ -280,7 +274,7 @@ describe('Model', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.findAll(function(err, collection) {
         if (err) return done(err);
-        should.exist(collection);
+        expect(collection).to.be.an.instanceOf(Array);
         Model.findAll({ id: 1 }, function(err, collection) {
           done();
         });
@@ -300,9 +294,8 @@ describe('Model', function() {
 
       Model.findAll(function(err, collection) {
         if (err) return done(err);
-        should.exist(collection);
-        collection.should.have.property('length', 1);
-        collection[0].should.have.property('constructor', Model);
+        expect(collection).to.have.property('length', 1);
+        expect(collection[0]).to.have.property('constructor', Model);
         done();
       });
     });
@@ -310,7 +303,7 @@ describe('Model', function() {
     it('emits "before findAll" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('before findAll', function(query) {
-        should.exist(query);
+        expect(query).to.be.an('object');
         done();
       });
       Model.findAll({ id: 1 }, function(err, collection) {
@@ -321,7 +314,7 @@ describe('Model', function() {
     it('emits "after findAll" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('after findAll', function(collection) {
-        should.exist(collection);
+        expect(collection).to.be.an.instanceOf(Array);
         done();
       });
       Model.findAll({ id: 1 }, function(err, collection) {
@@ -337,8 +330,7 @@ describe('Model', function() {
       });
 
       Model.findAll(function(err, collection) {
-        should.exist(err);
-        err.should.have.property('message', 'test')
+        expect(err).to.have.property('message', 'test')
         done();
       });
     });
@@ -349,7 +341,7 @@ describe('Model', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.count(function(err, count) {
         if (err) return done(err);
-        should.exist(count);
+        expect(count).to.be.a('number');
         Model.count({ id: 1 }, function(err, count) {
           done();
         });
@@ -369,8 +361,7 @@ describe('Model', function() {
 
       Model.count(function(err, count) {
         if (err) return done(err);
-        should.exist(count);
-        count.should.equal(3);
+        expect(count).to.equal(3);
         done();
       });
     });
@@ -378,7 +369,7 @@ describe('Model', function() {
     it('emits "before count" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('before count', function(query) {
-        should.exist(query);
+        expect(query).to.be.a('object');
         done();
       });
       Model.count({ id: 1 }, function(err, count) {
@@ -389,7 +380,7 @@ describe('Model', function() {
     it('emits "after count" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('after count', function(count) {
-        should.exist(count);
+        expect(count).to.be.a('number');
         done();
       });
       Model.count({ id: 1 }, function(err, count) {
@@ -409,8 +400,7 @@ describe('Model', function() {
         });
 
       Model.count(function(err, collection) {
-        should.exist(err);
-        err.should.have.property('message', 'test')
+        expect(err).to.have.property('message', 'test')
         done();
       });
     });
@@ -447,7 +437,7 @@ describe('Model', function() {
     it('emits "before removeAll" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('before removeAll', function(query) {
-        should.exist(query);
+        expect(query).to.be.an('object');
         done();
       });
       Model.removeAll({ id: 1 }, function(err) {
@@ -477,8 +467,7 @@ describe('Model', function() {
         });
 
       Model.removeAll(function(err) {
-        should.exist(err);
-        err.should.have.property('message', 'test')
+        expect(err).to.have.property('message', 'test')
         done();
       });
     });
@@ -488,17 +477,17 @@ describe('Model', function() {
     it('checks whether primary attribute is set', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
       var m1 = Model.create();
-      m1.isNew().should.equal(true);
+      expect(m1.isNew()).to.equal(true);
       var m2 = Model.create({ id: 1 });
-      m2.isNew().should.equal(false);
+      expect(m2.isNew()).to.equal(false);
     });
 
     it('throws error if primary key has not been defined', function() {
       var Model = mio.createModel('user').attr('id');
       var model = Model.create();
-      (function() {
+      expect(function() {
         model.isNew();
-      }).should.throw("Primary key has not been defined.");
+      }).to.throw("Primary key has not been defined.");
     });
   });
 
@@ -506,8 +495,8 @@ describe('Model', function() {
     it('checks for attribute definition', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
       var model = Model.create({ id: 1 });
-      model.has('name').should.equal(false);
-      model.has('id').should.equal(true);
+      expect(model.has('name')).to.equal(false);
+      expect(model.has('id')).to.equal(true);
     });
   });
 
@@ -517,9 +506,9 @@ describe('Model', function() {
         .attr('id', { primary: true })
         .attr('name');
       var model = Model.create({ id: 1, name: 'alex', age: 26 });
-      model.id.should.equal(1);
-      model.name.should.equal('alex');
-      model.should.not.have.property('age');
+      expect(model.id).to.equal(1);
+      expect(model.name).to.equal('alex');
+      expect(model).to.not.have.property('age');
     });
 
     it('emits "setting" event', function(done) {
@@ -527,10 +516,8 @@ describe('Model', function() {
         .attr('id', { primary: true })
         .attr('name')
         .on('setting', function(model, attrs) {
-          should.exist(model);
-          model.should.have.property('constructor', Model);
-          should.exist(attrs);
-          attrs.should.have.property('name', 'alex');
+          expect(model).to.have.property('constructor', Model);
+          expect(attrs).to.have.property('name', 'alex');
           done();
         });
       var model = new Model();
@@ -542,9 +529,9 @@ describe('Model', function() {
     it('returns whether model is changed/dirty', function() {
       var Model = mio.createModel('user').attr('id', { primary: true });
       var model = Model.create();
-      model.isDirty().should.equal(false);
+      expect(model.isDirty()).to.equal(false);
       model.id = 1;
-      model.isDirty().should.equal(true);
+      expect(model.isDirty()).to.equal(true);
     });
 
     it('returns whether attribute is changed/dirty', function() {
@@ -552,7 +539,7 @@ describe('Model', function() {
         .attr('id', { primary: true })
         .attr('name', { required: true });
 
-      Model.create({ name: 'alex' }).isDirty('name').should.equal(true);
+      expect(Model.create({ name: 'alex' }).isDirty('name')).to.equal(true);
     });
   });
 
@@ -563,7 +550,7 @@ describe('Model', function() {
         .attr('name');
       var model = Model.create({ id: 1 });
       model.name = 'alex';
-      should(model.changed()).have.property('name', 'alex');
+      expect(model.changed()).to.have.property('name', 'alex');
     });
   });
 
@@ -572,19 +559,19 @@ describe('Model', function() {
       var Model = mio.createModel('user')
         .attr('id', { primary: true, required: true })
         .use('save', function(model, changed, cb) {
-          should(changed).have.property('id', 1);
+          expect(changed).to.have.property('id', 1);
           cb();
         })
         .use('save', function(model, changed, cb) {
-          should(changed).have.property('id', 1);
+          expect(changed).to.have.property('id', 1);
           cb();
         });
 
       var model = Model.create({ id: 1 });
 
       model.save(function(err) {
-        should.not.exist(err);
-        model.id.should.equal(1);
+        expect(err).to.equal(null);
+        expect(model.id).to.equal(1);
         done();
       });
     });
@@ -599,8 +586,7 @@ describe('Model', function() {
       var model = Model.create();
 
       model.save(function(err) {
-        should.exist(err);
-        err.message.should.equal('test');
+        expect(err.message).to.equal('test');
         done();
       });
     });
@@ -608,14 +594,13 @@ describe('Model', function() {
     it('emits "before save" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('before save', function(model, changed, next) {
-        should.exist(model);
-        model.constructor.should.equal(Model);
-        should.exist(changed);
+        expect(model).to.have.property('constructor', Model);
+        expect(changed).to.be.an('object');
         next();
       });
       var model = Model.create({ id: 1 });
       model.on('before save', function(changed) {
-        should.exist(changed);
+        expect(changed).to.be.an('object');
         done();
       }).save(function(err) { });
     });
@@ -623,7 +608,7 @@ describe('Model', function() {
     it('emits "after save" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('after save', function(model, changed) {
-        should.exist(model);
+        expect(model).to.be.an.instanceOf(Model);
       });
       var model = Model.create({ id: 1 });
       model.on('after save', function() {
@@ -644,8 +629,8 @@ describe('Model', function() {
         });
       var model = Model.create({ id: 1 });
       model.remove(function(err) {
-        should.not.exist(err);
-        model.should.have.property('id', null);
+        expect(err).to.eql(undefined);
+        expect(model).to.have.property('id', null);
         done();
       });
     });
@@ -658,8 +643,7 @@ describe('Model', function() {
         });
       var model = Model.create({ id: 1 });
       model.remove(function(err) {
-        should.exist(err);
-        err.message.should.equal('test');
+        expect(err).to.have.property('message', 'test');
         done();
       });
     });
@@ -667,8 +651,7 @@ describe('Model', function() {
     it('emits "before remove" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('before remove', function(model, next) {
-        should.exist(model);
-        model.constructor.should.equal(Model);
+        expect(model).to.have.property('constructor', Model);
         next();
       });
       var model = Model.create({ id: 1 });
@@ -680,7 +663,7 @@ describe('Model', function() {
     it('emits "after remove" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
       Model.on('after remove', function(model) {
-        should.exist(model);
+        expect(model).to.be.an.instanceOf(Model);
       });
       var model = Model.create({ id: 1 });
       model.on('after remove', function() {

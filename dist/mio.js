@@ -1,4 +1,15 @@
-var noop = function() {};
+
+(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory(require, exports, module);
+  } else {
+    root.mio = factory();
+  }
+}(this, function(require, exports, module) {
+
+return var noop = function() {};
 
 exports.Model = AbstractModel;
 
@@ -636,3 +647,6 @@ AbstractModel.prototype.remove = function(callback) {
 };
 
 AbstractModel.prototype.destroy = AbstractModel.prototype.remove;
+;
+
+}));
