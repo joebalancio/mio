@@ -64,7 +64,7 @@ User.find(123, function(err, user) {
 });
 ```
 
-This method is also accessible using the `Model.get` alias.
+This method is also accessible using the `Model.get` or `Model.findOne` alias.
 
 ### Model.findAll(query, callback)
 
