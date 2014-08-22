@@ -170,13 +170,16 @@ A mutable object for saving extra information pertaining to the model instance.
 All asynchronous events receive a `next` function as the last argument,
 which must be called to continue.
 
+`before find`, `before findAll`, and `before count` are unique in that
+subsequent event handlers are ignored if `next` is passed a result.
+
 ### Model events
 
 #### Asynchronous
 
-`before find`    Receives arguments `query` and `next(err, result)`.  
-`before findAll` Receives arguments `query` and `next(err, result)`.  
-`before count`   Receives arguments `query` and `next(err, result)`.  
+`before find`    Receives arguments `query` and `next(err, result)`. Stops on result.  
+`before findAll` Receives arguments `query` and `next(err, result)`. Stops on result.  
+`before count`   Receives arguments `query` and `next(err, result)`. Stops on result.  
 `before remove`  Receives arguments `model` and `next(err)`.  
 `before save`    Receives arguments `model`, `changed`, and `next(err)`.  
 
