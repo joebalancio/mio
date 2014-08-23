@@ -29,14 +29,16 @@ User.attr('created_at', {
 - `get` getter function returning attribute value
 - `primary` use this attribute as primary key/id (must be unique)
 
-### Model.use(fn|obj)
+### Model.use(plugin)
 
 Use a plugin function that extends the model. Function is called with `Model` as
 the context and `Model` as the argument.
 
 ```javascript
 User
-  .use(plugin)
+  .use(function() {
+    // ...
+  })
   .browser(function() {
     this.use(browserPlugin);
   })
@@ -45,7 +47,7 @@ User
   });
 ```
 
-You can also extend the model by passing a map of prototype methods to add:
+Extend the model by passing a map of prototype methods to add:
 
 ```javascript
 Order.use({
@@ -125,9 +127,9 @@ console.log(User.type);
 
 ### Model.options
 
-## Instance methods
-
 Plugins should use this object to store options.
+
+## Instance methods
 
 ### Model#save(callback)
 
@@ -172,6 +174,29 @@ which must be called to continue.
 
 `before find`, `before findAll`, and `before count` are unique in that
 subsequent event handlers are ignored if `next` is passed a result.
+
+### Persist data using asynchronous events
+
+```javascript
+var mio = require('mio');
+var MongoClient = require('mongodb').MongoClient;
+var User = mio.createModel('user');
+
+User
+  .attr('id', { primary: true })
+  .attr('name');
+
+User.before('save', function(user, changed, next) {
+  MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
+    if (!user.isNew()) changed._id = user.primary;
+
+    db.collection('user').save(changed, function(err, docs) {
+      if (docs) user.primary = docs[0]._id;
+      next(err);
+    });
+  });
+});
+```
 
 ### Model events
 

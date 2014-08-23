@@ -67,41 +67,43 @@ console.log(user.fullName);
 // => "Spike Spiegel"
 ```
 
-Extend the model with new methods via `use()`:
+Use plugins that extend functionality via `use()`:
 
 ```javascript
-Cat
-  .use(validators)
-  .use(mysql)
-  .use({
-    meow: function() { ... }
+User
+  .use(mysql({
+    host: 'localhost',
+    user: 'test'
+  }))
+  .use(validators())
+  .use(ajax())
+```
+
+Store and fetch models from a database:
+
+```javascript
+User
+  .findAll()
+  .where({ name: { contains: 'foo' }})
+  .include('posts', { limit: 10 })
+  .limit(10)
+  .exec(function(err, users) {
+    // ...
   });
+```
+
+Extend the model with new methods:
+
+```javascript
+Cat.use({
+  meow: function() {
+    console.log("meow");
+  }
+});
 
 var cat = new Cat();
 cat.meow();
-```
-
-Persist data by utilizing asynchronous events:
-
-```javascript
-var mio = require('mio');
-var MongoClient = require('mongodb').MongoClient;
-var User = mio.createModel('user');
-
-User
-  .attr('id', { primary: true })
-  .attr('name');
-
-User.before('save', function(user, changed, next) {
-  MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
-    if (!user.isNew()) changed._id = user.primary;
-
-    db.collection('user').save(changed, function(err, docs) {
-      if (docs) user.primary = docs[0]._id;
-      next(err);
-    });
-  });
-});
+// => "meow"
 ```
 
 ## API
