@@ -131,6 +131,10 @@ Plugins should use this object to store options.
 
 ## Instance methods
 
+### Model#primary
+
+Get or set the models primary attribute.
+
 ### Model#save(callback)
 
 ```javascript
