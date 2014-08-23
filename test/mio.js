@@ -153,7 +153,7 @@ describe('Model', function() {
       var User = mio.createModel('user');
       var Post = mio.createModel('post');
 
-      User.before('find', function(query, callback) {
+      User.before('findOne', function(query, callback) {
         callback(null, {foo: 'bar'});
       });
 
@@ -200,57 +200,57 @@ describe('Model', function() {
     });
   });
 
-  describe('.find()', function() {
+  describe('.findOne()', function() {
     it('finds models by id', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
-      Model.find(1, function(err, model) {
+      Model.findOne(1, function(err, model) {
         if (err) return done(err);
         done();
       });
     });
 
-    it("calls each store's find method", function(done) {
+    it("calls each store's findOne method", function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
 
       Model
-        .before('find', function(query, cb) {
+        .before('findOne', function(query, cb) {
           cb();
         })
-        .before('find', function(query, cb) {
+        .before('findOne', function(query, cb) {
           cb(null, new Model({ id: 1 }));
         });
 
-      Model.find(1, function(err, model) {
+      Model.findOne(1, function(err, model) {
         if (err) return done(err);
         expect(model).to.have.property('id', 1);
         done();
       });
     });
 
-    it('emits "before find" event', function(done) {
+    it('emits "before findOne" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
-      Model.on('before find', function(query) {
+      Model.on('before findOne', function(query) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.find(1, function(err, model) {
+      Model.findOne(1, function(err, model) {
         if (err) return done(err);
       });
     });
 
-    it('emits "after find" event', function(done) {
+    it('emits "after findOne" event', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
 
-      Model.on('after find', function(model) {
+      Model.on('after findOne', function(model) {
         expect(model).to.be.an.instanceOf(Model);
         done();
       });
 
-      Model.before('find', function(query, cb) {
+      Model.before('findOne', function(query, cb) {
         cb(null, new Model({ id: 1 }));
       });
 
-      Model.find(1, function(err, model) {
+      Model.findOne(1, function(err, model) {
         if (err) return done(err);
       });
     });
@@ -258,11 +258,11 @@ describe('Model', function() {
     it('passes error from adapter to callback', function(done) {
       var Model = mio.createModel('user').attr('id', { primary: true });
 
-      Model.before('find', function(query, cb) {
+      Model.before('findOne', function(query, cb) {
         cb(new Error('test'));
       });
 
-      Model.find(1, function(err, model) {
+      Model.findOne(1, function(err, model) {
         expect(err).to.have.property('message', 'test')
         done();
       });
