@@ -82,6 +82,13 @@ User
 Store and fetch models from a database:
 
 ```javascript
+User.findAll(function(err, users) {
+  // ...
+});
+```
+including chainable builder for complex queries:
+
+```javascript
 User
   .findAll()
   .where({ name: { contains: 'foo' }})

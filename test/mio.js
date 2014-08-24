@@ -79,6 +79,13 @@ describe('Model', function() {
     expect(model.created_at).to.be.an.instanceOf(Date);
   });
 
+  it('sets attributes on initialization', function() {
+    var model = mio.createModel('user', {
+      id: { primary: true }
+    }).create({ id: 1 });
+    expect(model).to.have.property('id', 1);
+  });
+
   it('provides mutable extras attribute', function() {
     var User = mio.createModel('user').attr('id');
     var user = new User;
@@ -470,6 +477,55 @@ describe('Model', function() {
         expect(err).to.have.property('message', 'test')
         done();
       });
+    });
+  });
+
+  describe('.query()', function() {
+    it('returns query object', function() {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+      var query = Model.findAll();
+      expect(query).to.be.an('object');
+      expect(query).to.have.keys([
+        'where',
+        'paginate',
+        'skip',
+        'exec',
+        'sort',
+        'include',
+        'offset',
+        'limit',
+        'page'
+      ]);
+    });
+
+    it('is chainable', function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+      Model.findAll()
+        .where({ name: 'alex' })
+        .sort('asc')
+        .limit(10)
+        .exec(done);
+    });
+
+    it('modifies query', function(done) {
+      var Model = mio.createModel('user').attr('id', { primary: true });
+      Model.before('findAll', function(query, next) {
+        expect(query).to.have.keys([
+          'where',
+          'sort',
+          'page',
+          'offset',
+          'limit'
+        ]);
+        done();
+      });
+      Model.findAll()
+        .where({ name: 'alex' })
+        .sort('asc')
+        .paginate({ page: 1 })
+        .skip(10)
+        .limit(10)
+        .exec(function() {});
     });
   });
 
