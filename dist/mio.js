@@ -179,9 +179,13 @@ function AbstractModel(values) {
  */
 
 AbstractModel.attr = function(name, options) {
-  if (this.attributes[name]) return this;
+  if (this.attributes[name]) {
+    throw new Error(name + " attribute already exists");
+  }
 
-  options = options || Object.create(null);
+  if (typeof options !== 'object') {
+    options = { 'default': options };
+  }
 
   if (options.primary) {
     if (this.primaryKey) {
@@ -200,7 +204,7 @@ AbstractModel.attr = function(name, options) {
 };
 
 /**
- * Use a plugin function that extends the model.
+ * Use a plugin function or map of methods that extend the model.
  *
  *     User
  *       .use(require('example-plugin'))
@@ -211,16 +215,11 @@ AbstractModel.attr = function(name, options) {
  *         this.use(require('mio-ajax'));
  *       });
  *
- * @param {Function} plugin
+ * @param {Function(Model)|Object} plugin
  * @return {AbstractModel}
  */
 
-AbstractModel.use = function(ev, plugin) {
-  if (typeof ev === 'function') {
-    plugin = ev;
-    ev = null;
-  }
-
+AbstractModel.use = function(plugin) {
   if (typeof plugin === 'object') {
     for (var key in plugin) {
       if (plugin.hasOwnProperty(key)) {
@@ -229,7 +228,7 @@ AbstractModel.use = function(ev, plugin) {
     }
   }
   else if (typeof plugin === 'function') {
-    ev ? this.before(ev, plugin) : plugin.call(this, this);
+    plugin.call(this, this);
   }
   else {
     throw new Error(
@@ -440,17 +439,22 @@ AbstractModel.create = function(attrs) {
  * @return {AbstractModel}
  */
 
-AbstractModel.find = function(query, callback) {
+AbstractModel.findOne = function(query, callback) {
   if (typeof query == 'number') {
     query = { id: query };
   }
 
-  return this.run('find', [query], callback, {
+  if (!callback && (!query || typeof query === 'object')) {
+    return this.query('findOne', query);
+  }
+
+  return this.run('findOne', [query], callback, {
     stopOnResult: true
   });
 };
 
-AbstractModel.get = AbstractModel.find;
+AbstractModel.get = AbstractModel.findOne;
+AbstractModel.find = AbstractModel.findOne;
 
 /**
  * Find collection of models using given `query`.
@@ -461,11 +465,13 @@ AbstractModel.get = AbstractModel.find;
  */
 
 AbstractModel.findAll = function(query, callback) {
-  var self = this;
-
   if (typeof query === 'function') {
     callback = query;
     query = {};
+  }
+
+  if (!callback && (!query || typeof query === 'object')) {
+    return this.query('findAll', query);
   }
 
   return this.run('findAll', [query], callback, {
@@ -490,6 +496,10 @@ AbstractModel.count = function(query, callback) {
     query = {};
   }
 
+  if (!callback && (!query || typeof query === 'object')) {
+    return this.query('count', query);
+  }
+
   return this.run('count', [query], callback, {
     defaultResult: 0,
     stopOnResult: true
@@ -510,7 +520,72 @@ AbstractModel.removeAll = function(query, callback) {
     query = {};
   }
 
+  if (!callback && (!query || typeof query === 'object')) {
+    return this.query('removeAll', query);
+  }
+
   return this.run('removeAll', [query], callback);
+};
+
+/**
+ * Compose queries functionally.
+ *
+ * @example
+ *
+ *   User.findAll()
+ *     .where({ active: true })
+ *     .sort({ created_at: "desc" })
+ *     .limit(10)
+ *     .exec(function(err, users) {
+ *     });
+ *
+ * @param {String} method
+ * @param {Object} query
+ * @return {Object}
+ */
+
+AbstractModel.query = function(method, query) {
+  var Model = this;
+
+  if (!query) query = {};
+
+  var filters = {
+    where: function(where) {
+      query.where = query.where || {};
+      for (var key in where) {
+        query.where[key] = where[key];
+      }
+      return filters;
+    },
+    paginate: function(paginate) {
+      for (var key in paginate) {
+        query[key] = paginate[key]
+      }
+      return filters;
+    },
+    skip: function(skip) {
+      query.offset = skip;
+      return filters;
+    },
+    exec: function(cb) {
+      return Model[method](query, cb);
+    }
+  };
+
+  ['sort', 'include', 'offset', 'limit', 'page'].forEach(function(key) {
+    filters[key] = function(params) {
+      if (typeof params === 'object' && typeof filter === 'object') {
+        for (var param in params) {
+          query[key][param] = params[param];
+        }
+      } else {
+        query[key] = params;
+      }
+      return filters;
+    };
+  });
+
+  return filters;
 };
 
 /**
