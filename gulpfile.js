@@ -5,6 +5,7 @@ var buffer = require('vinyl-buffer')
   , fs = require('fs')
   , gulp = require('gulp')
   , instrument = require('gulp-instrument')
+  , jsdoc2md = require('jsdoc-to-markdown')
   , jshint = require('gulp-jshint')
   , mochaPhantomJS = require('gulp-mocha-phantomjs')
   , source = require('vinyl-source-stream')
@@ -71,7 +72,14 @@ gulp.task('wrap-umd', function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('dist', ['wrap-umd']);
+gulp.task('dist', ['wrap-umd', 'docs']);
+
+gulp.task('docs', function(done) {
+  jsdoc2md.render('./lib/**.js')
+  .on('error', done)
+  .on('end', done)
+  .pipe(fs.createWriteStream('docs/API.md'))
+});
 
 gulp.task('browserify-tests', function() {
   var bundler = new Browserify();

@@ -1,10 +1,4 @@
-# mio
-
-[![Build Status](https://secure.travis-ci.org/mio/mio.png)](http://travis-ci.org/mio/mio) 
-[![Coverage Status](https://coveralls.io/repos/mio/mio/badge.png?branch=master)](https://coveralls.io/r/mio/mio?branch=master)
-[![Bower version](https://badge.fury.io/bo/mio.png)](http://badge.fury.io/bo/mio)
-[![NPM version](https://badge.fury.io/js/mio.png)](http://badge.fury.io/js/mio)
-[![Dependency Status](https://david-dm.org/mio/mio.png)](http://david-dm.org/mio/mio)
+# mio [![Build Status](https://img.shields.io/travis/mio/mio.svg?style=flat)](http://travis-ci.org/mio/mio) [![Coverage Status](https://img.shields.io/coveralls/mio/mio.svg?style=flat)](https://coveralls.io/r/mio/mio?branch=master) [![Bower version](https://img.shields.io/bower/v/mio.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio.svg?style=flat)](http://badge.fury.io/js/mio) [![Dependency Status](https://img.shields.io/david/mio/mio.svg?style=flat)](http://david-dm.org/mio/mio)
 
 Modern idiomatic models for the browser and node.js. Treat your models like
 plain JavaScript objects.
@@ -44,7 +38,7 @@ Using browser script tag and global (UMD wrapper):
 Define a model using `createModel()` and create instances with `new`:
 
 ```javascript
-var User = mio.createModel('user');
+var User = mio.Resource.extend();
 
 User
   .attr('firstName')
