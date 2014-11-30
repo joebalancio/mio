@@ -589,7 +589,9 @@ describe('Model', function() {
         .attr('id', { primary: true })
         .attr('name', { required: true });
 
-      expect(Model.create({ name: 'alex' }).isDirty('name')).to.equal(true);
+      var model = new Model();
+      model.name = 'alex';
+      expect(model.isDirty('name')).to.equal(true);
     });
   });
 
@@ -605,14 +607,14 @@ describe('Model', function() {
   });
 
   describe('#save()', function() {
-    it("calls each store's save method", function(done) {
+    it("calls each store's create method", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('save', function(model, changed, cb) {
+        .before('create', function(model, changed, cb) {
           expect(changed).to.have.property('id', 1);
           cb();
         })
-        .before('save', function(model, changed, cb) {
+        .before('create', function(model, changed, cb) {
           expect(changed).to.have.property('id', 1);
           cb();
         });
@@ -629,7 +631,7 @@ describe('Model', function() {
     it("passes error from adapter to callback", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true })
-        .before('save', function(model, changed, cb) {
+        .before('create', function(model, changed, cb) {
           cb(new Error("test"));
         });
 
@@ -641,27 +643,52 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before save" event', function(done) {
+    it('emits "before create" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before save', function(model, changed, next) {
+      Model.on('before create', function(model, changed, next) {
         expect(model).to.have.property('constructor', Model);
         expect(changed).to.be.an('object');
         next();
       });
-      var model = Model.create({ id: 1 });
-      model.on('before save', function(changed) {
+      var model = Model.create().set('id', 1);
+      model.on('before create', function(changed) {
         expect(changed).to.be.an('object');
         done();
       }).save(function(err) { });
     });
 
-    it('emits "after save" event', function(done) {
+    it('emits "after create" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after save', function(model, changed) {
+      Model.on('after create', function(model, changed) {
         expect(model).to.be.an.instanceOf(Model);
       });
-      var model = Model.create({ id: 1 });
-      model.on('after save', function() {
+      var model = Model.create().set('id', 1);
+      model.on('after create', function() {
+        done();
+      }).save(function(err) { });
+    });
+
+    it('emits "before update" event', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      Model.on('before update', function(model, changed, next) {
+        expect(model).to.have.property('constructor', Model);
+        expect(changed).to.be.an('object');
+        next();
+      });
+      var model = Model.create({ id: 1 }).set('name', 'alex');
+      model.on('before update', function(changed) {
+        expect(changed).to.be.an('object');
+        done();
+      }).save(function(err) { });
+    });
+
+    it('emits "after update" event', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      Model.on('after update', function(model, changed) {
+        expect(model).to.be.an.instanceOf(Model);
+      });
+      var model = Model.create({ id: 1 }).set('name', 'alex');
+      model.on('after update', function() {
         done();
       }).save(function(err) { });
     });
