@@ -407,51 +407,51 @@ describe('Model', function() {
     });
   });
 
-  describe('.removeAll()', function() {
-    it('removes models using query', function(done) {
+  describe('.destroyAll()', function() {
+    it('destroys models using query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.removeAll(function(err) {
+      Model.destroyAll(function(err) {
         if (err) return done(err);
-        Model.removeAll({ id: 1 }, function(err) {
+        Model.destroyAll({ id: 1 }, function(err) {
           done();
         });
       });
     });
 
-    it("calls each store's removeAll method", function(done) {
+    it("calls each store's destroyAll method", function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('removeAll', function(query, cb) {
+        .before('destroyAll', function(query, cb) {
           cb();
         })
-        .before('removeAll', function(query, cb) {
+        .before('destroyAll', function(query, cb) {
           cb();
         });
 
-      Model.removeAll(function(err) {
+      Model.destroyAll(function(err) {
         if (err) return done(err);
         done();
       });
     });
 
-    it('emits "before removeAll" event', function(done) {
+    it('emits "before destroyAll" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before removeAll', function(query) {
+      Model.on('before destroyAll', function(query) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.removeAll({ id: 1 }, function(err) {
+      Model.destroyAll({ id: 1 }, function(err) {
         if (err) return done(err);
       });
     });
 
-    it('emits "after removeAll" event', function(done) {
+    it('emits "after destroyAll" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after removeAll', function() {
+      Model.on('after destroyAll', function() {
         done();
       });
-      Model.removeAll({ id: 1 }, function(err) {
+      Model.destroyAll({ id: 1 }, function(err) {
         if (err) return done(err);
       });
     });
@@ -460,14 +460,14 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('removeAll', function(query, cb) {
+        .before('destroyAll', function(query, cb) {
           cb();
         })
-        .before('removeAll', function(query, cb) {
+        .before('destroyAll', function(query, cb) {
           cb(new Error('test'));
         });
 
-      Model.removeAll(function(err) {
+      Model.destroyAll(function(err) {
         expect(err).to.have.property('message', 'test')
         done();
       });
@@ -667,18 +667,18 @@ describe('Model', function() {
     });
   });
 
-  describe('#remove()', function() {
-    it("calls each store's remove method", function(done) {
+  describe('#destroy()', function() {
+    it("calls each store's destroy method", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('remove', function(model, cb) {
+        .before('destroy', function(model, cb) {
           cb();
         })
-        .before('remove', function(model, cb) {
+        .before('destroy', function(model, cb) {
           cb();
         });
       var model = Model.create({ id: 1 });
-      model.remove(function(err) {
+      model.destroy(function(err) {
         expect(err).to.eql(undefined);
         expect(model).to.have.property('id', null);
         done();
@@ -688,37 +688,37 @@ describe('Model', function() {
     it("passes error from adapter to callback", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('remove', function(model, cb) {
+        .before('destroy', function(model, cb) {
           cb(new Error('test'));
         });
       var model = Model.create({ id: 1 });
-      model.remove(function(err) {
+      model.destroy(function(err) {
         expect(err).to.have.property('message', 'test');
         done();
       });
     });
 
-    it('emits "before remove" event', function(done) {
+    it('emits "before destroy" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before remove', function(model, next) {
+      Model.on('before destroy', function(model, next) {
         expect(model).to.have.property('constructor', Model);
         next();
       });
       var model = Model.create({ id: 1 });
-      model.on('before remove', function() {
+      model.on('before destroy', function() {
         done();
-      }).remove(function(err) { });
+      }).destroy(function(err) { });
     });
 
-    it('emits "after remove" event', function(done) {
+    it('emits "after destroy" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after remove', function(model) {
+      Model.on('after destroy', function(model) {
         expect(model).to.be.an.instanceOf(Model);
       });
       var model = Model.create({ id: 1 });
-      model.on('after remove', function() {
+      model.on('after destroy', function() {
         done();
-      }).remove(function(err) { });
+      }).destroy(function(err) { });
     });
   });
 });
