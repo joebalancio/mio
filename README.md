@@ -1,6 +1,6 @@
 # mio [![Build Status](https://img.shields.io/travis/mio/mio.svg?style=flat)](http://travis-ci.org/mio/mio) [![Coverage Status](https://img.shields.io/coveralls/mio/mio.svg?style=flat)](https://coveralls.io/r/mio/mio?branch=master) [![Bower version](https://img.shields.io/bower/v/mio.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio.svg?style=flat)](http://badge.fury.io/js/mio) [![Dependency Status](https://img.shields.io/david/mio/mio.svg?style=flat)](http://david-dm.org/mio/mio)
 
-Model RESTful resources using a simple, extensible, storage-agnostic prototype.
+> Model RESTful resources using a simple, extensible, storage-agnostic prototype.
 
 * **Small**: No dependencies and only ~500 SLOC.
 * **Simple**: Plain enumerable attributes using ECMAScript getters and setters.
