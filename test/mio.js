@@ -769,4 +769,19 @@ describe('Model', function() {
       }).destroy(function(err) { });
     });
   });
+
+  describe('#toJSON()', function () {
+    it('only includes serializable attributes', function () {
+      var resource = Resource.extend({
+        name: {},
+        active: {
+          serializable: false
+        }
+      })({ name: 'alex', active: true });
+
+      var json = resource.toJSON();
+      expect(json).to.have.property('name', 'alex');
+      expect(json).not.to.have.property('active');
+    });
+  });
 });
