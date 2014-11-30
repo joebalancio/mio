@@ -24,7 +24,6 @@
     "gulp-instrument": "^0.1.0",
     "gulp-jshint": "^1.9.0",
     "gulp-mocha-phantomjs": "^0.5.1",
-    "gulp-rename": "^1.2.0",
     "gulp-wrap-umd": "^0.2.1",
     "jshint-stylish": "^1.0.0",
     "mocha-lcov-reporter": "0.0.1",
@@ -32,7 +31,7 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.0.0"
   },
-  "main": "./lib/model.js",
+  "main": "./lib/mio.js",
   "scripts": {
     "coverage": "./node_modules/gulp/bin/gulp.js coverage",
     "test": "./node_modules/gulp/bin/gulp.js test",

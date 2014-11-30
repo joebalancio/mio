@@ -2,11 +2,11 @@ var buffer = require('vinyl-buffer')
   , Browserify = require('browserify')
   , clean = require('gulp-clean')
   , coveralls = require('gulp-coveralls')
+  , fs = require('fs')
   , gulp = require('gulp')
   , instrument = require('gulp-instrument')
   , jshint = require('gulp-jshint')
   , mochaPhantomJS = require('gulp-mocha-phantomjs')
-  , rename = require('gulp-rename')
   , source = require('vinyl-source-stream')
   , stylish = require('jshint-stylish')
   , spawn = require('child_process').spawn
@@ -64,18 +64,19 @@ gulp.task('instrument', function() {
 });
 
 gulp.task('wrap-umd', function() {
-  return gulp.src('lib/model.js')
+  return gulp.src('lib/mio.js')
     .pipe(wrapUMD({
       namespace: "mio"
     }))
-    .pipe(rename('mio.js'))
     .pipe(gulp.dest('dist'));
 });
+
+gulp.task('dist', ['wrap-umd']);
 
 gulp.task('browserify-tests', function() {
   var bundler = new Browserify();
   bundler.add('./test/mio.js');
-  bundler.exclude('../lib-cov/model');
+  bundler.exclude('../lib-cov/mio');
   return bundler.bundle()
     .pipe(source('tests.js'))
     .pipe(gulp.dest('dist'));

@@ -1,32 +1,26 @@
 var expect = require('chai').expect;
 
-var mio = process.env.JSCOV ? require('../lib-cov/model') : require('../lib/model');
+var mio = process.env.JSCOV
+        ? require('../lib-cov/mio') : require('../lib/mio');
 
-describe('mio', function() {
-  describe('.createModel()', function() {
-    it('creates new models', function() {
-      var Model = mio.createModel('user');
-      expect(Model.type).to.equal('User');
-    });
-  });
-});
+var Resource = mio.Resource;
 
 describe('Model', function() {
   it('is instanceof exports.Model', function() {
-    var User = mio.createModel('user');
+    var User = Resource.extend();
     var user = new User();
     expect(user).to.be.an.instanceOf(User);
-    expect(user).to.be.an.instanceOf(mio.Model);
+    expect(user).to.be.an.instanceOf(Resource);
   });
 
   it('inherits from EventEmitter', function() {
-    var Model = mio.createModel('user');
+    var Model = Resource.extend();
     expect(Model).to.have.property('emit');
     expect(Model).to.have.property('on');
   });
 
   it('emits "initializing" event', function(done) {
-    var Model = mio.createModel('user')
+    var Model = Resource.extend()
       .on('initializing', function(model, attrs) {
         expect(model).to.have.property('constructor', Model);
         expect(attrs).to.be.an('object');
@@ -36,7 +30,7 @@ describe('Model', function() {
   });
 
   it('emits "initialized" event', function(done) {
-    var Model = mio.createModel('user')
+    var Model = Resource.extend()
       .on('initialized', function(model) {
         expect(model).to.be.an('object');
         expect(model).to.have.property('constructor', Model);
@@ -46,7 +40,7 @@ describe('Model', function() {
   });
 
   it('emits "change" events', function(done) {
-    var Model = mio.createModel('user')
+    var Model = Resource.extend()
       .attr('id', { primary: true })
       .attr('name')
       .on('change', function(model, name, value, prev) {
@@ -62,7 +56,7 @@ describe('Model', function() {
   });
 
   it('sets default values on initialization', function() {
-    var Model = mio.createModel('user')
+    var Model = Resource.extend()
     .attr('id', {
       primary: true
     })
@@ -80,14 +74,14 @@ describe('Model', function() {
   });
 
   it('sets attributes on initialization', function() {
-    var model = mio.createModel('user', {
+    var model = Resource.extend({
       id: { primary: true }
     }).create({ id: 1 });
     expect(model).to.have.property('id', 1);
   });
 
   it('provides mutable extras attribute', function() {
-    var User = mio.createModel('user').attr('id');
+    var User = Resource.extend().attr('id');
     var user = new User;
 
     // Exists
@@ -102,7 +96,7 @@ describe('Model', function() {
   });
 
   describe('.primary', function() {
-    var Model = mio.createModel('user').attr('id');
+    var Model = Resource.extend().attr('id');
 
     it('throws error on get if primary key is undefined', function() {
       expect(function() {
@@ -119,7 +113,7 @@ describe('Model', function() {
     });
 
     it('sets primary key attribute', function() {
-      Model = mio.createModel('user').attr('id', { primary: true });
+      Model = Resource.extend().attr('id', { primary: true });
       var model = new Model();
       model.primary = 3;
       expect(model.id).to.equal(3);
@@ -128,7 +122,7 @@ describe('Model', function() {
 
   describe('.attr()', function() {
     it('throws error if defining two primary keys', function() {
-      var Model = mio.createModel('user');
+      var Model = Resource.extend();
       Model.attr('id', { primary: true });
       expect(function() {
         Model.attr('_id', { primary: true });
@@ -136,7 +130,7 @@ describe('Model', function() {
     });
 
     it('emits "attribute" event', function(done) {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .on('attribute', function(name, params) {
           expect(name).to.equal('id');
           expect(params).to.be.an('object');
@@ -149,7 +143,7 @@ describe('Model', function() {
 
   describe('.use()', function() {
     it('extends model', function() {
-      var Model = mio.createModel('user');
+      var Model = Resource.extend();
       Model.use(function() {
         this.test = 1;
       });
@@ -157,8 +151,8 @@ describe('Model', function() {
     });
 
     it('does not pollute other models', function(done) {
-      var User = mio.createModel('user');
-      var Post = mio.createModel('post');
+      var User = Resource.extend();
+      var Post = Resource.extend();
 
       User.before('findOne', function(query, callback) {
         callback(null, {foo: 'bar'});
@@ -177,7 +171,7 @@ describe('Model', function() {
 
   describe('.browser()', function() {
     it('only runs methods in browser', function() {
-      var Model = mio.createModel('user');
+      var Model = Resource.extend();
       Model.browser(function() {
         this.test = 1;
       });
@@ -186,7 +180,7 @@ describe('Model', function() {
 
   describe('.server()', function() {
     it('only runs methods in node', function() {
-      var Model = mio.createModel('user');
+      var Model = Resource.extend();
       Model.server(function() {
         this.test = 1;
       });
@@ -195,13 +189,13 @@ describe('Model', function() {
 
   describe('.create()', function() {
     it('creates new models', function() {
-      var Model = mio.createModel('user');
+      var Model = Resource.extend();
       var model = Model.create();
       expect(model).to.be.an.instanceOf(Model);
     });
 
     it('hydrates model from existing object', function() {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       var model = Model.create({ id: 1 });
       expect(model).to.have.property('id', 1);
     });
@@ -209,7 +203,7 @@ describe('Model', function() {
 
   describe('.findOne()', function() {
     it('finds models by id', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.findOne(1, function(err, model) {
         if (err) return done(err);
         done();
@@ -217,7 +211,7 @@ describe('Model', function() {
     });
 
     it("calls each store's findOne method", function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model
         .before('findOne', function(query, cb) {
@@ -235,7 +229,7 @@ describe('Model', function() {
     });
 
     it('emits "before findOne" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('before findOne', function(query) {
         expect(query).to.be.an('object');
         done();
@@ -246,7 +240,7 @@ describe('Model', function() {
     });
 
     it('emits "after findOne" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model.on('after findOne', function(model) {
         expect(model).to.be.an.instanceOf(Model);
@@ -263,7 +257,7 @@ describe('Model', function() {
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model.before('findOne', function(query, cb) {
         cb(new Error('test'));
@@ -278,7 +272,7 @@ describe('Model', function() {
 
   describe('.findAll()', function() {
     it('finds collection of models using query', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.findAll(function(err, collection) {
         if (err) return done(err);
         expect(collection).to.be.an.instanceOf(Array);
@@ -289,7 +283,7 @@ describe('Model', function() {
     });
 
     it("calls each store's findAll method", function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model
         .before('findAll', function(query, cb) {
@@ -308,7 +302,7 @@ describe('Model', function() {
     });
 
     it('emits "before findAll" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('before findAll', function(query) {
         expect(query).to.be.an('object');
         done();
@@ -319,7 +313,7 @@ describe('Model', function() {
     });
 
     it('emits "after findAll" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('after findAll', function(collection) {
         expect(collection).to.be.an.instanceOf(Array);
         done();
@@ -330,7 +324,7 @@ describe('Model', function() {
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model.before('findAll', function(query, cb) {
         cb(new Error('test'));
@@ -345,7 +339,7 @@ describe('Model', function() {
 
   describe('.count()', function() {
     it('counts models using query', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.count(function(err, count) {
         if (err) return done(err);
         expect(count).to.be.a('number');
@@ -356,7 +350,7 @@ describe('Model', function() {
     });
 
     it("calls each store's count method", function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model
         .before('count', function(query, cb) {
@@ -374,7 +368,7 @@ describe('Model', function() {
     });
 
     it('emits "before count" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('before count', function(query) {
         expect(query).to.be.a('object');
         done();
@@ -385,7 +379,7 @@ describe('Model', function() {
     });
 
     it('emits "after count" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('after count', function(count) {
         expect(count).to.be.a('number');
         done();
@@ -396,7 +390,7 @@ describe('Model', function() {
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model
         .before('count', function(query, cb) {
@@ -415,7 +409,7 @@ describe('Model', function() {
 
   describe('.removeAll()', function() {
     it('removes models using query', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.removeAll(function(err) {
         if (err) return done(err);
         Model.removeAll({ id: 1 }, function(err) {
@@ -425,7 +419,7 @@ describe('Model', function() {
     });
 
     it("calls each store's removeAll method", function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model
         .before('removeAll', function(query, cb) {
@@ -442,7 +436,7 @@ describe('Model', function() {
     });
 
     it('emits "before removeAll" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('before removeAll', function(query) {
         expect(query).to.be.an('object');
         done();
@@ -453,7 +447,7 @@ describe('Model', function() {
     });
 
     it('emits "after removeAll" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('after removeAll', function() {
         done();
       });
@@ -463,7 +457,7 @@ describe('Model', function() {
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
 
       Model
         .before('removeAll', function(query, cb) {
@@ -482,7 +476,7 @@ describe('Model', function() {
 
   describe('.query()', function() {
     it('returns query object', function() {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       var query = Model.findAll();
       expect(query).to.be.an('object');
       expect(query).to.have.keys([
@@ -499,7 +493,7 @@ describe('Model', function() {
     });
 
     it('is chainable', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.findAll()
         .where({ name: 'alex' })
         .sort('asc')
@@ -508,7 +502,7 @@ describe('Model', function() {
     });
 
     it('modifies query', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.before('findAll', function(query, next) {
         expect(query).to.have.keys([
           'where',
@@ -531,7 +525,7 @@ describe('Model', function() {
 
   describe('#isNew()', function() {
     it('checks whether primary attribute is set', function() {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       var m1 = Model.create();
       expect(m1.isNew()).to.equal(true);
       var m2 = Model.create({ id: 1 });
@@ -539,7 +533,7 @@ describe('Model', function() {
     });
 
     it('throws error if primary key has not been defined', function() {
-      var Model = mio.createModel('user').attr('id');
+      var Model = Resource.extend().attr('id');
       var model = Model.create();
       expect(function() {
         model.isNew();
@@ -549,7 +543,7 @@ describe('Model', function() {
 
   describe('#has()', function() {
     it('checks for attribute definition', function() {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       var model = Model.create({ id: 1 });
       expect(model.has('name')).to.equal(false);
       expect(model.has('id')).to.equal(true);
@@ -558,7 +552,7 @@ describe('Model', function() {
 
   describe('#set()', function() {
     it('sets values for defined attributes', function() {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true })
         .attr('name');
       var model = Model.create({ id: 1, name: 'alex', age: 26 });
@@ -568,7 +562,7 @@ describe('Model', function() {
     });
 
     it('emits "setting" event', function(done) {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true })
         .attr('name')
         .on('setting', function(model, attrs) {
@@ -583,7 +577,7 @@ describe('Model', function() {
 
   describe('#isDirty()', function() {
     it('returns whether model is changed/dirty', function() {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       var model = Model.create();
       expect(model.isDirty()).to.equal(false);
       model.id = 1;
@@ -591,7 +585,7 @@ describe('Model', function() {
     });
 
     it('returns whether attribute is changed/dirty', function() {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true })
         .attr('name', { required: true });
 
@@ -601,7 +595,7 @@ describe('Model', function() {
 
   describe('#changed()', function() {
     it('returns attributes changed since last save', function() {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true })
         .attr('name');
       var model = Model.create({ id: 1 });
@@ -612,7 +606,7 @@ describe('Model', function() {
 
   describe('#save()', function() {
     it("calls each store's save method", function(done) {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
         .before('save', function(model, changed, cb) {
           expect(changed).to.have.property('id', 1);
@@ -633,7 +627,7 @@ describe('Model', function() {
     });
 
     it("passes error from adapter to callback", function(done) {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true })
         .before('save', function(model, changed, cb) {
           cb(new Error("test"));
@@ -648,7 +642,7 @@ describe('Model', function() {
     });
 
     it('emits "before save" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('before save', function(model, changed, next) {
         expect(model).to.have.property('constructor', Model);
         expect(changed).to.be.an('object');
@@ -662,7 +656,7 @@ describe('Model', function() {
     });
 
     it('emits "after save" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('after save', function(model, changed) {
         expect(model).to.be.an.instanceOf(Model);
       });
@@ -675,7 +669,7 @@ describe('Model', function() {
 
   describe('#remove()', function() {
     it("calls each store's remove method", function(done) {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
         .before('remove', function(model, cb) {
           cb();
@@ -692,7 +686,7 @@ describe('Model', function() {
     });
 
     it("passes error from adapter to callback", function(done) {
-      var Model = mio.createModel('user')
+      var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
         .before('remove', function(model, cb) {
           cb(new Error('test'));
@@ -705,7 +699,7 @@ describe('Model', function() {
     });
 
     it('emits "before remove" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('before remove', function(model, next) {
         expect(model).to.have.property('constructor', Model);
         next();
@@ -717,7 +711,7 @@ describe('Model', function() {
     });
 
     it('emits "after remove" event', function(done) {
-      var Model = mio.createModel('user').attr('id', { primary: true });
+      var Model = Resource.extend().attr('id', { primary: true });
       Model.on('after remove', function(model) {
         expect(model).to.be.an.instanceOf(Model);
       });
