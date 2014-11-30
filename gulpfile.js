@@ -75,7 +75,7 @@ gulp.task('wrap-umd', function() {
 gulp.task('browserify-tests', function() {
   var bundler = new Browserify();
   bundler.add('./test/mio.js');
-  bundler.ignore('../lib-cov/model');
+  bundler.exclude('../lib-cov/model');
   return bundler.bundle()
     .pipe(source('tests.js'))
     .pipe(gulp.dest('dist'));
