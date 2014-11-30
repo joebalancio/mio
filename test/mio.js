@@ -141,6 +141,27 @@ describe('Model', function() {
     });
   });
 
+  describe('.on()', function() {
+    it('registers handler with multiple events', function(done) {
+      var Model = Resource.extend({ id: { primary: true } });
+      handlersCalled = 0;
+      Model.on('before create update', function(model, changed, next) {
+        handlersCalled++;
+        next();
+      });
+      var model = new Model();
+      model.id = 1;
+      model.save(function(err) {
+        model.name = 'alex';
+        model.save(function(err) {
+          if (err) return done(err);
+          expect(handlersCalled).to.equal(2);
+          done();
+        });
+      });
+    });
+  });
+
   describe('.use()', function() {
     it('extends model', function() {
       var Model = Resource.extend();
