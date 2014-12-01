@@ -2,12 +2,11 @@
 
 > Model RESTful resources using a simple, extensible, storage-agnostic prototype.
 
-* **Small**: No dependencies and core is only ~200 SLOC.
-* **Simple**: Plain enumerable attributes using ECMAScript getters and setters.
-* **Observable**: Before and after hooks for CRUD operations and lifecycle events
-* **Extensible**: Simple API for extending model prototypes with support
-  for browser or server specific plugins.
-* **Browser or Node.js**: Reuse code across the browser and server.
+* No dependencies and core is only ~200 SLOC
+* Plain enumerable attributes using ECMAScript getters and setters
+* Hooks before and after CRUD operations and lifecycle events
+* Simple Backbone-style API for extending resources
+* Runs in the browser or on the server with node.js
 
 ## Installation
 
@@ -36,10 +35,17 @@ See the full [API documentation](docs/API.md).
 
 ## Examples
 
-### Define a resource
+* [Resources](#resources)
+* [Queries](#queries)
+* [Middleware](#middleware)
+* [Hooks](#hooks)
+* [Relations](#relations)
+* [REST API](#rest-api)
 
-Define new resources by extending the base class. You can pass attribute
-definitions to `.extend()` or use the chainable `.attr()`:
+### Resources
+
+Define new resources by extending the base `Resource` class. You can pass
+attribute definitions to `.extend()` or use the chainable `.attr()`:
 
 ```javascript
 var User = mio.Resource.extend();
@@ -59,14 +65,30 @@ User
 var user = new User({ name: 'alex' });
 ```
 
-### Query for resources
+### Queries
+
+Query methods are used in combination with hooks for fetching resources from a
+database, such as provided by various storage plugins.
+
+Find one user:
 
 ```javascript
 User.findOne(123, function(err, user) {
   // ...
 });
+```
 
+Find all users matching a query:
 
+```javascript
+User.findAll({ active: true }, function (err, users) {
+  // ...
+});
+```
+
+Using a chainable query builder:
+
+```javascript
 User.findAll()
   .where({ active: true })
   .sort({ created_at: "desc" })
@@ -76,7 +98,10 @@ User.findAll()
   });
 ```
 
-### Middleware for validation and persistence
+### Middleware
+
+Resources can use middleware functions which extend the them with various
+functionality such as validation, persistence, etc.
 
 Persistence:
 
@@ -133,11 +158,15 @@ user.save(function (err) {
 });
 ```
 
-### Hook into CRUD operations
+### Hooks
+
+Before and after hooks are provided for CRUD operations and resource lifecycle
+events. Certain hooks, such as "before create" are asynchronous and execute in
+series. Others such as "after update" are synchronous and run in parallel.
 
 ```javascript
 User.before('create', function (resource, changed, next) {
-  // do something before save such as validation
+  // do something before save such as validation and then call next()
 });
 
 User.after('create update', function (resource, changed) {
@@ -145,9 +174,12 @@ User.after('create update', function (resource, changed) {
 });
 ```
 
-See the full list of [events](docs/API.md#Events).
+See the full [documentation for events](docs/API.md#Events).
 
 ### Relations
+
+Define relationships between resources in combination with a supporting storage
+adapter.
 
 ```javascript
 Author.hasMany('books', {
@@ -178,6 +210,76 @@ author.related('books').where({ published: true }).exec(function(err, books) {
 ```
 
 See the [relations API](docs/API.md#module_mio.hasOne) for more information.
+
+### REST API
+
+Create a REST API server from your models and interact with them from the
+browser using the same interface.
+
+Shared between browser and server:
+
+```javascript
+var mio = require('mio');
+var Validators = require('mio-validators');
+
+var User = module.exports = mio.Resource.extend({
+  id: { primary: true },
+  name: {
+    constraints: [Validators.Assert.Type('string')]
+  },
+  created: {
+    constraints: [Validators.Assert.Instance(Date)],
+    default: function () {
+      return new Date();
+    }
+  }
+});
+```
+
+On the server:
+
+```javascript
+var User = require('./models/User');
+var MongoDB = require('mio-mongo');
+var Resource = require('mio-resource');
+var express = require('express');
+
+User
+  .use(MongoDB({
+    url: ,
+  }))
+  .use(Resource({
+    url: {
+      collection: '/users',
+      resource: '/users/:id'
+    }
+  }));
+
+var app = express();
+
+app
+  .use(User.middleware())
+  .listen(3000);
+```
+
+In the browser:
+
+```javascript
+var User = require('./models/User');
+var Ajax = require('mio-ajax');
+
+User
+  .use(Ajax({
+    url: {
+      collection: '/users',
+      resource: '/users/:id'
+    }
+  }));
+
+var user = User().set({ name: "alex" }).save(function(err) {
+  // ...
+});
+```
 
 ## Community
 
