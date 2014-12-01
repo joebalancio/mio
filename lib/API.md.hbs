@@ -1,0 +1,75 @@
+# API
+
+{{#module name="mio"~}}{{>body~}}{{>exported~}}{{/module~}}## Events
+
+All asynchronous events receive a `next` function as the last argument,
+which must be called to continue.
+
+`before findOne`, `before findAll`, and `before count` are unique in that
+subsequent event handlers are ignored if `next` is passed a result.
+
+### Persist data using asynchronous events
+
+```javascript
+var mio = require('mio');
+var MongoClient = require('mongodb').MongoClient;
+var User = mio.createModel('user');
+
+User
+  .attr('id', { primary: true })
+  .attr('name');
+
+User.before('save', function(user, changed, next) {
+  MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
+    if (!user.isNew()) changed._id = user.primary;
+
+    db.collection('user').save(changed, function(err, docs) {
+      if (docs) user.primary = docs[0]._id;
+      next(err);
+    });
+  });
+});
+```
+
+### Model events
+
+#### Asynchronous
+
+`before findOne` Receives arguments `query` and `next(err, result)`. Stops on result.
+`before findAll` Receives arguments `query` and `next(err, result)`. Stops on result.
+`before count`   Receives arguments `query` and `next(err, result)`. Stops on result.
+`before create`  Receives arguments `resource`, `changed`, and `next(err)`.
+`before update`  Receives arguments `resource`, `changed`, and `next(err)`.
+`before destroy` Receives arguments `resource` and `next(err)`.
+
+#### Synchronous
+
+`after findOne`  Receives argument `resource`.
+`after findAll`  Receives argument `collection`.
+`after count`    Receives argument `count`.
+`after create`   Receives arguments `resource` and `changed`.
+`after update`   Receives arguments `resource` and `changed`.
+`after destroy`  Receives argument `resource`.
+`attribute`      Receives arguments `name` and `params`.
+`change`         Receives arguments `resource`, `name`, `value`, and `prev`.
+`change:[attr]`  Receives arguments `resource`, `value`, and `prev`.
+`initializing`   Receives arguments `resource` and `attributes`.
+`initialized`    Receives argument `resource`.
+`setting`        Receives arguments `resource` and `attributes`.
+
+### Instance events
+
+#### Asynchronous
+
+`before create`  Receives arguments `changed` and `next(err)`.
+`before update`  Receives arguments `changed` and `next(err)`.
+`before destroy` Receives argument `next(err)`.
+
+#### Synchronous
+
+`after create`   Receives argument `changed`.
+`after update`   Receives argument `changed`.
+`after destroy`
+`change`         Receives arguments `name`, `value`, and `prev`.
+`change:[attr]`  Receives arguments `value`, and `prev`.
+`setting`        Receives argument `attributes`.

@@ -34,6 +34,119 @@ Using browser script tag and global (UMD wrapper):
 
 See the full [API documentation](docs/API.md).
 
+## Examples
+
+### Define a resource
+
+Define new resources by extending the base class. You can pass attribute
+definitions to `.extend()` or use the chainable `.attr()`:
+
+```javascript
+var User = mio.Resource.extend();
+
+User
+  .attr('id', { primary: true })
+  .attr('name')
+  .attr('active', {
+    default: false
+  })
+  .attr('created', {
+    default: function () {
+      return new Date();
+    }
+  });
+
+var user = new User({ name: 'alex' });
+```
+
+### Query for resources
+
+```javascript
+User.findOne(123, function(err, user) {
+  // ...
+});
+
+
+User.findAll()
+  .where({ active: true })
+  .sort({ created_at: "desc" })
+  .limit(10)
+  .exec(function(err, users) {
+    // ...
+  });
+```
+
+### Middleware for validation and persistence
+
+Persistence:
+
+```javascript
+var MongoDB = require('mio-mongo');
+
+User
+  .attr('id', { primary: true })
+  .attr('name')
+  .use(MongoDB({
+    url: 'mongodb://db.example.net:2500'
+  }));
+
+var user = new User({ name: 'alex' });
+
+// persist to mongodb
+user.save(function(err) {
+  // ...
+});
+
+// fetch from mongodb
+User.findOne({ name: 'alex' }, function (err, user) {
+  // remove from mongodb
+  user.destroy(function (err) {
+    // ...
+  });
+});
+```
+
+Validation:
+
+```javascript
+var Validators = require('mio-validators');
+
+User
+  .attr('id', { primary: true })
+  .attr('name', {
+    constraints: [
+      Validators.Assert.Type('string'),
+      Validators.Assert.Length({ min: 2, max: 32 })
+    ]
+  })
+  .use(Validators);
+
+var user = new User();
+
+user.name = 123;
+
+user.save(function (err) {
+  console.log(err);
+  // { [Error: Validation(s) failed.]
+  //   violations: { name: [ '`123` is not of type string' ] }
+  // }
+});
+```
+
+### Hook into CRUD operations
+
+```javascript
+User.before('create', function (resource, changed, next) {
+  // do something before save such as validation
+});
+
+User.after('create update', function (resource, changed) {
+  // do something after create or update
+});
+```
+
+See the full list of [events](docs/API.md#Events).
+
 ## Community
 
 * [Plugins](https://github.com/mio/mio/wiki/Plugins/)

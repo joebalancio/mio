@@ -1,116 +1,143 @@
-<a name="Resource"></a>
-#class: Resource
+# API
+
+<a name="exp_module_mio"></a>
+##class: Resource ⏏
 **Members**
 
-* [class: Resource](#Resource)
-  * [new Resource(values)](#new_Resource)
-  * [Resource.extend(prototype)](#Resource.extend)
-  * [Resource.attr(name, options)](#Resource.attr)
-  * [Resource.use(fn)](#Resource.use)
-  * [Resource.browser(fn)](#Resource.browser)
-  * [Resource.server(fn)](#Resource.server)
-  * [Resource.on(ev, fn)](#Resource.on)
-  * [Resource.once(ev, fn)](#Resource.once)
-  * [Resource.emit(ev, ...)](#Resource.emit)
-  * [Resource.before()](#Resource.before)
-  * [Resource.after()](#Resource.after)
-  * [Resource.create(attrs)](#Resource.create)
-  * [Resource.findOne(query, callback)](#Resource.findOne)
-  * [Resource.findAll(query, callback)](#Resource.findAll)
-  * [Resource.count(query, callback)](#Resource.count)
-  * [Resource.removeAll(query, callback)](#Resource.removeAll)
-  * [Resource.query(method, query)](#Resource.query)
-  * [resource.isNew()](#Resource#isNew)
-  * [resource.isDirty(attr)](#Resource#isDirty)
-  * [resource.changed()](#Resource#changed)
-  * [resource.has(attr)](#Resource#has)
-  * [resource.set(attrs)](#Resource#set)
-  * [resource.save(callback)](#Resource#save)
-  * [resource.remove(callback)](#Resource#remove)
+* [class: Resource ⏏](#exp_module_mio)
+  * [new Resource(values)](#exp_new_module_mio)
+  * [Resource.extend(prototype)](#module_mio.extend)
+  * [Resource.attr(name, [options])](#module_mio.attr)
+  * [Resource.use(fn)](#module_mio.use)
+  * [Resource.browser(fn)](#module_mio.browser)
+  * [Resource.server(fn)](#module_mio.server)
+  * [Resource.on(ev, fn)](#module_mio.on)
+  * [Resource.once(ev, fn)](#module_mio.once)
+  * [Resource.before()](#module_mio.before)
+  * [Resource.after()](#module_mio.after)
+  * [Resource.create(attrs)](#module_mio.create)
+  * [Resource.findOne(query, callback)](#module_mio.findOne)
+  * [Resource.findAll(query, callback)](#module_mio.findAll)
+  * [Resource.count(query, callback)](#module_mio.count)
+  * [Resource.destroyAll(query, callback)](#module_mio.destroyAll)
+  * [resource.isNew()](#module_mio#isNew)
+  * [resource.isDirty(attr)](#module_mio#isDirty)
+  * [resource.changed()](#module_mio#changed)
+  * [resource.has(attr)](#module_mio#has)
+  * [resource.set(attrs)](#module_mio#set)
+  * [resource.save(callback)](#module_mio#save)
+  * [resource.destroy(callback)](#module_mio#destroy)
 
-<a name="new_Resource"></a>
-##new Resource(values)
-Create new `Resource` instance.
+<a name="exp_new_module_mio"></a>
+###new Resource(values)
+Create new `Resource` instance. Values set using the constructor are not
+marked as dirty. Use `.set()` after instantiation for hydration of dirty
+attributes.
 
 **Params**
 
 - values `Object` - optional  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.extend"></a>
-##Resource.extend(prototype)
+**Returns**: `Resource`  
+**Example**  
+```javascript
+var user = new User({ name: "alex" });
+```
+
+<a name="module_mio.extend"></a>
+###Resource.extend(prototype)
 Extend `Resource` with new attributes or methods.
 
 **Params**
 
-- prototype `Object` - properties or methods to extend prototype  
+- prototype `Object` - extend with attribute definitions or methods  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.attr"></a>
-##Resource.attr(name, options)
-Define a resource attribute with the given `name` and `params`.
+**Returns**: `Resource`  
+**Example**  
+```javascript
+var User = mio.Resource.extend({
+  id: { primary: true }
+});
+```
 
-Supported `options`:
-
-   - default     Provide default value or function that returns value.
-   - filtered    Exclude attribute from enumeration.
-   - get         Accessor function. Optional.
-   - primary     Use attribute as primary key.
+<a name="module_mio.attr"></a>
+###Resource.attr(name, [options])
+Define a resource attribute with the given `name` and `options`.
 
 **Params**
 
 - name `String`  
-- options `Object`  
+- \[options\] `Object`  
+  - \[default\] `Mixed` - default value or function that returns value  
+  - \[enumerable\] `Boolean` - attribute is enumerable (default: true)  
+  - \[serializable\] `Boolean` - include in JSON (default: true)  
+  - \[get\] `function` - accessor function  
+  - \[primary\] `Boolean` - use attribute as primary key  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.use"></a>
-##Resource.use(fn)
+**Returns**: `Resource`  
+**Example**  
+```javascript
+  User
+    .attr('id', { primary: true })
+    .attr('name')
+    .attr('created', {
+      default: function() {
+        return new Date();
+      }
+    });
+```
+
+<a name="module_mio.use"></a>
+###Resource.use(fn)
 Call the given plugin `fn` with the Resource as both argument and context.
-
-    User
-      .use(require('example-plugin'))
-      .server(function() {
-        this.use(require('mio-mysql'));
-      })
-      .browser(function() {
-        this.use(require('mio-ajax'));
-      });
 
 **Params**
 
 - fn `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.browser"></a>
-##Resource.browser(fn)
+**Returns**: `Resource`  
+**Example**  
+```javascript
+User
+  .use(require('example-plugin'))
+  .server(function() {
+    this.use(require('mio-mysql'));
+  })
+  .browser(function() {
+    this.use(require('mio-ajax'));
+  });
+```
+
+<a name="module_mio.browser"></a>
+###Resource.browser(fn)
 Use given `fn` only in browser.
 
 **Params**
 
 - fn `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.server"></a>
-##Resource.server(fn)
+**Returns**: `Resource`  
+<a name="module_mio.server"></a>
+###Resource.server(fn)
 Use given `fn` only in node.
 
 **Params**
 
 - fn `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.on"></a>
-##Resource.on(ev, fn)
+**Returns**: `Resource`  
+<a name="module_mio.on"></a>
+###Resource.on(ev, fn)
 Register `fn` to be called when `ev` is emitted.
 
 **Params**
 
-- ev `String`  
+- ev `String` - register multiple events with space-delimited names  
 - fn `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.once"></a>
-##Resource.once(ev, fn)
+**Returns**: `Resource`  
+<a name="module_mio.once"></a>
+###Resource.once(ev, fn)
 Register `fn` to be called once when `ev` is next emitted.
 
 **Params**
@@ -118,37 +145,29 @@ Register `fn` to be called once when `ev` is next emitted.
 - ev `String`  
 - fn `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.emit"></a>
-##Resource.emit(ev, ...)
-Emit `ev` and call listeners.
-
-**Params**
-
-- ev `String`  
-- ... `Mixed`  
-
-**Returns**: [Resource](#Resource)  
-<a name="Resource.before"></a>
-##Resource.before()
+**Returns**: `Resource`  
+<a name="module_mio.before"></a>
+###Resource.before()
 Alias for `Resource.on('before EVENT')`
 
-<a name="Resource.after"></a>
-##Resource.after()
+<a name="module_mio.after"></a>
+###Resource.after()
 Alias for `Resource.on('after EVENT')`
 
-<a name="Resource.create"></a>
-##Resource.create(attrs)
+<a name="module_mio.create"></a>
+###Resource.create(attrs)
 Create a new resource and hydrate with given `attrs`,
 or if `attrs` is already a resource return it.
+
+This is simply sugar for `new Resource(attrs)`.
 
 **Params**
 
 - attrs `Object`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.findOne"></a>
-##Resource.findOne(query, callback)
+**Returns**: `Resource`  
+<a name="module_mio.findOne"></a>
+###Resource.findOne(query, callback)
 Find a resource with given `id` or `query`.
 
 **Params**
@@ -156,9 +175,16 @@ Find a resource with given `id` or `query`.
 - query `Number` | `Object`  
 - callback `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.findAll"></a>
-##Resource.findAll(query, callback)
+**Returns**: `Resource`  
+**Example**  
+```javascript
+User.findOne(123, function (err, user) {
+  // ...
+})
+```
+
+<a name="module_mio.findAll"></a>
+###Resource.findAll(query, callback)
 Find collection of resources using given `query`.
 
 **Params**
@@ -166,9 +192,28 @@ Find collection of resources using given `query`.
 - query `Object`  
 - callback `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.count"></a>
-##Resource.count(query, callback)
+**Returns**: `Resource`  
+**Example**  
+```javascript
+User.findAll({ active: true }, function (err, users) {
+  // ...
+});
+```
+
+Queries can also be composed using chainable methods:
+
+```javascript
+User.findAll()
+ .where({ active: true })
+ .sort({ created_at: "desc" })
+ .limit(10)
+ .exec(function(err, users) {
+   // ...
+ });
+```
+
+<a name="module_mio.count"></a>
+###Resource.count(query, callback)
 Count resources using given `query`.
 
 **Params**
@@ -176,42 +221,24 @@ Count resources using given `query`.
 - query `Object`  
 - callback `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.removeAll"></a>
-##Resource.removeAll(query, callback)
-resources using given `query`.
+**Returns**: `Resource`  
+<a name="module_mio.destroyAll"></a>
+###Resource.destroyAll(query, callback)
+Destroy resources using given `query`.
 
 **Params**
 
 - query `Object`  
 - callback `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource.query"></a>
-##Resource.query(method, query)
-Compose queries functionally.
-
-**Params**
-
-- method `String`  
-- query `Object`  
-
-**Returns**: `Object`  
-**Example**  
-User.findAll()
-  .where({ active: true })
-  .sort({ created_at: "desc" })
-  .limit(10)
-  .exec(function(err, users) {
-  });
-
-<a name="Resource#isNew"></a>
-##resource.isNew()
+**Returns**: `Resource`  
+<a name="module_mio#isNew"></a>
+###resource.isNew()
 Check if resource is new and has not been saved.
 
 **Returns**: `Boolean`  
-<a name="Resource#isDirty"></a>
-##resource.isDirty(attr)
+<a name="module_mio#isDirty"></a>
+###resource.isDirty(attr)
 Check if resource is dirty (has any changed attributes).
 If an attribute name is specified, check if that attribute is dirty.
 
@@ -220,13 +247,13 @@ If an attribute name is specified, check if that attribute is dirty.
 - attr `String` - optional attribute to check if dirty  
 
 **Returns**: `Boolean`  
-<a name="Resource#changed"></a>
-##resource.changed()
-Return attributes changed since last save.
+<a name="module_mio#changed"></a>
+###resource.changed()
+Return dirty attributes (changed since last save).
 
 **Returns**: `Object`  
-<a name="Resource#has"></a>
-##resource.has(attr)
+<a name="module_mio#has"></a>
+###resource.has(attr)
 Check if resource has given `attr`.
 
 **Params**
@@ -234,30 +261,105 @@ Check if resource has given `attr`.
 - attr `String`  
 
 **Returns**: `Boolean`  
-<a name="Resource#set"></a>
-##resource.set(attrs)
+<a name="module_mio#set"></a>
+###resource.set(attrs)
 Set given resource `attrs`.
 
 **Params**
 
 - attrs `Object`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource#save"></a>
-##resource.save(callback)
-Save resource.
+**Returns**: `Resource`  
+<a name="module_mio#save"></a>
+###resource.save(callback)
+Persist resource to storage. Runs "create" or "update" event
+handlers registered by persistence plugins.
 
 **Params**
 
 - callback `function`  
 
-**Returns**: [Resource](#Resource)  
-<a name="Resource#remove"></a>
-##resource.remove(callback)
-Remove resource.
+**Returns**: `Resource`  
+<a name="module_mio#destroy"></a>
+###resource.destroy(callback)
+Remove resource from storage. Runs "destroy" event handlers registered by
+persistence plugins.
 
 **Params**
 
 - callback `function`  
 
-**Returns**: [Resource](#Resource)  
+**Returns**: `Resource`  
+## Events
+
+All asynchronous events receive a `next` function as the last argument,
+which must be called to continue.
+
+`before findOne`, `before findAll`, and `before count` are unique in that
+subsequent event handlers are ignored if `next` is passed a result.
+
+### Persist data using asynchronous events
+
+```javascript
+var mio = require('mio');
+var MongoClient = require('mongodb').MongoClient;
+var User = mio.createModel('user');
+
+User
+  .attr('id', { primary: true })
+  .attr('name');
+
+User.before('save', function(user, changed, next) {
+  MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
+    if (!user.isNew()) changed._id = user.primary;
+
+    db.collection('user').save(changed, function(err, docs) {
+      if (docs) user.primary = docs[0]._id;
+      next(err);
+    });
+  });
+});
+```
+
+### Model events
+
+#### Asynchronous
+
+`before findOne` Receives arguments `query` and `next(err, result)`. Stops on result.
+`before findAll` Receives arguments `query` and `next(err, result)`. Stops on result.
+`before count`   Receives arguments `query` and `next(err, result)`. Stops on result.
+`before create`  Receives arguments `resource`, `changed`, and `next(err)`.
+`before update`  Receives arguments `resource`, `changed`, and `next(err)`.
+`before destroy` Receives arguments `resource` and `next(err)`.
+
+#### Synchronous
+
+`after findOne`  Receives argument `resource`.
+`after findAll`  Receives argument `collection`.
+`after count`    Receives argument `count`.
+`after create`   Receives arguments `resource` and `changed`.
+`after update`   Receives arguments `resource` and `changed`.
+`after destroy`  Receives argument `resource`.
+`attribute`      Receives arguments `name` and `params`.
+`change`         Receives arguments `resource`, `name`, `value`, and `prev`.
+`change:[attr]`  Receives arguments `resource`, `value`, and `prev`.
+`initializing`   Receives arguments `resource` and `attributes`.
+`initialized`    Receives argument `resource`.
+`setting`        Receives arguments `resource` and `attributes`.
+
+### Instance events
+
+#### Asynchronous
+
+`before create`  Receives arguments `changed` and `next(err)`.
+`before update`  Receives arguments `changed` and `next(err)`.
+`before destroy` Receives argument `next(err)`.
+
+#### Synchronous
+
+`after create`   Receives argument `changed`.
+`after update`   Receives argument `changed`.
+`after destroy`
+`change`         Receives arguments `name`, `value`, and `prev`.
+`change:[attr]`  Receives arguments `value`, and `prev`.
+`setting`        Receives argument `attributes`.

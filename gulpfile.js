@@ -75,7 +75,9 @@ gulp.task('wrap-umd', function() {
 gulp.task('dist', ['wrap-umd', 'docs']);
 
 gulp.task('docs', function(done) {
-  jsdoc2md.render('./lib/**.js')
+  jsdoc2md.render('./lib/**.js', {
+    template: './lib/API.md.hbs'
+  })
   .on('error', done)
   .on('end', done)
   .pipe(fs.createWriteStream('docs/API.md'))
