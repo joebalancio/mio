@@ -33,6 +33,12 @@ Using browser script tag and global (UMD wrapper):
 
 See the full [API documentation](docs/API.md).
 
+## Community
+
+* [Plugins](https://github.com/mio/mio/wiki/Plugins/)
+* [Wiki](https://github.com/mio/mio/wiki/)
+* `##mio` on irc.freenode.net
+
 ## Examples
 
 * [Resources](#resources)
@@ -280,11 +286,5 @@ var user = User().set({ name: "alex" }).save(function(err) {
   // ...
 });
 ```
-
-## Community
-
-* [Plugins](https://github.com/mio/mio/wiki/Plugins/)
-* [Wiki](https://github.com/mio/mio/wiki/)
-* `##mio` on irc.freenode.net
 
 ## MIT Licensed
