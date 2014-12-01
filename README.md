@@ -147,6 +147,38 @@ User.after('create update', function (resource, changed) {
 
 See the full list of [events](docs/API.md#Events).
 
+### Relations
+
+```javascript
+Author.hasMany('books', {
+  model: Book,
+
+  foreignKey: 'author_id'
+});
+
+Book.belongsTo('author', {
+  model: Author,
+  foreignKey: 'author_id'
+});
+
+// fetch book with related author included
+Book.findOne(1).withRelated(['author']).exec(function(err, book) {
+  console.log(book.author);
+});
+
+// fetch author for book
+book.related('author', function(err, author) {
+  // ...
+});
+
+// fetch books for author
+author.related('books').where({ published: true }).exec(function(err, books) {
+  // ...
+});
+```
+
+See the [relations API](docs/API.md#module_mio.hasOne) for more information.
+
 ## Community
 
 * [Plugins](https://github.com/mio/mio/wiki/Plugins/)
