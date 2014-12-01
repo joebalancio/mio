@@ -1,5 +1,7 @@
 # API
 
+`Resource` is available via `mio.Resource`.
+
 <a name="exp_module_mio"></a>
 ##class: Resource ⏏
 **Members**
@@ -11,15 +13,19 @@
   * [Resource.use(fn)](#module_mio.use)
   * [Resource.browser(fn)](#module_mio.browser)
   * [Resource.server(fn)](#module_mio.server)
-  * [Resource.on(ev, fn)](#module_mio.on)
-  * [Resource.once(ev, fn)](#module_mio.once)
-  * [Resource.before()](#module_mio.before)
-  * [Resource.after()](#module_mio.after)
   * [Resource.create(attrs)](#module_mio.create)
   * [Resource.findOne(query, callback)](#module_mio.findOne)
   * [Resource.findAll(query, callback)](#module_mio.findAll)
   * [Resource.count(query, callback)](#module_mio.count)
   * [Resource.destroyAll(query, callback)](#module_mio.destroyAll)
+  * [Resource.hasOne(attr, params)](#module_mio.hasOne)
+  * [Resource.hasMany(attr, params)](#module_mio.hasMany)
+  * [Resource.belongsTo(attr, params)](#module_mio.belongsTo)
+  * [Resource.belongsToMany(attr, params)](#module_mio.belongsToMany)
+  * [Resource.on(ev, fn)](#module_mio.on)
+  * [Resource.once(ev, fn)](#module_mio.once)
+  * [Resource.before()](#module_mio.before)
+  * [Resource.after()](#module_mio.after)
   * [resource.isNew()](#module_mio#isNew)
   * [resource.isDirty(attr)](#module_mio#isDirty)
   * [resource.changed()](#module_mio#changed)
@@ -126,34 +132,6 @@ Use given `fn` only in node.
 - fn `function`  
 
 **Returns**: `Resource`  
-<a name="module_mio.on"></a>
-###Resource.on(ev, fn)
-Register `fn` to be called when `ev` is emitted.
-
-**Params**
-
-- ev `String` - register multiple events with space-delimited names  
-- fn `function`  
-
-**Returns**: `Resource`  
-<a name="module_mio.once"></a>
-###Resource.once(ev, fn)
-Register `fn` to be called once when `ev` is next emitted.
-
-**Params**
-
-- ev `String`  
-- fn `function`  
-
-**Returns**: `Resource`  
-<a name="module_mio.before"></a>
-###Resource.before()
-Alias for `Resource.on('before EVENT')`
-
-<a name="module_mio.after"></a>
-###Resource.after()
-Alias for `Resource.on('after EVENT')`
-
 <a name="module_mio.create"></a>
 ###Resource.create(attrs)
 Create a new resource and hydrate with given `attrs`,
@@ -232,6 +210,138 @@ Destroy resources using given `query`.
 - callback `function`  
 
 **Returns**: `Resource`  
+<a name="module_mio.hasOne"></a>
+###Resource.hasOne(attr, params)
+A one-to-one relation, where the resource has exactly one of the specified
+target resource, referenced by a foreign key on the target resource.
+
+**Params**
+
+- attr `String` - name of the attribute populated with target resource  
+- params `Object` - additional parameters passed to `.attr()`  
+  - target `Resource`  
+  - foreignKey `String` - foreign key on target resource. defaults to
+resource table name appended with `_id`.  
+  - nested `Boolean` - whether to always include (default: false)  
+
+**Returns**: `Resource`  
+**Example**  
+```javascript
+Patient.hasOne('record', {
+  target: Record,
+  foreignKey: 'patient_id'
+});
+```
+
+<a name="module_mio.hasMany"></a>
+###Resource.hasMany(attr, params)
+The `hasMany` relationship is for a resource with a one-to-many
+relationship with the target resource. The resource is referenced by a
+foreign key on the target resource.
+
+**Params**
+
+- attr `String` - name of the attribute populated with target resource  
+- params `Object` - additional parameters passed to `.attr()`  
+  - target `Resource`  
+  - foreignKey `String` - foreign key on target resource. defaults to
+resource table name appended with `_id`.  
+  - nested `Boolean` - always include relation in queries (default: false)  
+
+**Returns**: `Resource`  
+**Example**  
+```javascript
+Author.hasMany('books', {
+  target: Book,
+  foreignKey: 'author_id'
+});
+```
+
+<a name="module_mio.belongsTo"></a>
+###Resource.belongsTo(attr, params)
+The `belongsTo` relationship is used when a resource is a member of another
+target resource. It can be used in a one-to-one association as the inverse of
+`hasOne`, or in a one-to-many association as the inverse of a `hasMany`.
+In both cases, the `belongsTo` relationship is referenced by a
+foreign key on the current resource.
+
+**Params**
+
+- attr `String` - name of the attribute populated with target resource  
+- params `Object` - additional parameters passed to `.attr()`  
+  - target `Resource` | `function` - can be a function that returns
+constructor to avoid circular reference issues  
+  - foreignKey `String` - foreign key on current resource. defaults
+to `params.target` table name appended with `_id`  
+  - nested `Boolean` - whether to always include (default: false)  
+
+**Returns**: `Resource`  
+**Example**  
+```javascript
+Book.belongsTo('author', {
+  target: Author,
+  foreignKey: 'author_id'
+}):
+```
+
+<a name="module_mio.belongsToMany"></a>
+###Resource.belongsToMany(attr, params)
+The `belongsToMany` relationship is for many-to-many relations, where the
+current resource is joined to one or more of a target resource through
+another table (or resource).
+
+**Params**
+
+- attr `String` - name of the attribute populated with target resource  
+- params `Object` - additional parameters passed to `.attr()`  
+  - target `Resource` | `function` - can be a function that returns
+constructor to avoid circular reference issues  
+  - through `String` | `Resource` - table or resource for association  
+  - foreignKey `String` - foreign key of the target resource.
+defaults to `params.target` table name appended with `_id`  
+  - throughKey `String` - foreign key of the current resource.
+defaults to resource table name appended with `_id`  
+  - nested `Boolean` - whether to always include (default: false)  
+
+**Returns**: `Resource`  
+**Example**  
+```javascript
+Post.belongsToMany('tags', {
+  target: Tag,
+  foreignKey: 'tag_id',
+  throughKey: 'post_id',
+  through: 'post_tag'
+});
+```
+
+<a name="module_mio.on"></a>
+###Resource.on(ev, fn)
+Register `fn` to be called when `ev` is emitted.
+
+**Params**
+
+- ev `String` - register multiple events with space-delimited names  
+- fn `function`  
+
+**Returns**: `Resource`  
+<a name="module_mio.once"></a>
+###Resource.once(ev, fn)
+Register `fn` to be called once when `ev` is next emitted.
+
+**Params**
+
+- ev `String`  
+- fn `function`  
+
+**Returns**: `Resource`  
+<a name="module_mio.before"></a>
+###Resource.before()
+Alias for `Resource.on('before EVENT')`
+
+<a name="module_mio.after"></a>
+###Resource.after()
+Alias for `Resource.on('after EVENT')`
+
 <a name="module_mio#isNew"></a>
 ###resource.isNew()
 Check if resource is new and has not been saved.

@@ -222,6 +222,91 @@ describe('Model', function() {
     });
   });
 
+  describe('.hasOne()', function () {
+    it('should define attribute for relation', function () {
+      var Patient = Resource.extend().hasOne('record', {
+        target: Resource.extend(),
+        foreignKey: 'patient_id'
+      });
+
+      expect(Patient.attributes).to.have.property('record');
+      expect(Patient.attributes.record).to.have.property('relation');
+
+      var relation = Patient.attributes.record.relation;
+
+      expect(relation).to.have.property('type', 'hasOne');
+      expect(relation).to.have.property('foreignKey', 'patient_id');
+    });
+  });
+
+  describe('.addRelation()', function () {
+    it('should pass params to .attr()`', function () {
+      var Patient = Resource.extend().hasOne('record', {
+        target: Resource.extend(),
+        foreignKey: 'patient_id',
+        serializable: false
+      });
+
+      expect(Patient.attributes).to.have.property('record');
+      expect(Patient.attributes.record).to.have.property('serializable', false);
+    });
+  });
+
+  describe('.hasMany()', function () {
+    it('should define attribute for relation', function () {
+      var Author = Resource.extend().hasMany('books', {
+        target: Resource.extend(),
+        foreignKey: 'author_id'
+      });
+
+      expect(Author.attributes).to.have.property('books');
+      expect(Author.attributes.books).to.have.property('relation');
+
+      var relation = Author.attributes.books.relation;
+
+      expect(relation).to.have.property('type', 'hasMany');
+      expect(relation).to.have.property('foreignKey', 'author_id');
+    });
+  });
+
+  describe('.belongsTo()', function () {
+    it('should define attribute for relation', function () {
+      var Book = Resource.extend().belongsTo('author', {
+        target: Resource.extend(),
+        foreignKey: 'author_id'
+      });
+
+      expect(Book.attributes).to.have.property('author');
+      expect(Book.attributes.author).to.have.property('relation');
+
+      var relation = Book.attributes.author.relation;
+
+      expect(relation).to.have.property('type', 'belongsTo');
+      expect(relation).to.have.property('foreignKey', 'author_id');
+    });
+  });
+
+  describe('.belongsToMany()', function () {
+    it('should define attribute for relation', function () {
+      var Post = Resource.extend().belongsToMany('tags', {
+        target: Resource.extend(),
+        foreignKey: 'tag_id',
+        throughKey: 'post_id',
+        through: 'post_tag'
+      });
+
+      expect(Post.attributes).to.have.property('tags');
+      expect(Post.attributes.tags).to.have.property('relation');
+
+      var relation = Post.attributes.tags.relation;
+
+      expect(relation).to.have.property('type', 'belongsToMany');
+      expect(relation).to.have.property('foreignKey', 'tag_id');
+      expect(relation).to.have.property('throughKey', 'post_id');
+      expect(relation).to.have.property('through', 'post_tag');
+    });
+  });
+
   describe('.findOne()', function() {
     it('finds models by id', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });

@@ -2,7 +2,7 @@
 
 > Model RESTful resources using a simple, extensible, storage-agnostic prototype.
 
-* **Small**: No dependencies and only ~500 SLOC.
+* **Small**: No dependencies and core is only ~200 SLOC.
 * **Simple**: Plain enumerable attributes using ECMAScript getters and setters.
 * **Observable**: Before and after hooks for CRUD operations and lifecycle events
 * **Extensible**: Simple API for extending model prototypes with support
