@@ -154,27 +154,6 @@ describe('Model', function() {
     });
   });
 
-  describe('.on()', function() {
-    it('registers handler with multiple events', function(done) {
-      var Model = Resource.extend({ id: { primary: true } });
-      handlersCalled = 0;
-      Model.on('before create update', function(model, changed, next) {
-        handlersCalled++;
-        next();
-      });
-      var model = new Model();
-      model.id = 1;
-      model.save(function(err) {
-        model.name = 'alex';
-        model.save(function(err) {
-          if (err) return done(err);
-          expect(handlersCalled).to.equal(2);
-          done();
-        });
-      });
-    });
-  });
-
   describe('.use()', function() {
     it('extends model', function() {
       var Model = Resource.extend();
@@ -188,14 +167,14 @@ describe('Model', function() {
       var User = Resource.extend();
       var Post = Resource.extend();
 
-      User.before('findOne', function(query, callback) {
+      User.before('find one', function(query, callback) {
         callback(null, {foo: 'bar'});
       });
 
-      Post.find({}, function(err, model) {
+      Post.findOne({}, function(err, model) {
         expect(model).to.equal(undefined);
 
-        User.find({}, function (err, model) {
+        User.findOne({}, function (err, model) {
           expect(model).to.have.property('foo', 'bar');
           done();
         });
@@ -333,10 +312,10 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('findOne', function(query, cb) {
+        .before('find one', function(query, cb) {
           cb();
         })
-        .before('findOne', function(query, cb) {
+        .before('find one', function(query, cb) {
           cb(null, new Model({ id: 1 }));
         });
 
@@ -347,9 +326,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before findOne" event', function(done) {
+    it('emits "before find one" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before findOne', function(query) {
+      Model.on('before find one', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -358,15 +337,15 @@ describe('Model', function() {
       });
     });
 
-    it('emits "after findOne" event', function(done) {
+    it('emits "after find one" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
-      Model.on('after findOne', function(model) {
+      Model.on('after find one', function(model) {
         expect(model).to.be.an.instanceOf(Model);
         done();
       });
 
-      Model.before('findOne', function(query, cb) {
+      Model.before('find one', function(query, cb) {
         cb(null, new Model({ id: 1 }));
       });
 
@@ -378,7 +357,7 @@ describe('Model', function() {
     it('passes error from adapter to callback', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
-      Model.before('findOne', function(query, cb) {
+      Model.before('find one', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -389,30 +368,30 @@ describe('Model', function() {
     });
   });
 
-  describe('.findAll()', function() {
+  describe('.find()', function() {
     it('finds collection of models using query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.findAll(function(err, collection) {
+      Model.find(function(err, collection) {
         if (err) return done(err);
         expect(collection).to.be.an.instanceOf(Array);
-        Model.findAll({ id: 1 }, function(err, collection) {
+        Model.find({ id: 1 }, function(err, collection) {
           done();
         });
       });
     });
 
-    it("calls each store's findAll method", function(done) {
+    it("calls each store's find method", function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('findAll', function(query, cb) {
+        .before('find many', function(query, cb) {
           cb();
         })
-        .before('findAll', function(query, cb) {
+        .before('find many', function(query, cb) {
           cb(null, [new Model({ id: 1 })]);
         });
 
-      Model.findAll(function(err, collection) {
+      Model.find(function(err, collection) {
         if (err) return done(err);
         expect(collection).to.have.property('length', 1);
         expect(collection[0]).to.have.property('constructor', Model);
@@ -420,24 +399,24 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before findAll" event', function(done) {
+    it('emits "before find many" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before findAll', function(query) {
+      Model.on('before find many', function(query) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.findAll({ id: 1 }, function(err, collection) {
+      Model.find({ id: 1 }, function(err, collection) {
         if (err) return done(err);
       });
     });
 
-    it('emits "after findAll" event', function(done) {
+    it('emits "after find many" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after findAll', function(collection) {
+      Model.on('after find many', function(collection) {
         expect(collection).to.be.an.instanceOf(Array);
         done();
       });
-      Model.findAll({ id: 1 }, function(err, collection) {
+      Model.find({ id: 1 }, function(err, collection) {
         if (err) return done(err);
       });
     });
@@ -445,11 +424,11 @@ describe('Model', function() {
     it('passes error from adapter to callback', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
-      Model.before('findAll', function(query, cb) {
+      Model.before('find many', function(query, cb) {
         cb(new Error('test'));
       });
 
-      Model.findAll(function(err, collection) {
+      Model.find(function(err, collection) {
         expect(err).to.have.property('message', 'test')
         done();
       });
@@ -529,9 +508,9 @@ describe('Model', function() {
   describe('.destroyAll()', function() {
     it('destroys models using query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.destroyAll(function(err) {
+      Model.destroy(function(err) {
         if (err) return done(err);
-        Model.destroyAll({ id: 1 }, function(err) {
+        Model.destroy({ id: 1 }, function(err) {
           done();
         });
       });
@@ -541,36 +520,36 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('destroyAll', function(query, cb) {
+        .before('destroy many', function(query, cb) {
           cb();
         })
-        .before('destroyAll', function(query, cb) {
+        .before('destroy many', function(query, cb) {
           cb();
         });
 
-      Model.destroyAll(function(err) {
+      Model.destroy(function(err) {
         if (err) return done(err);
         done();
       });
     });
 
-    it('emits "before destroyAll" event', function(done) {
+    it('emits "before destroy many" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before destroyAll', function(query) {
+      Model.on('before destroy many', function(query) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.destroyAll({ id: 1 }, function(err) {
+      Model.destroy({ id: 1 }, function(err) {
         if (err) return done(err);
       });
     });
 
-    it('emits "after destroyAll" event', function(done) {
+    it('emits "after destroy many" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after destroyAll', function() {
+      Model.on('after destroy many', function() {
         done();
       });
-      Model.destroyAll({ id: 1 }, function(err) {
+      Model.destroy({ id: 1 }, function(err) {
         if (err) return done(err);
       });
     });
@@ -579,14 +558,14 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('destroyAll', function(query, cb) {
+        .before('destroy many', function(query, cb) {
           cb();
         })
-        .before('destroyAll', function(query, cb) {
+        .before('destroy many', function(query, cb) {
           cb(new Error('test'));
         });
 
-      Model.destroyAll(function(err) {
+      Model.destroy(function(err) {
         expect(err).to.have.property('message', 'test')
         done();
       });
@@ -596,7 +575,7 @@ describe('Model', function() {
   describe('.query()', function() {
     it('returns query object', function() {
       var Model = Resource.extend().attr('id', { primary: true });
-      var query = Model.findAll();
+      var query = Model.find();
       expect(query).to.be.an('object');
       expect(query).to.have.keys([
         'where',
@@ -613,7 +592,7 @@ describe('Model', function() {
 
     it('is chainable', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.findAll()
+      Model.find()
         .where({ name: 'alex' })
         .sort('asc')
         .limit(10)
@@ -622,7 +601,7 @@ describe('Model', function() {
 
     it('modifies query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.before('findAll', function(query, next) {
+      Model.before('find many', function(query, next) {
         expect(query).to.have.keys([
           'where',
           'sort',
@@ -632,7 +611,7 @@ describe('Model', function() {
         ]);
         done();
       });
-      Model.findAll()
+      Model.find()
         .where({ name: 'alex' })
         .sort('asc')
         .paginate({ page: 1 })

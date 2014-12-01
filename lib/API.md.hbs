@@ -7,7 +7,7 @@
 All asynchronous events receive a `next` function as the last argument,
 which must be called to continue.
 
-`before findOne`, `before findAll`, and `before count` are unique in that
+`before find one`, `before find many`, and `before count` are unique in that
 subsequent event handlers are ignored if `next` is passed a result.
 
 ### Persist data using asynchronous events
@@ -21,7 +21,7 @@ User
   .attr('id', { primary: true })
   .attr('name');
 
-User.before('save', function(user, changed, next) {
+User.before('create', function(user, changed, next) {
   MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
     if (!user.isNew()) changed._id = user.primary;
 
@@ -37,27 +37,31 @@ User.before('save', function(user, changed, next) {
 
 #### Asynchronous
 
-`before findOne` Receives arguments `query` and `next(err, result)`. Stops on result.
-`before findAll` Receives arguments `query` and `next(err, result)`. Stops on result.
-`before count`   Receives arguments `query` and `next(err, result)`. Stops on result.
-`before create`  Receives arguments `resource`, `changed`, and `next(err)`.
-`before update`  Receives arguments `resource`, `changed`, and `next(err)`.
-`before destroy` Receives arguments `resource` and `next(err)`.
+`before find one`     Receives arguments `query` and `next(err, result)`. Stops on result.
+`before find many`    Receives arguments `query` and `next(err, result)`. Stops on result.
+`before count`        Receives arguments `query` and `next(err, result)`. Stops on result.
+`before create`       Receives arguments `resource`, `changed`, and `next(err)`.
+`before update`       Receives arguments `resource`, `changed`, and `next(err)`.
+`before update many`  Receives arguments `query`, `changes`, and `next(err)`.
+`before destroy`      Receives arguments `resource` and `next(err)`.
+`before destroy many` Receives arguments `query` and `next(err)`.
 
 #### Synchronous
 
-`after findOne`  Receives argument `resource`.
-`after findAll`  Receives argument `collection`.
-`after count`    Receives argument `count`.
-`after create`   Receives arguments `resource` and `changed`.
-`after update`   Receives arguments `resource` and `changed`.
-`after destroy`  Receives argument `resource`.
-`attribute`      Receives arguments `name` and `params`.
-`change`         Receives arguments `resource`, `name`, `value`, and `prev`.
-`change:[attr]`  Receives arguments `resource`, `value`, and `prev`.
-`initializing`   Receives arguments `resource` and `attributes`.
-`initialized`    Receives argument `resource`.
-`setting`        Receives arguments `resource` and `attributes`.
+`after find one`      Receives argument `resource`.
+`after find many`     Receives argument `collection`.
+`after count`         Receives argument `count`.
+`after create`        Receives arguments `resource` and `changed`.
+`after update`        Receives arguments `resource` and `changed`.
+`after update many`   Receives arguments `changes`.
+`after destroy`       Receives argument `resource`.
+`after destroy many`  Receives argument `query`.
+`attribute`           Receives arguments `name` and `params`.
+`change`              Receives arguments `resource`, `name`, `value`, and `prev`.
+`change:[attr]`       Receives arguments `resource`, `value`, and `prev`.
+`initializing`        Receives arguments `resource` and `attributes`.
+`initialized`         Receives argument `resource`.
+`setting`             Receives arguments `resource` and `attributes`.
 
 ### Instance events
 
