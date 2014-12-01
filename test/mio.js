@@ -120,6 +120,19 @@ describe('Model', function() {
     });
   });
 
+  describe('.extend()', function () {
+    it('extends model', function() {
+      var Base = Resource.extend({
+        id: { primary: true }
+      });
+      var Extended = Base.extend();
+      var extended = new Extended();
+      expect(extended).to.be.instanceOf(Resource);
+      expect(extended).to.be.instanceOf(Base);
+      expect(extended.attributes).to.have.property('id');
+    });
+  });
+
   describe('.attr()', function() {
     it('throws error if defining two primary keys', function() {
       var Model = Resource.extend();
