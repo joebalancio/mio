@@ -53,7 +53,7 @@ User.before('create', function(user, changed, next) {
 `after count`         Receives argument `count`.
 `after create`        Receives arguments `resource` and `changed`.
 `after update`        Receives arguments `resource` and `changed`.
-`after update many`   Receives arguments `changes`.
+`after update many`   Receives arguments `query` and `changes`.
 `after destroy`       Receives argument `resource`.
 `after destroy many`  Receives argument `query`.
 `attribute`           Receives arguments `name` and `params`.

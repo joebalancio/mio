@@ -75,7 +75,9 @@ describe('Model', function() {
 
   it('sets attributes on initialization', function() {
     var model = Resource.extend({
-      id: { primary: true }
+      attributes: {
+        id: { primary: true }
+      }
     }).create({ id: 1 });
     expect(model).to.have.property('id', 1);
   });
@@ -123,7 +125,9 @@ describe('Model', function() {
   describe('.extend()', function () {
     it('extends model', function() {
       var Base = Resource.extend({
-        id: { primary: true }
+        attributes: {
+          id: { primary: true }
+        }
       });
       var Extended = Base.extend();
       var extended = new Extended();
@@ -586,7 +590,8 @@ describe('Model', function() {
         'include',
         'offset',
         'limit',
-        'page'
+        'page',
+        'with'
       ]);
     });
 
@@ -850,9 +855,11 @@ describe('Model', function() {
   describe('#toJSON()', function () {
     it('only includes serializable attributes', function () {
       var resource = Resource.extend({
-        name: {},
-        active: {
-          serializable: false
+        attributes: {
+          name: {},
+          active: {
+            serializable: false
+          }
         }
       })({ name: 'alex', active: true });
 

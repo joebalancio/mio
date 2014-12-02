@@ -51,24 +51,35 @@ See the full [API documentation](docs/API.md).
 ### Resources
 
 Define new resources by extending the base `Resource` class. You can pass
-attribute definitions to `.extend()` or use the chainable `.attr()`:
+attribute definitions to [`.extend()`](docs/API.md#module_mio.extend) or use
+the chainable [`.attr()`](docs/API.md#module_mio.attr):
 
 ```javascript
-var User = mio.Resource.extend();
-
-User
-  .attr('id', { primary: true })
-  .attr('name')
-  .attr('active', {
-    default: false
-  })
-  .attr('created', {
-    default: function () {
-      return new Date();
+var User = mio.Resource.extend({
+  attributes: {
+    id: { primary: true },
+    name: { required: true },
+    active: { default: false },
+    created: {
+      default: function() {
+        return new Date();
+      }
     }
-  });
+  },
+  sayHello: function() {
+    return "Hello I'm " + this.name;
+  }
+}, {
+  url: '/users',
+  use: [
+    Validators,
+    MongoDB(...)
+  ]
+});
 
-var user = new User({ name: 'alex' });
+var user = new User({ name: 'Mio' });
+
+user.sayHello(); // => "Hello I'm Mio"
 ```
 
 ### Queries
@@ -87,7 +98,7 @@ User.findOne(123, function(err, user) {
 Find all users matching a query:
 
 ```javascript
-User.findAll({ active: true }, function (err, users) {
+User.find({ active: true }, function (err, users) {
   // ...
 });
 ```
@@ -95,7 +106,7 @@ User.findAll({ active: true }, function (err, users) {
 Using a chainable query builder:
 
 ```javascript
-User.findAll()
+User.find()
   .where({ active: true })
   .sort({ created_at: "desc" })
   .limit(10)
@@ -106,7 +117,7 @@ User.findAll()
 
 ### Middleware
 
-Resources can use middleware functions which extend the them with various
+Resources can use middleware functions which extend them with various
 functionality such as validation, persistence, etc.
 
 Persistence:
@@ -175,8 +186,8 @@ User.before('create', function (resource, changed, next) {
   // do something before save such as validation and then call next()
 });
 
-User.after('create update', function (resource, changed) {
-  // do something after create or update
+User.after('update', function (resource, changed) {
+  // do something after update
 });
 ```
 
@@ -229,14 +240,16 @@ var mio = require('mio');
 var Validators = require('mio-validators');
 
 var User = module.exports = mio.Resource.extend({
-  id: { primary: true },
-  name: {
-    constraints: [Validators.Assert.Type('string')]
-  },
-  created: {
-    constraints: [Validators.Assert.Instance(Date)],
-    default: function () {
-      return new Date();
+  attributes: {
+    id: { primary: true },
+    name: {
+      constraints: [Validators.Assert.Type('string')]
+    },
+    created: {
+      constraints: [Validators.Assert.Instance(Date)],
+      default: function () {
+        return new Date();
+      }
     }
   }
 });
@@ -247,14 +260,14 @@ On the server:
 ```javascript
 var User = require('./models/User');
 var MongoDB = require('mio-mongo');
-var Resource = require('mio-resource');
+var ExpressResource = require('mio-resource');
 var express = require('express');
 
 User
   .use(MongoDB({
-    url: ,
+    url: 'mongodb://db.example.net:2500'
   }))
-  .use(Resource({
+  .use(ExpressResource({
     url: {
       collection: '/users',
       resource: '/users/:id'
@@ -263,9 +276,10 @@ User
 
 var app = express();
 
-app
-  .use(User.middleware())
-  .listen(3000);
+// register routes provided by ExpressResource
+User.mount(app);
+
+app.listen(3000);
 ```
 
 In the browser:

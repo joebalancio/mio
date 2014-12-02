@@ -8,16 +8,17 @@
 
 * [class: Resource ⏏](#exp_module_mio)
   * [new Resource(values)](#exp_new_module_mio)
-  * [Resource.extend(prototype)](#module_mio.extend)
+  * [Resource.extend(prototype, [statics])](#module_mio.extend)
   * [Resource.attr(name, [options])](#module_mio.attr)
   * [Resource.use(fn)](#module_mio.use)
   * [Resource.browser(fn)](#module_mio.browser)
   * [Resource.server(fn)](#module_mio.server)
   * [Resource.create(attrs)](#module_mio.create)
   * [Resource.findOne(query, callback)](#module_mio.findOne)
-  * [Resource.findAll(query, callback)](#module_mio.findAll)
+  * [Resource.find(query, callback)](#module_mio.find)
   * [Resource.count(query, callback)](#module_mio.count)
-  * [Resource.destroyAll(query, callback)](#module_mio.destroyAll)
+  * [Resource.update(query, changes, callback)](#module_mio.update)
+  * [Resource.destroy(query, callback)](#module_mio.destroy)
   * [Resource.hasOne(attr, params)](#module_mio.hasOne)
   * [Resource.hasMany(attr, params)](#module_mio.hasMany)
   * [Resource.belongsTo(attr, params)](#module_mio.belongsTo)
@@ -31,6 +32,7 @@
   * [resource.changed()](#module_mio#changed)
   * [resource.has(attr)](#module_mio#has)
   * [resource.set(attrs)](#module_mio#set)
+  * [resource.reset(attrs)](#module_mio#reset)
   * [resource.save(callback)](#module_mio#save)
   * [resource.destroy(callback)](#module_mio#destroy)
 
@@ -51,18 +53,30 @@ var user = new User({ name: "alex" });
 ```
 
 <a name="module_mio.extend"></a>
-###Resource.extend(prototype)
-Extend `Resource` with new attributes or methods.
+###Resource.extend(prototype, [statics])
+Extend `Resource` with attributes, prototype, or static properties.
 
 **Params**
 
-- prototype `Object` - extend with attribute definitions or methods  
+- prototype `Object` - extend resource prototype  
+  - attributes `Object` - attribute definitions passed to `attr()`  
+- \[statics\] `Object` - extend resource with static properties or methods  
+  - \[use\] `Array` - array of plugins to use  
+  - \[browser\] `Array` - array of browser plugins to use  
+  - \[server\] `Array` - array of server plugins to use  
 
 **Returns**: `Resource`  
 **Example**  
 ```javascript
 var User = mio.Resource.extend({
-  id: { primary: true }
+  attributes: {
+    id: { primary: true }
+  },
+}, {
+  use: [
+    Validators,
+    MongoDB(...)
+  ]
 });
 ```
 
@@ -161,8 +175,8 @@ User.findOne(123, function (err, user) {
 })
 ```
 
-<a name="module_mio.findAll"></a>
-###Resource.findAll(query, callback)
+<a name="module_mio.find"></a>
+###Resource.find(query, callback)
 Find collection of resources using given `query`.
 
 **Params**
@@ -173,7 +187,7 @@ Find collection of resources using given `query`.
 **Returns**: `Resource`  
 **Example**  
 ```javascript
-User.findAll({ active: true }, function (err, users) {
+User.find({ active: true }, function (err, users) {
   // ...
 });
 ```
@@ -181,7 +195,7 @@ User.findAll({ active: true }, function (err, users) {
 Queries can also be composed using chainable methods:
 
 ```javascript
-User.findAll()
+User.find()
  .where({ active: true })
  .sort({ created_at: "desc" })
  .limit(10)
@@ -200,8 +214,26 @@ Count resources using given `query`.
 - callback `function`  
 
 **Returns**: `Resource`  
-<a name="module_mio.destroyAll"></a>
-###Resource.destroyAll(query, callback)
+<a name="module_mio.update"></a>
+###Resource.update(query, changes, callback)
+Update all resources using given `query` and corresponding set of `changes`.
+
+**Params**
+
+- query `Object`  
+- changes `Object` | `Array` - array of updates or patch to be applied  
+- callback `function`  
+
+**Returns**: `Resource`  
+**Example**  
+```javascript
+User.update({ active: true }, { active: false }, function(err) {
+  // ...
+});
+```
+
+<a name="module_mio.destroy"></a>
+###Resource.destroy(query, callback)
 Destroy resources using given `query`.
 
 **Params**
@@ -320,7 +352,7 @@ Register `fn` to be called when `ev` is emitted.
 
 **Params**
 
-- ev `String` - register multiple events with space-delimited names  
+- ev `String`  
 - fn `function`  
 
 **Returns**: `Resource`  
@@ -380,6 +412,16 @@ Set given resource `attrs`.
 - attrs `Object`  
 
 **Returns**: `Resource`  
+<a name="module_mio#reset"></a>
+###resource.reset(attrs)
+Reset attributes for resource. Marks resource as clean and does not fire
+events.
+
+**Params**
+
+- attrs `Object`  
+
+**Returns**: `Resource`  
 <a name="module_mio#save"></a>
 ###resource.save(callback)
 Persist resource to storage. Runs "create" or "update" event
@@ -405,7 +447,7 @@ persistence plugins.
 All asynchronous events receive a `next` function as the last argument,
 which must be called to continue.
 
-`before findOne`, `before findAll`, and `before count` are unique in that
+`before find one`, `before find many`, and `before count` are unique in that
 subsequent event handlers are ignored if `next` is passed a result.
 
 ### Persist data using asynchronous events
@@ -419,7 +461,7 @@ User
   .attr('id', { primary: true })
   .attr('name');
 
-User.before('save', function(user, changed, next) {
+User.before('create', function(user, changed, next) {
   MongoClient.connect('mongodb://127.0.0.01:27017/test', function(err, db) {
     if (!user.isNew()) changed._id = user.primary;
 
@@ -435,27 +477,31 @@ User.before('save', function(user, changed, next) {
 
 #### Asynchronous
 
-`before findOne` Receives arguments `query` and `next(err, result)`. Stops on result.
-`before findAll` Receives arguments `query` and `next(err, result)`. Stops on result.
-`before count`   Receives arguments `query` and `next(err, result)`. Stops on result.
-`before create`  Receives arguments `resource`, `changed`, and `next(err)`.
-`before update`  Receives arguments `resource`, `changed`, and `next(err)`.
-`before destroy` Receives arguments `resource` and `next(err)`.
+`before find one`     Receives arguments `query` and `next(err, result)`. Stops on result.
+`before find many`    Receives arguments `query` and `next(err, result)`. Stops on result.
+`before count`        Receives arguments `query` and `next(err, result)`. Stops on result.
+`before create`       Receives arguments `resource`, `changed`, and `next(err)`.
+`before update`       Receives arguments `resource`, `changed`, and `next(err)`.
+`before update many`  Receives arguments `query`, `changes`, and `next(err)`.
+`before destroy`      Receives arguments `resource` and `next(err)`.
+`before destroy many` Receives arguments `query` and `next(err)`.
 
 #### Synchronous
 
-`after findOne`  Receives argument `resource`.
-`after findAll`  Receives argument `collection`.
-`after count`    Receives argument `count`.
-`after create`   Receives arguments `resource` and `changed`.
-`after update`   Receives arguments `resource` and `changed`.
-`after destroy`  Receives argument `resource`.
-`attribute`      Receives arguments `name` and `params`.
-`change`         Receives arguments `resource`, `name`, `value`, and `prev`.
-`change:[attr]`  Receives arguments `resource`, `value`, and `prev`.
-`initializing`   Receives arguments `resource` and `attributes`.
-`initialized`    Receives argument `resource`.
-`setting`        Receives arguments `resource` and `attributes`.
+`after find one`      Receives argument `resource`.
+`after find many`     Receives argument `collection`.
+`after count`         Receives argument `count`.
+`after create`        Receives arguments `resource` and `changed`.
+`after update`        Receives arguments `resource` and `changed`.
+`after update many`   Receives arguments `query` and `changes`.
+`after destroy`       Receives argument `resource`.
+`after destroy many`  Receives argument `query`.
+`attribute`           Receives arguments `name` and `params`.
+`change`              Receives arguments `resource`, `name`, `value`, and `prev`.
+`change:[attr]`       Receives arguments `resource`, `value`, and `prev`.
+`initializing`        Receives arguments `resource` and `attributes`.
+`initialized`         Receives argument `resource`.
+`setting`             Receives arguments `resource` and `attributes`.
 
 ### Instance events
 
