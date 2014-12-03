@@ -118,22 +118,61 @@ describe('Model', function() {
       Model = Resource.extend().attr('id', { primary: true });
       var model = new Model();
       model.primary = 3;
-      expect(model.id).to.equal(3);
+      expect(model.primary).to.equal(3);
     });
   });
 
   describe('.extend()', function () {
-    it('extends model', function() {
+    it('extends model with static props', function() {
       var Base = Resource.extend({
         attributes: {
           id: { primary: true }
+        }
+      }, {
+        description: "test",
+        use: [function(){}],
+        browser: [function(){}],
+        server: [function(){}]
+      });
+      var Extended = Base.extend();
+      expect(Extended).to.have.property('description', 'test');
+      var extended = new Extended();
+      expect(extended).to.be.instanceOf(Resource);
+      expect(extended).to.be.instanceOf(Base);
+      expect(extended.attributes).to.have.property('id');
+    });
+
+    it('extends model prototype', function() {
+      var Base = Resource.extend({
+        attributes: {
+          id: { primary: true }
+        },
+        test: function() {
+          return "test";
         }
       });
       var Extended = Base.extend();
       var extended = new Extended();
       expect(extended).to.be.instanceOf(Resource);
       expect(extended).to.be.instanceOf(Base);
-      expect(extended.attributes).to.have.property('id');
+      expect(extended).to.have.property('test');
+      expect(extended.test).to.be.a('function');
+      expect(extended.test()).to.equal('test');
+    });
+  });
+
+  describe('.once()', function() {
+    it('calls handler only once', function() {
+      called = 0;
+
+      var Model = Resource.extend().once('foo', function() {
+        called++;
+      });
+
+      Model.emit('foo');
+      Model.emit('foo');
+
+      expect(called).to.equal(1);
     });
   });
 
@@ -144,6 +183,14 @@ describe('Model', function() {
       expect(function() {
         Model.attr('_id', { primary: true });
       }).to.throw('Primary attribute already exists: id');
+    });
+
+    it('throws error if defining existing key', function() {
+      var Model = Resource.extend();
+      Model.attr('id', { primary: true });
+      expect(function() {
+        Model.attr('id');
+      }).to.throw('id attribute already exists');
     });
 
     it('emits "attribute" event', function(done) {
@@ -165,6 +212,12 @@ describe('Model', function() {
         this.test = 1;
       });
       expect(Model).to.have.property('test', 1);
+    });
+
+    it('throws error if plugin is not a function', function() {
+      expect(function() {
+        Resource.extend().use(1);
+      }).to.throw(/must be a function/);
     });
 
     it('does not pollute other models', function(done) {
@@ -189,6 +242,7 @@ describe('Model', function() {
   describe('.browser()', function() {
     it('only runs methods in browser', function() {
       var Model = Resource.extend();
+      global.window = {};
       Model.browser(function() {
         this.test = 1;
       });
@@ -509,7 +563,72 @@ describe('Model', function() {
     });
   });
 
-  describe('.destroyAll()', function() {
+  describe('.update()', function() {
+    it('updates models using query', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      Model.update({ id: 1 }, { id: 2 }, function(err) {
+        done();
+      });
+    });
+
+    it("calls each store's updateAll method", function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+
+      Model
+        .before('update many', function(query, changes, cb) {
+          cb();
+        })
+        .before('update many', function(query, changes, cb) {
+          cb();
+        });
+
+      Model.update({}, {}, function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "before update many" event', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      Model.on('before update many', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Model.update({ id: 1 }, { id: 2 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "after update many" event', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      Model.on('after update many', function() {
+        done();
+      });
+      Model.update({ id: 1 }, { id: 2 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+
+      Model
+        .before('update many', function(query, changes, cb) {
+          cb();
+        })
+        .before('update many', function(query, changes, cb) {
+          cb(new Error('test'));
+        });
+
+      Model.update({}, {}, function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+
+  describe('.destroy()', function() {
     it('destroys models using query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
       Model.destroy(function(err) {
@@ -597,11 +716,39 @@ describe('Model', function() {
 
     it('is chainable', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.find()
+      Model.findOne()
+      .where({ name: 'alex' })
+      .sort('asc')
+      .limit(10)
+      .with('related')
+      .exec(function(err) {
+        if (err) return done(err);
+
+        Model.find()
         .where({ name: 'alex' })
         .sort('asc')
         .limit(10)
-        .exec(done);
+        .with(['related'])
+        .exec(function(err) {
+          if (err) return done(err);
+
+          Model.count()
+          .where({ name: 'alex' })
+          .sort({
+            name: 'asc'
+          })
+          .limit(10)
+          .exec(function(err) {
+            if (err) return done(err);
+
+            Model.destroy()
+            .where({ name: 'alex' })
+            .sort('asc')
+            .limit(10)
+            .exec(done);
+          });
+        });
+      });
     });
 
     it('modifies query', function(done) {
@@ -658,7 +805,7 @@ describe('Model', function() {
       var Model = Resource.extend()
         .attr('id', { primary: true })
         .attr('name');
-      var model = Model.create({ id: 1, name: 'alex', age: 26 });
+      var model = Model.create().set({ id: 1, name: 'alex', age: 26 });
       expect(model.id).to.equal(1);
       expect(model.name).to.equal('alex');
       expect(model).to.not.have.property('age');
@@ -675,6 +822,31 @@ describe('Model', function() {
         });
       var model = new Model();
       model.set({ name: 'alex' });
+    });
+  });
+
+  describe('#reset()', function() {
+    it('resets values for defined attributes', function() {
+      var Model = Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name');
+      var model = Model.create().reset({ id: 1, name: 'alex', age: 26 });
+      expect(model.id).to.equal(1);
+      expect(model.name).to.equal('alex');
+      expect(model).to.not.have.property('age');
+    });
+
+    it('emits "setting" event', function(done) {
+      var Model = Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name')
+        .on('reset', function(model, attrs) {
+          expect(model).to.have.property('constructor', Model);
+          expect(attrs).to.have.property('name', 'alex');
+          done();
+        });
+      var model = new Model();
+      model.reset({ name: 'alex' });
     });
   });
 
@@ -762,7 +934,7 @@ describe('Model', function() {
 
     it('emits "after create" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after create', function(model, changed) {
+      Model.after('create', function(model, changed) {
         expect(model).to.be.an.instanceOf(Model);
       });
       var model = Model.create().set('id', 1);

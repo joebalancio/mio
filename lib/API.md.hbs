@@ -62,6 +62,7 @@ User.before('create', function(user, changed, next) {
 `initializing`        Receives arguments `resource` and `attributes`.
 `initialized`         Receives argument `resource`.
 `setting`             Receives arguments `resource` and `attributes`.
+`reset`               Receives arguments `resource` and `attributes`.
 
 ### Instance events
 
@@ -79,3 +80,4 @@ User.before('create', function(user, changed, next) {
 `change`         Receives arguments `name`, `value`, and `prev`.
 `change:[attr]`  Receives arguments `value`, and `prev`.
 `setting`        Receives argument `attributes`.
+`reset`          Receives argument `attributes`.

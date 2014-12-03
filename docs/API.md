@@ -27,14 +27,14 @@
   * [Resource.once(ev, fn)](#module_mio.once)
   * [Resource.before()](#module_mio.before)
   * [Resource.after()](#module_mio.after)
+  * [resource.save(callback)](#module_mio#save)
+  * [resource.destroy(callback)](#module_mio#destroy)
   * [resource.isNew()](#module_mio#isNew)
   * [resource.isDirty(attr)](#module_mio#isDirty)
   * [resource.changed()](#module_mio#changed)
   * [resource.has(attr)](#module_mio#has)
   * [resource.set(attrs)](#module_mio#set)
   * [resource.reset(attrs)](#module_mio#reset)
-  * [resource.save(callback)](#module_mio#save)
-  * [resource.destroy(callback)](#module_mio#destroy)
 
 <a name="exp_new_module_mio"></a>
 ###new Resource(values)
@@ -374,6 +374,26 @@ Alias for `Resource.on('before EVENT')`
 ###Resource.after()
 Alias for `Resource.on('after EVENT')`
 
+<a name="module_mio#save"></a>
+###resource.save(callback)
+Persist resource to storage. Runs "create" or "update" event
+handlers registered by persistence plugins.
+
+**Params**
+
+- callback `function`  
+
+**Returns**: `Resource`  
+<a name="module_mio#destroy"></a>
+###resource.destroy(callback)
+Remove resource from storage. Runs "destroy" event handlers registered by
+persistence plugins.
+
+**Params**
+
+- callback `function`  
+
+**Returns**: `Resource`  
 <a name="module_mio#isNew"></a>
 ###resource.isNew()
 Check if resource is new and has not been saved.
@@ -414,32 +434,11 @@ Set given resource `attrs`.
 **Returns**: `Resource`  
 <a name="module_mio#reset"></a>
 ###resource.reset(attrs)
-Reset attributes for resource. Marks resource as clean and does not fire
-events.
+Reset attributes for resource. Marks resource as clean.
 
 **Params**
 
 - attrs `Object`  
-
-**Returns**: `Resource`  
-<a name="module_mio#save"></a>
-###resource.save(callback)
-Persist resource to storage. Runs "create" or "update" event
-handlers registered by persistence plugins.
-
-**Params**
-
-- callback `function`  
-
-**Returns**: `Resource`  
-<a name="module_mio#destroy"></a>
-###resource.destroy(callback)
-Remove resource from storage. Runs "destroy" event handlers registered by
-persistence plugins.
-
-**Params**
-
-- callback `function`  
 
 **Returns**: `Resource`  
 ## Events
@@ -502,6 +501,7 @@ User.before('create', function(user, changed, next) {
 `initializing`        Receives arguments `resource` and `attributes`.
 `initialized`         Receives argument `resource`.
 `setting`             Receives arguments `resource` and `attributes`.
+`reset`               Receives arguments `resource` and `attributes`.
 
 ### Instance events
 
@@ -519,3 +519,4 @@ User.before('create', function(user, changed, next) {
 `change`         Receives arguments `name`, `value`, and `prev`.
 `change:[attr]`  Receives arguments `value`, and `prev`.
 `setting`        Receives argument `attributes`.
+`reset`          Receives argument `attributes`.
