@@ -1,12 +1,13 @@
 # mio [![Build Status](https://img.shields.io/travis/mio/mio.svg?style=flat)](http://travis-ci.org/mio/mio) [![Coverage Status](https://img.shields.io/coveralls/mio/mio.svg?style=flat)](https://coveralls.io/r/mio/mio?branch=master) [![Bower version](https://img.shields.io/bower/v/mio.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio.svg?style=flat)](http://badge.fury.io/js/mio) [![Dependency Status](https://img.shields.io/david/mio/mio.svg?style=flat)](http://david-dm.org/mio/mio)
 
-> Model RESTful resources using a simple, extensible, storage-agnostic prototype.
+> RESTful resources for both client and server.
 
-* No dependencies and core is only ~200 SLOC
-* Plain enumerable attributes using ECMAScript getters and setters
-* Hooks before and after CRUD operations and lifecycle events
-* Simple Backbone-style API for extending resources
-* Runs in the browser or on the server with node.js
+* Small readable core (only ~200 SLOC)
+* Simple enumerable attributes using ECMAScript getters and setters
+* Hooks and events before and after CRUD operations and object lifecycle
+* Backbone-style API for extending resources
+* Modular. Plugins provide storage, validation, etc.
+* Browser and node.js support
 
 ## Installation
 
@@ -43,7 +44,7 @@ See the full [API documentation](docs/API.md).
 
 * [Resources](#resources)
 * [Queries](#queries)
-* [Middleware](#middleware)
+* [Plugins](#plugins)
 * [Hooks](#hooks)
 * [Relations](#relations)
 * [REST API](#rest-api)
@@ -69,12 +70,6 @@ var User = mio.Resource.extend({
   sayHello: function() {
     return "Hello I'm " + this.name;
   }
-}, {
-  url: '/users',
-  use: [
-    Validators,
-    MongoDB(...)
-  ]
 });
 
 var user = new User({ name: 'Mio' });
@@ -84,8 +79,9 @@ user.sayHello(); // => "Hello I'm Mio"
 
 ### Queries
 
-Query methods are used in combination with hooks for fetching resources from a
-database, such as provided by various storage plugins.
+Query methods provide a consistent interface for fetching resources.
+Storage plugins use the asynchronous events provided for each method to fetch or
+persist resources to a database.
 
 Find one user:
 
@@ -115,64 +111,30 @@ User.find()
   });
 ```
 
-### Middleware
+See the [API documentation](docs/API.md) for a complete list of query methods
+and event information.
 
-Resources can use middleware functions which extend them with various
-functionality such as validation, persistence, etc.
+### Plugins
 
-Persistence:
+Resources may use plugin functions which extend them with functionality such
+as validation, persistence, etc.
 
 ```javascript
+var mio = require('mio');
 var MongoDB = require('mio-mongo');
+var User = mio.Resource.extend();
 
-User
-  .attr('id', { primary: true })
-  .attr('name')
-  .use(MongoDB({
-    url: 'mongodb://db.example.net:2500'
-  }));
-
-var user = new User({ name: 'alex' });
-
-// persist to mongodb
-user.save(function(err) {
-  // ...
-});
-
-// fetch from mongodb
-User.findOne({ name: 'alex' }, function (err, user) {
-  // remove from mongodb
-  user.destroy(function (err) {
-    // ...
-  });
-});
+User.use(MongoDB({
+  url: 'mongodb://db.example.net:2500'
+}));
 ```
 
-Validation:
+Browser or server specific plugins:
 
 ```javascript
-var Validators = require('mio-validators');
+User.browser(plugin);
 
-User
-  .attr('id', { primary: true })
-  .attr('name', {
-    constraints: [
-      Validators.Assert.Type('string'),
-      Validators.Assert.Length({ min: 2, max: 32 })
-    ]
-  })
-  .use(Validators);
-
-var user = new User();
-
-user.name = 123;
-
-user.save(function (err) {
-  console.log(err);
-  // { [Error: Validation(s) failed.]
-  //   violations: { name: [ '`123` is not of type string' ] }
-  // }
-});
+User.server(plugin);
 ```
 
 ### Hooks
@@ -196,7 +158,7 @@ See the full [documentation for events](docs/API.md#Events).
 ### Relations
 
 Define relationships between resources in combination with a supporting storage
-adapter.
+plugin.
 
 ```javascript
 Author.hasMany('books', {
@@ -230,10 +192,11 @@ See the [relations API](docs/API.md#module_mio.hasOne) for more information.
 
 ### REST API
 
-Create a REST API server from your models and interact with them from the
-browser using the same interface.
+Create a REST API server from your resources and interact with them from the
+browser using the same interface. No need for any route handling or AJAX
+boilerplate.
 
-Shared between browser and server:
+Resource definition shared between browser and server:
 
 ```javascript
 var mio = require('mio');
@@ -243,9 +206,11 @@ var User = module.exports = mio.Resource.extend({
   attributes: {
     id: { primary: true },
     name: {
+      required: true,
       constraints: [Validators.Assert.Type('string')]
     },
     created: {
+      required: true,
       constraints: [Validators.Assert.Instance(Date)],
       default: function () {
         return new Date();
@@ -255,7 +220,7 @@ var User = module.exports = mio.Resource.extend({
 });
 ```
 
-On the server:
+Extended on the server with server-specific plugins:
 
 ```javascript
 var User = require('./models/User');
