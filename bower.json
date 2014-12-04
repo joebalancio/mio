@@ -7,10 +7,15 @@
     "Alexander Mingoia"
   ],
   "keywords": [
+    "REST",
+    "resource",
+    "REST resources",
     "model",
+    "models",
     "db",
     "database",
     "orm",
+    "odm",
     "sync",
     "store"
   ],
