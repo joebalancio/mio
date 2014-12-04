@@ -487,9 +487,9 @@ User.before('create', function(user, changed, next) {
 
 #### Synchronous
 
-`after find one`      Receives argument `resource`.
-`after find many`     Receives argument `collection`.
-`after count`         Receives argument `count`.
+`after find one`      Receives argument `query` and `resource`.
+`after find many`     Receives argument `query` and `collection`.
+`after count`         Receives argument `query` and `count`.
 `after create`        Receives arguments `resource` and `changed`.
 `after update`        Receives arguments `resource` and `changed`.
 `after update many`   Receives arguments `query` and `changes`.

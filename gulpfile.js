@@ -10,8 +10,7 @@ var buffer = require('vinyl-buffer')
   , mochaPhantomJS = require('gulp-mocha-phantomjs')
   , source = require('vinyl-source-stream')
   , stylish = require('jshint-stylish')
-  , spawn = require('child_process').spawn
-  , wrapUMD = require('gulp-wrap-umd');
+  , spawn = require('child_process').spawn;
 
 gulp.task('coveralls', ['instrument'], function(done) {
   if (!process.env.COVERALLS_REPO_TOKEN) {
@@ -65,10 +64,13 @@ gulp.task('instrument', function() {
 });
 
 gulp.task('wrap-umd', function() {
-  return gulp.src('lib/mio.js')
-    .pipe(wrapUMD({
-      namespace: "mio"
-    }))
+  var bundler = new Browserify({
+    standalone: 'mio'
+  });
+  bundler.add('./lib/mio.js');
+  bundler.exclude('./lib-cov/mio');
+  return bundler.bundle()
+    .pipe(source('mio.js'))
     .pipe(gulp.dest('dist'));
 });
 
