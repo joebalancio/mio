@@ -1,19 +1,25 @@
 {
   "name": "mio",
-  "description": "Modern idiomatic models for the browser and node.js.",
+  "description": "RESTful resources for both client and server using a simple, extensible, storage-agnostic prototype.",
   "version": "0.9.0",
-  "repo": "alexmingoia/mio",
+  "repo": "mio/mio",
   "keywords": [
+    "REST",
+    "resource",
+    "REST resources",
     "model",
+    "models",
     "db",
     "database",
     "orm",
+    "odm",
     "sync",
     "store"
   ],
-  "main": "./lib/model.js",
+  "main": "./lib/mio.js",
   "scripts": [
-    "lib/model.js"
+    "lib/mio.js",
+    "lib/resource.js"
   ],
   "license": "MIT"
 }
