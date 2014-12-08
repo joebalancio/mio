@@ -2,6 +2,15 @@
 
 > RESTful resources for both client and server.
 
+Mio provides a common model layer between client and server for building REST
+APIs and web applications that interact with them.
+
+Create a REST API server from your resources and interact with them from the
+browser using the same interface. No need for any route handling or AJAX
+boilerplate. [mio-express](https://github.com/mio/express) and
+[mio-ajax](https://github.com/mio/ajax) can be used in the browser and
+server respectively to provide automatic client-server communication.
+
 * Small readable core (only ~200 SLOC)
 * Simple enumerable attributes using ECMAScript getters and setters
 * Hooks and events before and after CRUD operations and object lifecycle
@@ -194,7 +203,9 @@ See the [relations API](docs/API.md#module_mio.hasOne) for more information.
 
 Create a REST API server from your resources and interact with them from the
 browser using the same interface. No need for any route handling or AJAX
-boilerplate.
+boilerplate. [mio-express](https://github.com/mio/express) and
+[mio-ajax](https://github.com/mio/ajax) can be used in the browser and
+server respectively to provide automatic client-server communication.
 
 Resource definition shared between browser and server:
 
@@ -232,7 +243,7 @@ User
   .use(MongoDB({
     url: 'mongodb://db.example.net:2500'
   }))
-  .use(ExpressResource({
+  .use(ExpressResource.plugin({
     url: {
       collection: '/users',
       resource: '/users/:id'
@@ -242,7 +253,7 @@ User
 var app = express();
 
 // register routes provided by ExpressResource
-User.mount(app);
+app.use(User.router);
 
 app.listen(3000);
 ```

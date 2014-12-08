@@ -897,7 +897,7 @@ describe('Model', function() {
       var model = Model.create({ id: 1 });
 
       model.save(function(err) {
-        expect(err).to.equal(null);
+        expect(err).to.be.empty();
         expect(model.id).to.equal(1);
         done();
       });

@@ -476,47 +476,47 @@ User.before('create', function(user, changed, next) {
 
 #### Asynchronous
 
-`before find one`     Receives arguments `query` and `next(err, result)`. Stops on result.
-`before find many`    Receives arguments `query` and `next(err, result)`. Stops on result.
-`before count`        Receives arguments `query` and `next(err, result)`. Stops on result.
-`before create`       Receives arguments `resource`, `changed`, and `next(err)`.
-`before update`       Receives arguments `resource`, `changed`, and `next(err)`.
-`before update many`  Receives arguments `query`, `changes`, and `next(err)`.
-`before destroy`      Receives arguments `resource` and `next(err)`.
+`before find one`     Receives arguments `query` and `next(err, result)`. Stops on result.  
+`before find many`    Receives arguments `query` and `next(err, result)`. Stops on result.  
+`before count`        Receives arguments `query` and `next(err, result)`. Stops on result.  
+`before create`       Receives arguments `resource`, `changed`, and `next(err)`.  
+`before update`       Receives arguments `resource`, `changed`, and `next(err)`.  
+`before update many`  Receives arguments `query`, `changes`, and `next(err)`.  
+`before destroy`      Receives arguments `resource` and `next(err)`.  
 `before destroy many` Receives arguments `query` and `next(err)`.
 
 #### Synchronous
 
-`after find one`      Receives argument `query` and `resource`.
-`after find many`     Receives argument `query` and `collection`.
-`after count`         Receives argument `query` and `count`.
-`after create`        Receives arguments `resource` and `changed`.
-`after update`        Receives arguments `resource` and `changed`.
-`after update many`   Receives arguments `query` and `changes`.
-`after destroy`       Receives argument `resource`.
-`after destroy many`  Receives argument `query`.
-`attribute`           Receives arguments `name` and `params`.
-`change`              Receives arguments `resource`, `name`, `value`, and `prev`.
-`change:[attr]`       Receives arguments `resource`, `value`, and `prev`.
-`initializing`        Receives arguments `resource` and `attributes`.
-`initialized`         Receives argument `resource`.
-`setting`             Receives arguments `resource` and `attributes`.
+`after find one`      Receives argument `query` and `resource`.  
+`after find many`     Receives argument `query` and `collection`.  
+`after count`         Receives argument `query` and `count`.  
+`after create`        Receives arguments `resource` and `changed`.  
+`after update`        Receives arguments `resource` and `changed`.  
+`after update many`   Receives arguments `query` and `changes`.  
+`after destroy`       Receives argument `resource`.  
+`after destroy many`  Receives argument `query`.  
+`attribute`           Receives arguments `name` and `params`.  
+`change`              Receives arguments `resource`, `name`, `value`, and `prev`.  
+`change:[attr]`       Receives arguments `resource`, `value`, and `prev`.  
+`initializing`        Receives arguments `resource` and `attributes`.  
+`initialized`         Receives argument `resource`.  
+`setting`             Receives arguments `resource` and `attributes`.  
 `reset`               Receives arguments `resource` and `attributes`.
 
 ### Instance events
 
 #### Asynchronous
 
-`before create`  Receives arguments `changed` and `next(err)`.
-`before update`  Receives arguments `changed` and `next(err)`.
+`before create`  Receives arguments `changed` and `next(err)`.  
+`before update`  Receives arguments `changed` and `next(err)`.  
 `before destroy` Receives argument `next(err)`.
 
 #### Synchronous
 
-`after create`   Receives argument `changed`.
-`after update`   Receives argument `changed`.
-`after destroy`
-`change`         Receives arguments `name`, `value`, and `prev`.
-`change:[attr]`  Receives arguments `value`, and `prev`.
-`setting`        Receives argument `attributes`.
-`reset`          Receives argument `attributes`.
+`after create`   Receives argument `changed`.  
+`after update`   Receives argument `changed`.  
+`after destroy`  
+`change`         Receives arguments `name`, `value`, and `prev`.  
+`change:[attr]`  Receives arguments `value`, and `prev`.  
+`setting`        Receives argument `attributes`.  
+`reset`          Receives argument `attributes`.  
