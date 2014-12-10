@@ -95,8 +95,8 @@ attributes.
 
 **Fires**
 
-[initializing](#event_initializing)
-[initialized](#event_initialized)
+[initializing](#event_initializing)  
+[initialized](#event_initialized)  
 
 **Example**  
 ```javascript
@@ -116,8 +116,8 @@ attributes.
 
 **Fires**
 
-[initializing](#event_initializing)
-[initialized](#event_initialized)
+[initializing](#event_initializing)  
+[initialized](#event_initialized)  
 
 **Example**  
 ```javascript
@@ -169,7 +169,7 @@ Define a resource attribute with the given `name` and `options`.
 **Returns**: `Resource`  
 **Fires**
 
-[attribute](#event_attribute)
+[attribute](#event_attribute)  
 
 **Example**  
 ```javascript
@@ -246,8 +246,8 @@ Find a resource with given `id` or `query`.
 **Returns**: `Resource`  
 **Fires**
 
-[before find one](#event_before find one)
-[after find one](#event_after find one)
+[before find one](#event_before find one)  
+[after find one](#event_after find one)  
 
 **Example**  
 ```javascript
@@ -268,8 +268,8 @@ Find collection of resources using given `query`.
 **Returns**: `Resource`  
 **Fires**
 
-[before find many](#event_before find many)
-[after find many](#event_after find many)
+[before find many](#event_before find many)  
+[after find many](#event_after find many)  
 
 **Example**  
 ```javascript
@@ -302,8 +302,8 @@ Count resources using given `query`.
 **Returns**: `Resource`  
 **Fires**
 
-[before count](#event_before count)
-[after count](#event_after count)
+[before count](#event_before count)  
+[after count](#event_after count)  
 
 <a name="module_mio.Resource.update"></a>
 ##Resource.update(query, changes, callback)
@@ -318,8 +318,8 @@ Update all resources using given `query` and corresponding set of `changes`.
 **Returns**: `Resource`  
 **Fires**
 
-[before update many](#event_before update many)
-[after update many](#event_after update many)
+[before update many](#event_before update many)  
+[after update many](#event_after update many)  
 
 **Example**  
 ```javascript
@@ -340,8 +340,8 @@ Destroy resources using given `query`.
 **Returns**: `Resource`  
 **Fires**
 
-[before destroy many](#event_before destroy many)
-[after destroy many](#event_after destroy many)
+[before destroy many](#event_before destroy many)  
+[after destroy many](#event_after destroy many)  
 
 <a name="module_mio.Resource.hasOne"></a>
 ##Resource.hasOne(attr, params)
@@ -487,10 +487,10 @@ handlers registered by persistence plugins.
 **Returns**: `Resource`  
 **Fires**
 
-[before create](#event_before create)
-[before update](#event_before update)
-[after create](#event_after create)
-[after update](#event_after update)
+[before create](#event_before create)  
+[before update](#event_before update)  
+[after create](#event_after create)  
+[after update](#event_after update)  
 
 <a name="module_mio.Resource#destroy"></a>
 ##resource.destroy(callback)
@@ -504,8 +504,8 @@ persistence plugins.
 **Returns**: `Resource`  
 **Fires**
 
-[before destroy](#event_before destroy)
-[after destroy](#event_after destroy)
+[before destroy](#event_before destroy)  
+[after destroy](#event_after destroy)  
 
 <a name="module_mio.Resource#isNew"></a>
 ##resource.isNew()
@@ -547,7 +547,7 @@ Set given resource `attrs`.
 **Returns**: `Resource`  
 **Fires**
 
-[setting](#event_setting)
+[setting](#event_setting)  
 
 <a name="module_mio.Resource#reset"></a>
 ##resource.reset(attrs)
@@ -560,7 +560,7 @@ Reset attributes for resource. Marks resource as clean.
 **Returns**: `Resource`  
 **Fires**
 
-[reset](#event_reset)
+[reset](#event_reset)  
 
 
 
