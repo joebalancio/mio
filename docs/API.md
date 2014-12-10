@@ -31,6 +31,7 @@
   * [resource.has(attr)](#module_mio.Resource#has)
   * [resource.set(attrs)](#module_mio.Resource#set)
   * [resource.reset(attrs)](#module_mio.Resource#reset)
+
 ## Events
 
 * [event: "after find one"](#event_after find one)
