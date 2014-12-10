@@ -31,7 +31,6 @@
   * [resource.has(attr)](#module_mio.Resource#has)
   * [resource.set(attrs)](#module_mio.Resource#set)
   * [resource.reset(attrs)](#module_mio.Resource#reset)
-
 ## Events
 
 * [event: "after find one"](#event_after find one)
@@ -39,8 +38,8 @@
 * [event: "after count"](#event_after count)
 * [event: "after create"](#event_after create)
 * [event: "after update"](#event_after update)
-* [event: "after destroy"](#event_after destroy)
 * [event: "after update many"](#event_after update many)
+* [event: "after destroy"](#event_after destroy)
 * [event: "after destroy many"](#event_after destroy many)
 * [event: "attribute"](#event_attribute)
 * [event: "before find one"](#event_before find one)
@@ -48,8 +47,8 @@
 * [event: "before count"](#event_before count)
 * [event: "before create"](#event_before create)
 * [event: "before update"](#event_before update)
-* [event: "before destroy"](#event_before destroy)
 * [event: "before update many"](#event_before update many)
+* [event: "before destroy"](#event_before destroy)
 * [event: "before destroy many"](#event_before destroy many)
 * [event: "change"](#event_change)
 * [event: "change:[attr]"](#change_[attr])
@@ -95,8 +94,8 @@ attributes.
 
 **Fires**
 
-[initializing](#event_initializing)  
-[initialized](#event_initialized)  
+- [event:foobar](event:foobar)
+- [initialized](#event_initialized)
 
 **Example**  
 ```javascript
@@ -116,8 +115,8 @@ attributes.
 
 **Fires**
 
-[initializing](#event_initializing)  
-[initialized](#event_initialized)  
+- [event:foobar](event:foobar)
+- [initialized](#event_initialized)
 
 **Example**  
 ```javascript
@@ -166,11 +165,11 @@ Define a resource attribute with the given `name` and `options`.
   - \[get\] `function` - accessor function  
   - \[primary\] `Boolean` - use attribute as primary key  
 
-**Returns**: `Resource`  
 **Fires**
 
-[attribute](#event_attribute)  
+- [attribute](#event_attribute)
 
+**Returns**: `Resource`  
 **Example**  
 ```javascript
   User
@@ -243,12 +242,12 @@ Find a resource with given `id` or `query`.
 - query `Number` | `Object`  
 - callback <code>[findOneCallback](#findOneCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before find one](#event_before find one)  
-[after find one](#event_after find one)  
+- [before find one](#event_before find one)
+- [after find one](#event_after find one)
 
+**Returns**: `Resource`  
 **Example**  
 ```javascript
 User.findOne(123, function (err, user) {
@@ -265,12 +264,12 @@ Find collection of resources using given `query`.
 - query `Object`  
 - callback <code>[findCallback](#findCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before find many](#event_before find many)  
-[after find many](#event_after find many)  
+- [before find many](#event_before find many)
+- [after find many](#event_after find many)
 
+**Returns**: `Resource`  
 **Example**  
 ```javascript
 User.find({ active: true }, function (err, users) {
@@ -299,12 +298,12 @@ Count resources using given `query`.
 - query `Object`  
 - callback <code>[countCallback](#countCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before count](#event_before count)  
-[after count](#event_after count)  
+- [before count](#event_before count)
+- [after count](#event_after count)
 
+**Returns**: `Resource`  
 <a name="module_mio.Resource.update"></a>
 ##Resource.update(query, changes, callback)
 Update all resources using given `query` and corresponding set of `changes`.
@@ -315,12 +314,12 @@ Update all resources using given `query` and corresponding set of `changes`.
 - changes `Object` | `Array`  
 - callback <code>[updateCallback](#updateCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before update many](#event_before update many)  
-[after update many](#event_after update many)  
+- [before update many](#event_before update many)
+- [after update many](#event_after update many)
 
+**Returns**: `Resource`  
 **Example**  
 ```javascript
 User.update({ active: true }, { active: false }, function(err) {
@@ -337,12 +336,12 @@ Destroy resources using given `query`.
 - query `Object`  
 - callback <code>[destroyCallback](#destroyCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before destroy many](#event_before destroy many)  
-[after destroy many](#event_after destroy many)  
+- [before destroy many](#event_before destroy many)
+- [after destroy many](#event_after destroy many)
 
+**Returns**: `Resource`  
 <a name="module_mio.Resource.hasOne"></a>
 ##Resource.hasOne(attr, params)
 A one-to-one relation, where the resource has exactly one of the specified
@@ -484,14 +483,14 @@ handlers registered by persistence plugins.
 
 - callback <code>[saveInstanceCallback](#saveInstanceCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before create](#event_before create)  
-[before update](#event_before update)  
-[after create](#event_after create)  
-[after update](#event_after update)  
+- [before create](#event_before create)
+- [before update](#event_before update)
+- [after create](#event_after create)
+- [after update](#event_after update)
 
+**Returns**: `Resource`  
 <a name="module_mio.Resource#destroy"></a>
 ##resource.destroy(callback)
 Remove resource from storage. Runs "destroy" event handlers registered by
@@ -501,12 +500,12 @@ persistence plugins.
 
 - callback <code>[destroyInstanceCallback](#destroyInstanceCallback)</code>  
 
-**Returns**: `Resource`  
 **Fires**
 
-[before destroy](#event_before destroy)  
-[after destroy](#event_after destroy)  
+- [before destroy](#event_before destroy)
+- [after destroy](#event_after destroy)
 
+**Returns**: `Resource`  
 <a name="module_mio.Resource#isNew"></a>
 ##resource.isNew()
 Check if resource is new and has not been saved.
@@ -544,11 +543,11 @@ Set given resource `attrs`.
 
 - attrs `Object`  
 
-**Returns**: `Resource`  
 **Fires**
 
-[setting](#event_setting)  
+- [setting](#event_setting)
 
+**Returns**: `Resource`  
 <a name="module_mio.Resource#reset"></a>
 ##resource.reset(attrs)
 Reset attributes for resource. Marks resource as clean.
@@ -557,11 +556,11 @@ Reset attributes for resource. Marks resource as clean.
 
 - attrs `Object`  
 
-**Returns**: `Resource`  
 **Fires**
 
-[reset](#event_reset)  
+- [reset](#event_reset)
 
+**Returns**: `Resource`  
 
 
 
