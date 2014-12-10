@@ -162,7 +162,7 @@ User.after('update', function (resource, changed) {
 });
 ```
 
-See the full [documentation for events](docs/API.md#Events).
+See the full [documentation for events](docs/API.md#events).
 
 ### Relations
 
@@ -203,11 +203,11 @@ See the [relations API](docs/API.md#module_mio.hasOne) for more information.
 
 Create a REST API server from your resources and interact with them from the
 browser using the same interface. No need for any route handling or AJAX
-boilerplate. [mio-express](https://github.com/mio/express) and
-[mio-ajax](https://github.com/mio/ajax) can be used in the browser and
-server respectively to provide automatic client-server communication.
+boilerplate. Automatic client-server communication is provided by
+[mio-ajax](https://github.com/mio/ajax) in the browser and
+[mio-express](https://github.com/mio/express) on the server.
 
-Resource definition shared between browser and server:
+Create a Resource definition shared between browser and server:
 
 ```javascript
 var mio = require('mio');
@@ -231,7 +231,7 @@ var User = module.exports = mio.Resource.extend({
 });
 ```
 
-Extended on the server with server-specific plugins:
+Extend it on the server with server-specific plugins:
 
 ```javascript
 var User = require('./models/User');
@@ -258,7 +258,7 @@ app.use(User.router);
 app.listen(3000);
 ```
 
-In the browser:
+And in the browser:
 
 ```javascript
 var User = require('./models/User');
