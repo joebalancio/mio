@@ -7,9 +7,9 @@ APIs and web applications that interact with them.
 
 Create a REST API server from your resources and interact with them from the
 browser using the same interface. No need for any route handling or AJAX
-boilerplate. [mio-express](https://github.com/mio/express) and
-[mio-ajax](https://github.com/mio/ajax) can be used in the browser and
-server respectively to provide automatic client-server communication.
+boilerplate. Automatic client-server communication is provided by
+[mio-ajax](https://github.com/mio/ajax) in the browser and
+[mio-express](https://github.com/mio/express) on the server.
 
 * Small readable core (only ~200 SLOC)
 * Simple enumerable attributes using ECMAScript getters and setters
