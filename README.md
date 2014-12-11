@@ -61,8 +61,8 @@ See the full [API documentation](docs/API.md).
 ### Resources
 
 Define new resources by extending the base `Resource` class. You can pass
-attribute definitions to [`.extend()`](docs/API.md#module_mio.extend) or use
-the chainable [`.attr()`](docs/API.md#module_mio.attr):
+attribute definitions to [`.extend()`](docs/API.md#module_mio.Resource.extend)
+or use the chainable [`.attr()`](docs/API.md#module_mio.Resource.attr):
 
 ```javascript
 var User = mio.Resource.extend({
@@ -197,7 +197,8 @@ author.related('books').where({ published: true }).exec(function(err, books) {
 });
 ```
 
-See the [relations API](docs/API.md#module_mio.hasOne) for more information.
+See the [relations API](docs/API.md#module_mio.Resource.hasOne) for more
+information.
 
 ### REST API
 
