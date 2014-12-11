@@ -11,29 +11,6 @@
 {{#each (events)~}}
   {{>index~}}
 {{/each}}
-### Hooks
-
-Before and after hooks are provided for CRUD operations and resource lifecycle
-events. Certain hooks, such as "before create" are asynchronous and execute in
-series. Others such as "after update" are synchronous and run in parallel.
-
-```javascript
-User.before('create', function (resource, changed, next) {
-  // do something before save such as validation and then call next()
-});
-
-User.after('update', function (resource, changed) {
-  // do something after update
-});
-```
-
-Events prefixed with `before` are asynchronous hooks and run in series.
-Asynchronous hooks receive a `next` function as the last argument, which must
-be called to continue firing subsequent listeners. Arguments received by
-`next` are passed to the callback of the method that fired the event. If the
-first argument received by `next` is an error subsequent hooks will not be run.
-Similarly for find and count events, if the second argument received by next
-is non-null subsequent hooks will not be run.
 
 {{#each (classes)~}}
   {{>head}}

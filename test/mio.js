@@ -21,7 +21,7 @@ describe('Model', function() {
 
   it('emits "initializing" event', function(done) {
     var Model = Resource.extend()
-      .on('initializing', function(model, attrs) {
+      .on('initialize', function(model, attrs) {
         expect(model).to.have.property('constructor', Model);
         expect(attrs).to.be.an('object');
         done();
@@ -31,7 +31,7 @@ describe('Model', function() {
 
   it('emits "initialized" event', function(done) {
     var Model = Resource.extend()
-      .on('initialized', function(model) {
+      .on('create', function(model) {
         expect(model).to.be.an('object');
         expect(model).to.have.property('constructor', Model);
         done();
@@ -224,7 +224,7 @@ describe('Model', function() {
       var User = Resource.extend();
       var Post = Resource.extend();
 
-      User.before('find one', function(query, callback) {
+      User.before('findOne', function(query, callback) {
         callback(null, {foo: 'bar'});
       });
 
@@ -370,10 +370,10 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('find one', function(query, cb) {
+        .before('findOne', function(query, cb) {
           cb();
         })
-        .before('find one', function(query, cb) {
+        .before('findOne', function(query, cb) {
           cb(null, new Model({ id: 1 }));
         });
 
@@ -384,9 +384,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before find one" event', function(done) {
+    it('emits "before:findOne" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before find one', function(query) {
+      Model.before('findOne', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -395,15 +395,15 @@ describe('Model', function() {
       });
     });
 
-    it('emits "after find one" event', function(done) {
+    it('emits "findOne" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
-      Model.on('after find one', function(model) {
+      Model.on('findOne', function(model) {
         expect(model).to.be.an.instanceOf(Model);
         done();
       });
 
-      Model.before('find one', function(query, cb) {
+      Model.before('findOne', function(query, cb) {
         cb(null, new Model({ id: 1 }));
       });
 
@@ -415,7 +415,7 @@ describe('Model', function() {
     it('passes error from adapter to callback', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
-      Model.before('find one', function(query, cb) {
+      Model.before('findOne', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -442,10 +442,10 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('find many', function(query, cb) {
+        .before('find', function(query, cb) {
           cb();
         })
-        .before('find many', function(query, cb) {
+        .before('find', function(query, cb) {
           cb(null, [new Model({ id: 1 })]);
         });
 
@@ -457,9 +457,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before find many" event', function(done) {
+    it('emits "before:find" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before find many', function(query) {
+      Model.before('find', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -468,9 +468,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "after find many" event', function(done) {
+    it('emits "find" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after find many', function(collection) {
+      Model.on('find', function(collection) {
         expect(collection).to.be.an.instanceOf(Array);
         done();
       });
@@ -482,7 +482,7 @@ describe('Model', function() {
     it('passes error from adapter to callback', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
-      Model.before('find many', function(query, cb) {
+      Model.before('find', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -523,9 +523,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before count" event', function(done) {
+    it('emits "before:count" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before count', function(query) {
+      Model.before('count', function(query) {
         expect(query).to.be.a('object');
         done();
       });
@@ -534,9 +534,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "after count" event', function(done) {
+    it('emits "count" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after count', function(count) {
+      Model.on('count', function(count) {
         expect(count).to.be.a('number');
         done();
       });
@@ -575,10 +575,10 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('update many', function(query, changes, cb) {
+        .before('updateMany', function(query, changes, cb) {
           cb();
         })
-        .before('update many', function(query, changes, cb) {
+        .before('updateMany', function(query, changes, cb) {
           cb();
         });
 
@@ -588,9 +588,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before update many" event', function(done) {
+    it('emits "before:updateMany" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before update many', function(query) {
+      Model.before('updateMany', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -599,9 +599,9 @@ describe('Model', function() {
       });
     });
 
-    it('emits "after update many" event', function(done) {
+    it('emits "update many" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after update many', function() {
+      Model.on('updateMany', function() {
         done();
       });
       Model.update({ id: 1 }, { id: 2 }, function(err) {
@@ -613,10 +613,10 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('update many', function(query, changes, cb) {
+        .before('updateMany', function(query, changes, cb) {
           cb();
         })
-        .before('update many', function(query, changes, cb) {
+        .before('updateMany', function(query, changes, cb) {
           cb(new Error('test'));
         });
 
@@ -628,51 +628,51 @@ describe('Model', function() {
   });
 
 
-  describe('.destroy()', function() {
-    it('destroys models using query', function(done) {
+  describe('.remove()', function() {
+    it('removes models using query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.destroy(function(err) {
+      Model.remove(function(err) {
         if (err) return done(err);
-        Model.destroy({ id: 1 }, function(err) {
+        Model.remove({ id: 1 }, function(err) {
           done();
         });
       });
     });
 
-    it("calls each store's destroyAll method", function(done) {
+    it("calls each store's removeAll method", function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('destroy many', function(query, cb) {
+        .before('removeMany', function(query, cb) {
           cb();
         })
-        .before('destroy many', function(query, cb) {
+        .before('removeMany', function(query, cb) {
           cb();
         });
 
-      Model.destroy(function(err) {
+      Model.remove(function(err) {
         if (err) return done(err);
         done();
       });
     });
 
-    it('emits "before destroy many" event', function(done) {
+    it('emits "before:removeMany" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before destroy many', function(query) {
+      Model.before('removeMany', function(query) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.destroy({ id: 1 }, function(err) {
+      Model.remove({ id: 1 }, function(err) {
         if (err) return done(err);
       });
     });
 
-    it('emits "after destroy many" event', function(done) {
+    it('emits "remove many" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after destroy many', function() {
+      Model.on('removeMany', function() {
         done();
       });
-      Model.destroy({ id: 1 }, function(err) {
+      Model.remove({ id: 1 }, function(err) {
         if (err) return done(err);
       });
     });
@@ -681,14 +681,14 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
 
       Model
-        .before('destroy many', function(query, cb) {
+        .before('removeMany', function(query, cb) {
           cb();
         })
-        .before('destroy many', function(query, cb) {
+        .before('removeMany', function(query, cb) {
           cb(new Error('test'));
         });
 
-      Model.destroy(function(err) {
+      Model.remove(function(err) {
         expect(err).to.have.property('message', 'test')
         done();
       });
@@ -700,18 +700,13 @@ describe('Model', function() {
       var Model = Resource.extend().attr('id', { primary: true });
       var query = Model.find();
       expect(query).to.be.an('object');
-      expect(query).to.have.keys([
-        'where',
-        'paginate',
-        'skip',
-        'exec',
-        'sort',
-        'include',
-        'offset',
-        'limit',
-        'page',
-        'with'
-      ]);
+      expect(query).to.have.property('where');
+      expect(query).to.have.property('sort');
+      expect(query).to.have.property('paginate');
+      expect(query).to.have.property('from');
+      expect(query).to.have.property('size');
+      expect(query).to.have.property('with');
+      expect(query).to.have.property('exec');
     });
 
     it('is chainable', function(done) {
@@ -719,7 +714,7 @@ describe('Model', function() {
       Model.findOne()
       .where({ name: 'alex' })
       .sort('asc')
-      .limit(10)
+      .size(10)
       .with('related')
       .exec(function(err) {
         if (err) return done(err);
@@ -727,7 +722,7 @@ describe('Model', function() {
         Model.find()
         .where({ name: 'alex' })
         .sort('asc')
-        .limit(10)
+        .size(10)
         .with(['related'])
         .exec(function(err) {
           if (err) return done(err);
@@ -737,14 +732,14 @@ describe('Model', function() {
           .sort({
             name: 'asc'
           })
-          .limit(10)
+          .size(10)
           .exec(function(err) {
             if (err) return done(err);
 
-            Model.destroy()
+            Model.remove()
             .where({ name: 'alex' })
             .sort('asc')
-            .limit(10)
+            .size(10)
             .exec(done);
           });
         });
@@ -753,13 +748,13 @@ describe('Model', function() {
 
     it('modifies query', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.before('find many', function(query, next) {
+      Model.before('find', function(query, next) {
         expect(query).to.have.keys([
-          'where',
-          'sort',
+          'from',
           'page',
-          'offset',
-          'limit'
+          'size',
+          'sort',
+          'where'
         ]);
         done();
       });
@@ -767,8 +762,8 @@ describe('Model', function() {
         .where({ name: 'alex' })
         .sort('asc')
         .paginate({ page: 1 })
-        .skip(10)
-        .limit(10)
+        .from(10)
+        .size(10)
         .exec(function() {});
     });
   });
@@ -815,7 +810,7 @@ describe('Model', function() {
       var Model = Resource.extend()
         .attr('id', { primary: true })
         .attr('name')
-        .on('setting', function(model, attrs) {
+        .on('set', function(model, attrs) {
           expect(model).to.have.property('constructor', Model);
           expect(attrs).to.have.property('name', 'alex');
           done();
@@ -885,11 +880,11 @@ describe('Model', function() {
     it("calls each store's create method", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('create', function(model, changed, cb) {
+        .before('save:new', function(model, changed, cb) {
           expect(changed).to.have.property('id', 1);
           cb();
         })
-        .before('create', function(model, changed, cb) {
+        .before('save:new', function(model, changed, cb) {
           expect(changed).to.have.property('id', 1);
           cb();
         });
@@ -906,7 +901,7 @@ describe('Model', function() {
     it("passes error from adapter to callback", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true })
-        .before('create', function(model, changed, cb) {
+        .before('save:new', function(model, changed, cb) {
           cb(new Error("test"));
         });
 
@@ -918,69 +913,86 @@ describe('Model', function() {
       });
     });
 
-    it('emits "before create" event', function(done) {
+    it('emits "before:save" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before create', function(model, changed, next) {
+      var called = false;
+      Model.before('save', function(model, changed, next) {
+        called = true;
+        expect(model).to.have.property('constructor', Model);
+        expect(changed).to.be.an('object');
+        next();
+      });
+      Model.create().set('id', 1).save(function(err) {
+        expect(called).to.equal(true);
+        done(err);
+      });
+    });
+
+    it('emits "save" event', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      var model = Model.create().set('id', 1);
+      model.on('save', function() {
+        done();
+      }).save(function(err) { });
+    });
+
+    it('emits "before:save:new" event', function(done) {
+      var Model = Resource.extend().attr('id', { primary: true });
+      Model.before('save:new', function(model, changed, next) {
         expect(model).to.have.property('constructor', Model);
         expect(changed).to.be.an('object');
         next();
       });
       var model = Model.create().set('id', 1);
-      model.on('before create', function(changed) {
+      model.on('save:new', function(changed) {
         expect(changed).to.be.an('object');
         done();
       }).save(function(err) { });
     });
 
-    it('emits "after create" event', function(done) {
+    it('emits "save:new" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.after('create', function(model, changed) {
-        expect(model).to.be.an.instanceOf(Model);
-      });
       var model = Model.create().set('id', 1);
-      model.on('after create', function() {
+      model.on('save:new', function() {
         done();
       }).save(function(err) { });
     });
 
-    it('emits "before update" event', function(done) {
+    it('emits "before:save:update" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before update', function(model, changed, next) {
+      Model.before('save:update', function(model, changed, next) {
         expect(model).to.have.property('constructor', Model);
         expect(changed).to.be.an('object');
         next();
       });
       var model = Model.create({ id: 1 }).set('name', 'alex');
-      model.on('before update', function(changed) {
+      model.on('save:update', function(changed) {
         expect(changed).to.be.an('object');
         done();
       }).save(function(err) { });
     });
 
-    it('emits "after update" event', function(done) {
+    it('emits "save:update" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after update', function(model, changed) {
-        expect(model).to.be.an.instanceOf(Model);
-      });
       var model = Model.create({ id: 1 }).set('name', 'alex');
-      model.on('after update', function() {
+      model.on('save:update', function() {
         done();
       }).save(function(err) { });
     });
   });
 
-  describe('#destroy()', function() {
-    it("calls each store's destroy method", function(done) {
+  describe('#remove()', function() {
+    it("calls each store's remove method", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('destroy', function(model, cb) {
+        .before('remove', function(model, cb) {
           cb();
         })
-        .before('destroy', function(model, cb) {
+        .before('remove', function(model, cb) {
           cb();
         });
       var model = Model.create({ id: 1 });
-      model.destroy(function(err) {
+      model.remove(function(err) {
         expect(err).to.eql(undefined);
         expect(model).to.have.property('id', null);
         done();
@@ -990,37 +1002,37 @@ describe('Model', function() {
     it("passes error from adapter to callback", function(done) {
       var Model = Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('destroy', function(model, cb) {
+        .before('remove', function(model, cb) {
           cb(new Error('test'));
         });
       var model = Model.create({ id: 1 });
-      model.destroy(function(err) {
+      model.remove(function(err) {
         expect(err).to.have.property('message', 'test');
         done();
       });
     });
 
-    it('emits "before destroy" event', function(done) {
+    it('emits "before:remove" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('before destroy', function(model, next) {
+      Model.before('remove', function(model, next) {
         expect(model).to.have.property('constructor', Model);
         next();
       });
       var model = Model.create({ id: 1 });
-      model.on('before destroy', function() {
+      model.before('remove', function() {
         done();
-      }).destroy(function(err) { });
+      }).remove(function(err) { });
     });
 
-    it('emits "after destroy" event', function(done) {
+    it('emits "remove" event', function(done) {
       var Model = Resource.extend().attr('id', { primary: true });
-      Model.on('after destroy', function(model) {
+      Model.on('remove', function(model) {
         expect(model).to.be.an.instanceOf(Model);
       });
       var model = Model.create({ id: 1 });
-      model.on('after destroy', function() {
+      model.on('remove', function() {
         done();
-      }).destroy(function(err) { });
+      }).remove(function(err) { });
     });
   });
 

@@ -114,7 +114,7 @@ Using a chainable query builder:
 User.find()
   .where({ active: true })
   .sort({ created_at: "desc" })
-  .limit(10)
+  .size(10)
   .exec(function(err, users) {
     // ...
   });
@@ -149,15 +149,15 @@ User.server(plugin);
 ### Hooks
 
 Before and after hooks are provided for CRUD operations and resource lifecycle
-events. Certain hooks, such as "before create" are asynchronous and execute in
-series. Others such as "after update" are synchronous and run in parallel.
+events. Certain hooks, such as "before:save" are asynchronous and execute in
+series. Others such as "reset" are synchronous and run in parallel.
 
 ```javascript
-User.before('create', function (resource, changed, next) {
+User.before('save', function (resource, changed, next) {
   // do something before save such as validation and then call next()
 });
 
-User.after('update', function (resource, changed) {
+User.on('save:update', function (resource, changed) {
   // do something after update
 });
 ```
