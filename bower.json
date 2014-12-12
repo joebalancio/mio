@@ -1,6 +1,6 @@
 {
   "name": "mio",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "RESTful resources for both client and server using a simple, extensible, storage-agnostic prototype.",
   "homepage": "https://github.com/mio/mio",
   "authors": [
