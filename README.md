@@ -95,7 +95,7 @@ persist resources to a database.
 Find one user:
 
 ```javascript
-User.findOne(123, function(err, user) {
+User.get(123, function(err, user) {
   // ...
 });
 ```
@@ -103,7 +103,7 @@ User.findOne(123, function(err, user) {
 Find all users matching a query:
 
 ```javascript
-User.find({ active: true }, function (err, users) {
+User.Collection.get({ active: true }, function (err, users) {
   // ...
 });
 ```
@@ -111,7 +111,7 @@ User.find({ active: true }, function (err, users) {
 Using a chainable query builder:
 
 ```javascript
-User.find()
+User.Collection.get()
   .where({ active: true })
   .sort({ created_at: "desc" })
   .size(10)
@@ -149,15 +149,14 @@ User.server(plugin);
 ### Hooks
 
 Before and after hooks are provided for CRUD operations and resource lifecycle
-events. Certain hooks, such as "before:save" are asynchronous and execute in
-series. Others such as "reset" are synchronous and run in parallel.
+events. Hooks are asynchronous and execute in series.
 
 ```javascript
-User.before('save', function (resource, changed, next) {
+User.before('get', function (query, next) {
   // do something before save such as validation and then call next()
 });
 
-User.on('save:update', function (resource, changed) {
+User.on('patch', function (query, changed) {
   // do something after update
 });
 ```
@@ -182,7 +181,7 @@ Book.belongsTo('author', {
 });
 
 // fetch book with related author included
-Book.findOne(1).withRelated(['author']).exec(function(err, book) {
+Book.get(1).withRelated(['author']).exec(function(err, book) {
   console.log(book.author);
 });
 
@@ -229,6 +228,8 @@ var User = module.exports = mio.Resource.extend({
       }
     }
   }
+}, {
+  baseUrl: '/users'
 });
 ```
 
@@ -244,12 +245,7 @@ User
   .use(MongoDB({
     url: 'mongodb://db.example.net:2500'
   }))
-  .use(ExpressResource.plugin({
-    url: {
-      collection: '/users',
-      resource: '/users/:id'
-    }
-  }));
+  .use(ExpressResource.plugin());
 
 var app = express();
 
@@ -266,14 +262,9 @@ var User = require('./models/User');
 var Ajax = require('mio-ajax');
 
 User
-  .use(Ajax({
-    url: {
-      collection: '/users',
-      resource: '/users/:id'
-    }
-  }));
+  .use(Ajax());
 
-var user = User().set({ name: "alex" }).save(function(err) {
+var user = User().set({ name: "alex" }).post(function(err) {
   // ...
 });
 ```

@@ -10,18 +10,13 @@
   * [Resource.browser(fn)](#module_mio.Resource.browser)
   * [Resource.server(fn)](#module_mio.Resource.server)
   * [Resource.create(attrs)](#module_mio.Resource.create)
-  * [Resource.findOne(query, callback)](#module_mio.Resource.findOne)
-  * [Resource.find(query, callback)](#module_mio.Resource.find)
-  * [Resource.count(query, callback)](#module_mio.Resource.count)
-  * [Resource.update(query, changes, callback)](#module_mio.Resource.update)
-  * [Resource.remove(query, callback)](#module_mio.Resource.remove)
   * [Resource.Query#where(where)](#module_mio.Resource.Query#where)
   * [Resource.Query#sort(sort)](#module_mio.Resource.Query#sort)
   * [Resource.Query#paginate(paginate)](#module_mio.Resource.Query#paginate)
   * [Resource.Query#from(from)](#module_mio.Resource.Query#from)
   * [Resource.Query#size(size)](#module_mio.Resource.Query#size)
   * [Resource.Query#page(page)](#module_mio.Resource.Query#page)
-  * [Resource.Query#with(relations)](#module_mio.Resource.Query#with)
+  * [Resource.Query#withRelated(relations)](#module_mio.Resource.Query#withRelated)
   * [Resource.Query#exec(callback)](#module_mio.Resource.Query#exec)
   * [Resource.hasOne(attr, params)](#module_mio.Resource.hasOne)
   * [Resource.hasMany(attr, params)](#module_mio.Resource.hasMany)
@@ -31,43 +26,32 @@
   * [Resource.once(event, listener)](#module_mio.Resource.once)
   * [Resource.emit(event, ...)](#module_mio.Resource.emit)
   * [Resource.before(event, hook)](#module_mio.Resource.before)
-  * [Resource.trigger(event, args, callback, [defaultResult])](#module_mio.Resource.trigger)
-  * [resource.save(callback)](#module_mio.Resource#save)
-  * [resource.remove(callback)](#module_mio.Resource#remove)
+  * [Resource.trigger(event, args, callback)](#module_mio.Resource.trigger)
+  * [Resource.get(query, callback)](#module_mio.Resource.get)
+  * [Resource.put(query, representation, callback)](#module_mio.Resource.put)
+  * [Resource.patch(query, changes, callback)](#module_mio.Resource.patch)
+  * [Resource.post(representation, callback)](#module_mio.Resource.post)
+  * [Resource.delete(query, callback)](#module_mio.Resource.delete)
+  * [resource.get(callback)](#module_mio.Resource#get)
+  * [resource.put(callback)](#module_mio.Resource#put)
+  * [resource.patch(callback)](#module_mio.Resource#patch)
+  * [resource.post(callback)](#module_mio.Resource#post)
+  * [resource.delete(callback)](#module_mio.Resource#delete)
   * [resource.isNew()](#module_mio.Resource#isNew)
   * [resource.isDirty(attr)](#module_mio.Resource#isDirty)
   * [resource.changed()](#module_mio.Resource#changed)
   * [resource.has(attr)](#module_mio.Resource#has)
   * [resource.set(attributes)](#module_mio.Resource#set)
   * [resource.reset(attributes)](#module_mio.Resource#reset)
-
 ## Events
 
-* [event: "before:findOne"](#before_findOne)
-* [event: "before:find"](#before_find)
-* [event: "before:count"](#before_count)
-* [event: "before:save"](#before_save)
-* [event: "before:save:new"](#before_save_new)
-* [event: "before:save:update"](#before_save_update)
-* [event: "before:remove"](#before_remove)
-* [event: "before:updateMany"](#before_updateMany)
-* [event: "before:removeMany"](#before_removeMany)
-* [event: "findOne"](#event_findOne)
-* [event: "find"](#event_find)
-* [event: "count"](#event_count)
-* [event: "save"](#event_save)
-* [event: "save:new"](#save_new)
-* [event: "save:update"](#save_update)
-* [event: "remove"](#event_remove)
-* [event: "updateMany"](#event_updateMany)
-* [event: "removeMany"](#event_removeMany)
+* [event: "change"](#event_change)
 * [event: "initialize"](#event_initialize)
+* [event: "change:[attr]"](#change_[attr])
 * [event: "create"](#event_create)
 * [event: "attribute"](#event_attribute)
-* [event: "change"](#event_change)
-* [event: "change:[attr]"](#change_[attr])
-* [event: "reset"](#event_reset)
 * [event: "set"](#event_set)
+* [event: "reset"](#event_reset)
 
 
 <a name="new_module_mio.Resource"></a>
@@ -222,115 +206,6 @@ This is simply sugar for `new Resource(attrs)`.
 - attrs `Object`  
 
 **Returns**: `Resource`  
-<a name="module_mio.Resource.findOne"></a>
-##Resource.findOne(query, callback)
-Find a resource with given `id` or `query`.
-
-**Params**
-
-- query `Number` | `Object`  
-- callback <code>[findOneCallback](#findOneCallback)</code>  
-
-**Fires**
-
-- [before:findOne](#before_findOne)
-- [findOne](#event_findOne)
-
-**Returns**: `Resource`  
-**Example**  
-```javascript
-User.findOne(123, function (err, user) {
-  // ...
-})
-```
-
-<a name="module_mio.Resource.find"></a>
-##Resource.find(query, callback)
-Find collection of resources using given `query`.
-
-**Params**
-
-- query `Object`  
-- callback <code>[findCallback](#findCallback)</code>  
-
-**Fires**
-
-- [before:find](#before_find)
-- [find](#event_find)
-
-**Returns**: `Resource`  
-**Example**  
-```javascript
-User.find({ active: true }, function (err, users) {
-  // ...
-});
-```
-
-Queries can also be composed using chainable methods:
-
-```javascript
-User.find()
- .where({ active: true })
- .sort({ created_at: "desc" })
- .size(10)
- .exec(function(err, users) {
-   // ...
- });
-```
-
-<a name="module_mio.Resource.count"></a>
-##Resource.count(query, callback)
-Count resources using given `query`.
-
-**Params**
-
-- query `Object`  
-- callback <code>[countCallback](#countCallback)</code>  
-
-**Fires**
-
-- [before:count](#before_count)
-- [count](#event_count)
-
-**Returns**: `Resource`  
-<a name="module_mio.Resource.update"></a>
-##Resource.update(query, changes, callback)
-Update all resources using given `query` and corresponding set of `changes`.
-
-**Params**
-
-- query `Object`  
-- changes `Object` | `Array`  
-- callback <code>[updateCallback](#updateCallback)</code>  
-
-**Fires**
-
-- [before:updateMany](#before_updateMany)
-- [updateMany](#event_updateMany)
-
-**Returns**: `Resource`  
-**Example**  
-```javascript
-User.update({ active: true }, { active: false }, function(err) {
-  // ...
-});
-```
-
-<a name="module_mio.Resource.remove"></a>
-##Resource.remove(query, callback)
-Destroy many resources using given `query`.
-
-**Params**
-
-- query `Object`  
-- callback <code>[removeManyCallback](#removeManyCallback)</code>  
-
-**Fires**
-
-- [before:removeMany](#before_removeMany)
-- [removeMany](#event_removeMany)
-
-**Returns**: `Resource`  
 <a name="module_mio.Resource.Query#where"></a>
 ##Resource.Query#where(where)
 Set `query.where` parameters.
@@ -387,9 +262,9 @@ Set `query.page` parameter. Must be used after `query.size` is set.
 - page `Number` - first page is 1  
 
 **Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#with"></a>
-##Resource.Query#with(relations)
-Set `query.withRelations` parameter.
+<a name="module_mio.Resource.Query#withRelated"></a>
+##Resource.Query#withRelated(relations)
+Set `query.withRelated` parameter.
 
 **Params**
 
@@ -544,8 +419,8 @@ Emit `event` and call listeners.
 Register `hook` to be called before `event`.
 
 Hooks are [trigger](#module_mio.Resource.trigger) by various methods
-such as [findOne](#module_mio.Resource.findOne) or
-[save](#module_mio.Resource#save), are asynchronous, and run in series.
+such as [module:mio.Resource.findOne](module:mio.Resource.findOne) or
+[module:mio.Resource#save](module:mio.Resource#save), are asynchronous, and run in series.
 Hooks receive a `next` function as the last argument, which must be called
 to continue firing subsequent listeners. Subsequent hooks will not be run
 if `next` receives any arguments. Arguments received by `next` are passed to
@@ -557,7 +432,7 @@ the callback of the method that fired the event.
 - hook `function`  
 
 <a name="module_mio.Resource.trigger"></a>
-##Resource.trigger(event, args, callback, [defaultResult])
+##Resource.trigger(event, args, callback)
 Run [before](#module_mio.Resource.before) hooks for given `event`.
 
 Hooks registered with [before](#module_mio.Resource.before) are asynchronous and
@@ -571,41 +446,167 @@ must be called to continue firing subsequent listeners. Arguments received by
 - event `String`  
 - args `Mixed` - multiple arguments can be passed  
 - callback `function`  
-- \[defaultResult\] `Mixed`  
 
 **Returns**: `Resource`  
-<a name="module_mio.Resource#save"></a>
-##resource.save(callback)
-Persist resource to storage. Runs "save" event handlers registered by
-persistence plugins.
+<a name="module_mio.Resource.get"></a>
+##Resource.get(query, callback)
+Get a resource with given `id` or `query`.
 
 **Params**
 
-- callback <code>[saveInstanceCallback](#saveInstanceCallback)</code>  
+- query `Number` | `Object`  
+- callback `getCallback`  
 
 **Fires**
 
-- [before:save](#before_save)
-- [before:save:new](#before_save_new)
-- [before:save:update](#before_save_update)
-- [save](#event_save)
-- [save:new](#save_new)
-- [save:update](#save_update)
+- [before:get](before:get)
+- [event:get](event:get)
 
 **Returns**: `Resource`  
-<a name="module_mio.Resource#remove"></a>
-##resource.remove(callback)
-Remove resource from storage. Runs "remove" event handlers registered by
-persistence plugins.
+**Example**  
+```javascript
+User.get(123, function (err, user) {
+  // ...
+});
+```
+
+<a name="module_mio.Resource.put"></a>
+##Resource.put(query, representation, callback)
+Replace or create resource using given `query` and `representation`.
 
 **Params**
 
-- callback <code>[removeCallback](#removeCallback)</code>  
+- query `Object`  
+- representation `Object`  
+- callback `putCallback`  
 
 **Fires**
 
-- [before:remove](#before_remove)
-- [remove](#event_remove)
+- [before:put](before:put)
+- [event:put](event:put)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource.patch"></a>
+##Resource.patch(query, changes, callback)
+Patch resource using given `query` and corresponding set of `changes`.
+
+**Params**
+
+- query `Object`  
+- changes `Object` | `Array`  
+- callback `patchCallback`  
+
+**Fires**
+
+- [before:patch](before:patch)
+- [event:patch](event:patch)
+
+**Returns**: `Resource`  
+**Example**  
+```javascript
+User.patch({ active: true }, { active: false }, function(err) {
+  // ...
+});
+```
+
+<a name="module_mio.Resource.post"></a>
+##Resource.post(representation, callback)
+Post resource using given `representation`.
+
+**Params**
+
+- representation `Object`  
+- callback `postCallback`  
+
+**Fires**
+
+- [before:post](before:post)
+- [event:post](event:post)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource.delete"></a>
+##Resource.delete(query, callback)
+Delete resource using given `query`.
+
+**Params**
+
+- query `Object`  
+- callback `deleteCallback`  
+
+**Fires**
+
+- [before:delete](before:delete)
+- [event:delete](event:delete)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource#get"></a>
+##resource.get(callback)
+Refresh the resource instance.
+
+**Params**
+
+- callback `getCallback`  
+
+**Fires**
+
+- [before:get](before:get)
+- [event:get](event:get)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource#put"></a>
+##resource.put(callback)
+Replace resource with instance representation.
+
+**Params**
+
+- callback `putCallback`  
+
+**Fires**
+
+- [before:put](before:put)
+- [event:put](event:put)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource#patch"></a>
+##resource.patch(callback)
+Patch resource with diff of instance representation.
+
+**Params**
+
+- callback `patchCallback`  
+
+**Fires**
+
+- [before:patch](before:patch)
+- [event:patch](event:patch)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource#post"></a>
+##resource.post(callback)
+Post resource and update instance.
+
+**Params**
+
+- callback `postCallback`  
+
+**Fires**
+
+- [before:post](before:post)
+- [event:post](event:post)
+
+**Returns**: `Resource`  
+<a name="module_mio.Resource#delete"></a>
+##resource.delete(callback)
+Delete resource.
+
+**Params**
+
+- callback `deleteCallback`  
+
+**Fires**
+
+- [before:delete](before:delete)
+- [event:delete](event:delete)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#isNew"></a>
@@ -678,219 +679,6 @@ Fired whenever a resource attribute is changed.
 - prev `Mixed`  
 
 
-<a name="before_findOne"></a>
-#event: "before:findOne"
-Runs before [findOne](#module_mio.Resource.findOne) callback.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next` **or a value as the second**, subsequent hooks are
-**not** executed and `next` arguments are passed to the callback
-for [findOne](#module_mio.Resource.findOne).
-
-**Params**
-
-- query `Object`  
-- next `function`  
-
-
-<a name="event_findOne"></a>
-#event: "findOne"
-Run at the beginning of [findOne](#module_mio.Resource.findOne)'s callback.
-
-**Params**
-
-- query `Object`  
-- resource `Resource`  
-
-
-<a name="before_find"></a>
-#event: "before:find"
-Runs before [find](#module_mio.Resource.find) callback.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next` **or a value as the second**, subsequent hooks are
-**not** executed and `next` arguments are passed to the callback
-for [find](#module_mio.Resource.find).
-
-**Params**
-
-- query `Object`  
-- next `function`  
-
-
-<a name="event_find"></a>
-#event: "find"
-Runs at the beginning of [find](#module_mio.Resource.find)'s callback.
-
-**Params**
-
-- query `Object`  
-- collection `Array.<Resource>`  
-
-
-<a name="before_count"></a>
-#event: "before:count"
-Runs before [count](#module_mio.Resource.count) callback.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next` **or a value as the second**, subsequent hooks are
-**not** executed and the `next` arguments are passed to the callback
-for [count](#module_mio.Resource.count).
-
-**Params**
-
-- query `Object`  
-- next `function`  
-
-
-<a name="event_count"></a>
-#event: "count"
-Run at the beginning of [count](#module_mio.Resource.count)'s callback.
-
-**Params**
-
-- query `Object`  
-- count `Number`  
-
-
-<a name="before_updateMany"></a>
-#event: "before:updateMany"
-Runs before [update](#module_mio.Resource.update) callback.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next`, subsequent hooks are not executed and the `next`
-arguments are passed to the callback for
-[update](#module_mio.Resource.update).
-
-**Params**
-
-- query `Object`  
-- changes `Object` | `Array`  
-- next `function`  
-
-
-<a name="event_updateMany"></a>
-#event: "updateMany"
-Run at the beginning of [update](#module_mio.Resource.update)'s callback.
-
-**Params**
-
-- query `Object`  
-- changes `Object` | `Array`  
-
-
-<a name="before_removeMany"></a>
-#event: "before:removeMany"
-Runs before [remove](#module_mio.Resource.remove) callback.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next`, subsequent hooks are not executed and the `next`
-arguments are passed to the callback for
-[remove](#module_mio.Resource.remove).
-
-**Params**
-
-- query `Object`  
-- next `function`  
-
-
-<a name="event_removeMany"></a>
-#event: "removeMany"
-Run at the beginning of [remove](#module_mio.Resource.remove)'s callback.
-
-**Params**
-
-- query `Object`  
-
-
-<a name="before_save"></a>
-#event: "before:save"
-Runs before [save](#module_mio.Resource#save) callback for new or previously
-saved resources.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next`, subsequent hooks are not executed and the `next`
-arguments are passed to the callback for
-[save](#module_mio.Resource#save).
-
-**Params**
-
-- resource `Resource`  
-- changed `Object` - map of dirty attributes  
-- next `function`  
-
-
-<a name="before_save_new"></a>
-#event: "before:save:new"
-Runs before [save](#module_mio.Resource#save) callback for new resources
-that have not been saved.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next`, subsequent hooks are not executed and the `next`
-arguments are passed to the callback for
-[save](#module_mio.Resource#save).
-
-**Params**
-
-- resource `Resource`  
-- changed `Object` - map of dirty attributes  
-- next `function`  
-
-
-<a name="before_save_update"></a>
-#event: "before:save:update"
-Runs before [save](#module_mio.Resource#save) callback for resources that
-have been successfully saved.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next`, subsequent hooks are not executed and the `next`
-arguments are passed to the callback for
-[save](#module_mio.Resource#save).
-
-**Params**
-
-- resource `Resource`  
-- changed `Object` - map of dirty attributes  
-- next `function`  
-
-
-<a name="event_save"></a>
-#event: "save"
-Run at the beginning of [save](#module_mio.Resource#save)'s callback for
-new or previously saved resources.
-
-**Params**
-
-- resource `Resource`  
-- changed `Object` - map of dirty attributes  
-
-
-<a name="save_new"></a>
-#event: "save:new"
-Run at the beginning of [save](#module_mio.Resource#save)'s callback for
-new resources that have not been saved.
-
-**Params**
-
-- resource `Resource`  
-- changed `Object` - map of dirty attributes  
-
-
-<a name="before_remove"></a>
-#event: "before:remove"
-Runs before [remove](#module_mio.Resource#remove) callback.
-
-Asynchronous. Listeners run in series. If an error is passed as the first
-argument to `next`, subsequent hooks are not executed and the `next`
-arguments are passed to the callback for
-[remove](#module_mio.Resource#remove).
-
-**Params**
-
-- resource `Resource`  
-- next `function`  
-
-
 <a name="event_initialize"></a>
 #event: "initialize"
 Run at the beginning of resource constructor.
@@ -931,26 +719,6 @@ Run at the end of resource constructor.
 - options `Object` - attribute options  
 
 
-<a name="save_update"></a>
-#event: "save:update"
-Run at the beginning of [save](#module_mio.Resource#save)'s callback for
-resources that have been successfully saved.
-
-**Params**
-
-- resource `Resource`  
-- changed `Object` - map of dirty attributes  
-
-
-<a name="event_remove"></a>
-#event: "remove"
-Run at the beginning of [remove](#module_mio.Resource#remove)'s callback.
-
-**Params**
-
-- resource `Resource`  
-
-
 <a name="event_set"></a>
 #event: "set"
 **Params**
@@ -969,87 +737,11 @@ Run at the beginning of [remove](#module_mio.Resource#remove)'s callback.
 
 
 
-<a name="findOneCallback"></a>
-#callback: findOneCallback
-Callback for [findOne](#module_mio.Resource.findOne).
-
-**Params**
-
-- err `Error`  
-- resource `Resource`  
-
-**Type**: `function`  
-
-<a name="findCallback"></a>
-#callback: findCallback
-Callback for [find](#module_mio.Resource.find).
-
-**Params**
-
-- err `Error`  
-- resources `Array.<Resource>`  
-
-**Type**: `function`  
-
-<a name="countCallback"></a>
-#callback: countCallback
-Callback for [count](#module_mio.Resource.count).
-
-**Params**
-
-- err `Error`  
-- count `Number`  
-
-**Type**: `function`  
-
 <a name="plugin"></a>
 #callback: plugin
 **Params**
 
 - Resource `Resource`  
-
-**Type**: `function`  
-
-<a name="updateCallback"></a>
-#callback: updateCallback
-Callback for [update](#module_mio.Resource.update).
-
-**Params**
-
-- err `Error`  
-- query `Object`  
-- changes `Object` | `Array`  
-
-**Type**: `function`  
-
-<a name="removeManyCallback"></a>
-#callback: removeManyCallback
-Callback for [remove](#module_mio.Resource.remove).
-
-**Params**
-
-- err `Error`  
-- query `Object`  
-
-**Type**: `function`  
-
-<a name="saveInstanceCallback"></a>
-#callback: saveInstanceCallback
-Callback for [module:mio.Resource.prototype.save](module:mio.Resource.prototype.save).
-
-**Params**
-
-- err `Error`  
-
-**Type**: `function`  
-
-<a name="removeCallback"></a>
-#callback: removeCallback
-Callback for [remove](#module_mio.Resource#remove).
-
-**Params**
-
-- err `Error`  
 
 **Type**: `function`  
 
