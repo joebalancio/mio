@@ -886,7 +886,7 @@ describe('Model', function() {
         });
       var model = Model.create({ id: 1 });
       model.delete(function(err) {
-        expect(err).to.eql(null);
+        expect(err).to.eql(undefined);
         done();
       });
     });
@@ -918,7 +918,7 @@ describe('Model', function() {
 
     it('emits "delete" event', function(done) {
       var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.on('delete', function(result, query, model) {
+      Model.on('delete', function(query, model) {
         expect(model).to.be.an.instanceOf(Model);
       });
       var model = Model.create({ id: 1 });

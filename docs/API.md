@@ -10,14 +10,6 @@
   * [Resource.browser(fn)](#module_mio.Resource.browser)
   * [Resource.server(fn)](#module_mio.Resource.server)
   * [Resource.create(attrs)](#module_mio.Resource.create)
-  * [Resource.Query#where(where)](#module_mio.Resource.Query#where)
-  * [Resource.Query#sort(sort)](#module_mio.Resource.Query#sort)
-  * [Resource.Query#paginate(paginate)](#module_mio.Resource.Query#paginate)
-  * [Resource.Query#from(from)](#module_mio.Resource.Query#from)
-  * [Resource.Query#size(size)](#module_mio.Resource.Query#size)
-  * [Resource.Query#page(page)](#module_mio.Resource.Query#page)
-  * [Resource.Query#withRelated(relations)](#module_mio.Resource.Query#withRelated)
-  * [Resource.Query#exec(callback)](#module_mio.Resource.Query#exec)
   * [Resource.hasOne(attr, params)](#module_mio.Resource.hasOne)
   * [Resource.hasMany(attr, params)](#module_mio.Resource.hasMany)
   * [Resource.belongsTo(attr, params)](#module_mio.Resource.belongsTo)
@@ -43,23 +35,249 @@
   * [resource.has(attr)](#module_mio.Resource#has)
   * [resource.set(attributes)](#module_mio.Resource#set)
   * [resource.reset(attributes)](#module_mio.Resource#reset)
+  * [Resource.url([method])](#module_mio.Resource.url)
+* [class: mio.Collection](#module_mio.Collection)
+  * [new mio.Collection(resources)](#new_module_mio.Collection)
+  * [collection.resources](#module_mio.Collection#resources)
+  * [collection.length](#module_mio.Collection#length)
+  * [collection.toArray](#module_mio.Collection#toArray)
+  * [Collection.extend(prototype, statics)](#module_mio.Collection.extend)
+  * [Collection.url([method])](#module_mio.Collection.url)
+  * [collection.at(index)](#module_mio.Collection#at)
+  * [collection.toJSON()](#module_mio.Collection#toJSON)
+* [class: mio.Query](#module_mio.Query)
+  * [new mio.Query(context, handler)](#new_module_mio.Query)
+  * [query.where(where)](#module_mio.Query#where)
+  * [query.sort(sort)](#module_mio.Query#sort)
+  * [query.paginate(paginate)](#module_mio.Query#paginate)
+  * [query.from(from)](#module_mio.Query#from)
+  * [query.size(size)](#module_mio.Query#size)
+  * [query.page(page)](#module_mio.Query#page)
+  * [query.withRelated(relations)](#module_mio.Query#withRelated)
+  * [query.exec(callback)](#module_mio.Query#exec)
+  * [query.toJSON()](#module_mio.Query#toJSON)
+
 ## Events
 
+* [event: "before:get"](#before_get)
+* [event: "before:put"](#before_put)
+* [event: "before:patch"](#before_patch)
+* [event: "before:post"](#before_post)
+* [event: "before:delete"](#before_delete)
+* [event: "get"](#event_get)
+* [event: "put"](#event_put)
+* [event: "patch"](#event_patch)
+* [event: "post"](#event_post)
+* [event: "delete"](#event_delete)
 * [event: "change"](#event_change)
-* [event: "initialize"](#event_initialize)
 * [event: "change:[attr]"](#change_[attr])
+* [event: "initialize"](#event_initialize)
 * [event: "create"](#event_create)
 * [event: "attribute"](#event_attribute)
 * [event: "set"](#event_set)
 * [event: "reset"](#event_reset)
 
 
+<a name="new_module_mio.Collection"></a>
+#new mio.Collection(resources)
+
+  A collection is the interface for working with multiple resources, and
+exposes the same set of HTTP verbs as `Resource`.
+
+All Array.prototype methods are available for collections, but a collection
+is not an array. The array of resources is kept at `Collection#resources`.
+
+**Params**
+
+- resources `Array.<Resource>`  
+
+
+  <a name="new_module_mio.Collection"></a>
+##new mio.Collection(resources)
+A collection is the interface for working with multiple resources, and
+exposes the same set of HTTP verbs as `Resource`.
+
+All Array.prototype methods are available for collections, but a collection
+is not an array. The array of resources is kept at `Collection#resources`.
+
+**Params**
+
+- resources `Array.<Resource>`  
+
+<a name="module_mio.Collection#resources"></a>
+##collection.resources
+**Type**: `Array.<Resource>`  
+<a name="module_mio.Collection#length"></a>
+##collection.length
+**Type**: `Number`  
+<a name="module_mio.Collection#toArray"></a>
+##collection.toArray
+Returns array of resources in collection.
+
+**Returns**: `Array.<Resource>`  
+<a name="module_mio.Collection.extend"></a>
+##Collection.extend(prototype, statics)
+Extend collection prototype or class.
+
+**Params**
+
+- prototype `Object`  
+- statics `Object`  
+
+**Returns**: `Collection`  
+<a name="module_mio.Collection.url"></a>
+##Collection.url([method])
+Returns map of HTTP methods to collection URLs. If `method` is specified, the
+URL for that `method` is returned.
+
+**Params**
+
+- \[method\] `String`  
+
+**Returns**: `Object` | `String`  
+<a name="module_mio.Collection#at"></a>
+##collection.at(index)
+Returns resource at given `index`.
+
+**Params**
+
+- index `Number`  
+
+**Returns**: `Resource`  
+<a name="module_mio.Collection#toJSON"></a>
+##collection.toJSON()
+Returns array of resources in collection.
+
+**Returns**: `Array.<Resource>`  
+
+<a name="new_module_mio.Query"></a>
+#new mio.Query(context, handler)
+
+  Compose queries functionally.
+
+**Params**
+
+- context `Object` - context to execute `handler` with  
+- handler `function` - method to execute for Query#exec  
+
+**Returns**: `Query`  
+**Example**  
+```javascript
+User.Collection.get()
+ .where({ active: true })
+ .sort({ created_at: "desc" })
+ .size(10)
+ .exec(function(err, users) {
+   // ...
+ });
+```
+
+
+  <a name="new_module_mio.Query"></a>
+##new mio.Query(context, handler)
+Compose queries functionally.
+
+**Params**
+
+- context `Object` - context to execute `handler` with  
+- handler `function` - method to execute for Query#exec  
+
+**Returns**: `Query`  
+**Example**  
+```javascript
+User.Collection.get()
+ .where({ active: true })
+ .sort({ created_at: "desc" })
+ .size(10)
+ .exec(function(err, users) {
+   // ...
+ });
+```
+
+<a name="module_mio.Query#where"></a>
+##query.where(where)
+Set `query.where` parameters.
+
+**Params**
+
+- where `Object`  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#sort"></a>
+##query.sort(sort)
+Set `query.sort` parameters.
+
+**Params**
+
+- sort `Object`  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#paginate"></a>
+##query.paginate(paginate)
+Set `query.paginate` parameters.
+
+**Params**
+
+- paginate `Object`  
+  - \[from\] `Number`  
+  - \[size\] `Number`  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#from"></a>
+##query.from(from)
+Set `query.from` parameter.
+
+**Params**
+
+- from `Mixed` - treated as an offset if number  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#size"></a>
+##query.size(size)
+Set `query.size` parameter.
+
+**Params**
+
+- size `Number`  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#page"></a>
+##query.page(page)
+Set `query.page` parameter. Must be used after `query.size` is set.
+
+**Params**
+
+- page `Number` - first page is 1  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#withRelated"></a>
+##query.withRelated(relations)
+Set `query.withRelated` parameter.
+
+**Params**
+
+- relations `String` | `Array.<String>`  
+
+**Returns**: `Query`  
+<a name="module_mio.Query#exec"></a>
+##query.exec(callback)
+Execute query.
+
+**Params**
+
+- callback `function`  
+
+<a name="module_mio.Query#toJSON"></a>
+##query.toJSON()
+Return query object.
+
+**Returns**: [query](#query)  
+
 <a name="new_module_mio.Resource"></a>
 #new mio.Resource(values)
 
-  Create new `Resource` instance. Values set using the constructor are not
-marked as dirty. Use `.set()` after instantiation for hydration of dirty
-attributes.
+  Values set using the constructor are not marked as dirty. Use `.set()`
+after instantiation for hydration of dirty attributes.
 
 **Params**
 
@@ -78,9 +296,8 @@ var user = new User({ name: "alex" });
 
   <a name="new_module_mio.Resource"></a>
 ##new mio.Resource(values)
-Create new `Resource` instance. Values set using the constructor are not
-marked as dirty. Use `.set()` after instantiation for hydration of dirty
-attributes.
+Values set using the constructor are not marked as dirty. Use `.set()`
+after instantiation for hydration of dirty attributes.
 
 **Params**
 
@@ -204,80 +421,6 @@ This is simply sugar for `new Resource(attrs)`.
 **Params**
 
 - attrs `Object`  
-
-**Returns**: `Resource`  
-<a name="module_mio.Resource.Query#where"></a>
-##Resource.Query#where(where)
-Set `query.where` parameters.
-
-**Params**
-
-- where `Object`  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#sort"></a>
-##Resource.Query#sort(sort)
-Set `query.sort` parameters.
-
-**Params**
-
-- sort `Object`  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#paginate"></a>
-##Resource.Query#paginate(paginate)
-Set `query.paginate` parameters.
-
-**Params**
-
-- paginate `Object`  
-  - \[from\] `Number`  
-  - \[size\] `Number`  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#from"></a>
-##Resource.Query#from(from)
-Set `query.from` parameter.
-
-**Params**
-
-- from `Mixed` - treated as an offset if number  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#size"></a>
-##Resource.Query#size(size)
-Set `query.size` parameter.
-
-**Params**
-
-- size `Number`  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#page"></a>
-##Resource.Query#page(page)
-Set `query.page` parameter. Must be used after `query.size` is set.
-
-**Params**
-
-- page `Number` - first page is 1  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#withRelated"></a>
-##Resource.Query#withRelated(relations)
-Set `query.withRelated` parameter.
-
-**Params**
-
-- relations `String` | `Array.<String>`  
-
-**Returns**: `Resource.Query`  
-<a name="module_mio.Resource.Query#exec"></a>
-##Resource.Query#exec(callback)
-Execute query.
-
-**Params**
-
-- callback `function`  
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource.hasOne"></a>
@@ -450,17 +593,19 @@ must be called to continue firing subsequent listeners. Arguments received by
 **Returns**: `Resource`  
 <a name="module_mio.Resource.get"></a>
 ##Resource.get(query, callback)
-Get a resource with given `id` or `query`.
+Get a resource with given `query`.
+
+If `query` is a non-object it's transformed into `{ where: query }`.
 
 **Params**
 
-- query `Number` | `Object`  
-- callback `getCallback`  
+- query <code>[query](#query)</code>  
+- callback <code>[getCallback](#getCallback)</code>  
 
 **Fires**
 
-- [before:get](before:get)
-- [event:get](event:get)
+- [before:get](#before_get)
+- [get](#event_get)
 
 **Returns**: `Resource`  
 **Example**  
@@ -476,30 +621,32 @@ Replace or create resource using given `query` and `representation`.
 
 **Params**
 
-- query `Object`  
+- query <code>[query](#query)</code>  
 - representation `Object`  
-- callback `putCallback`  
+- callback <code>[putCallback](#putCallback)</code>  
 
 **Fires**
 
-- [before:put](before:put)
-- [event:put](event:put)
+- [before:put](#before_put)
+- [put](#event_put)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource.patch"></a>
 ##Resource.patch(query, changes, callback)
 Patch resource using given `query` and corresponding set of `changes`.
 
+To patch multiple resources use `Resource.Collection.patch`.
+
 **Params**
 
-- query `Object`  
+- query <code>[query](#query)</code>  
 - changes `Object` | `Array`  
-- callback `patchCallback`  
+- callback <code>[patchCallback](#patchCallback)</code>  
 
 **Fires**
 
-- [before:patch](before:patch)
-- [event:patch](event:patch)
+- [before:patch](#before_patch)
+- [patch](#event_patch)
 
 **Returns**: `Resource`  
 **Example**  
@@ -513,44 +660,49 @@ User.patch({ active: true }, { active: false }, function(err) {
 ##Resource.post(representation, callback)
 Post resource using given `representation`.
 
+To post multiple resources use `Resource.Collection.post`.
+
 **Params**
 
 - representation `Object`  
-- callback `postCallback`  
+- callback <code>[postCallback](#postCallback)</code>  
 
 **Fires**
 
-- [before:post](before:post)
-- [event:post](event:post)
+- [before:post](#before_post)
+- [post](#event_post)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource.delete"></a>
 ##Resource.delete(query, callback)
 Delete resource using given `query`.
 
+To delete multiple resources use `Resource.Collection.delete`.
+
 **Params**
 
-- query `Object`  
-- callback `deleteCallback`  
+- query <code>[query](#query)</code>  
+- callback <code>[deleteCallback](#deleteCallback)</code>  
 
 **Fires**
 
-- [before:delete](before:delete)
-- [event:delete](event:delete)
+- [before:delete](#before_delete)
+- [delete](#event_delete)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#get"></a>
 ##resource.get(callback)
-Refresh the resource instance.
+Refresh the resource instance with the representation passed to the last
+hook's `next`.
 
 **Params**
 
-- callback `getCallback`  
+- callback <code>[getCallback](#getCallback)</code>  
 
 **Fires**
 
-- [before:get](before:get)
-- [event:get](event:get)
+- [before:get](#before_get)
+- [get](#event_get)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#put"></a>
@@ -559,12 +711,12 @@ Replace resource with instance representation.
 
 **Params**
 
-- callback `putCallback`  
+- callback <code>[putCallback](#putCallback)</code>  
 
 **Fires**
 
-- [before:put](before:put)
-- [event:put](event:put)
+- [before:put](#before_put)
+- [put](#event_put)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#patch"></a>
@@ -573,12 +725,12 @@ Patch resource with diff of instance representation.
 
 **Params**
 
-- callback `patchCallback`  
+- callback <code>[patchCallback](#patchCallback)</code>  
 
 **Fires**
 
-- [before:patch](before:patch)
-- [event:patch](event:patch)
+- [before:patch](#before_patch)
+- [patch](#event_patch)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#post"></a>
@@ -587,12 +739,12 @@ Post resource and update instance.
 
 **Params**
 
-- callback `postCallback`  
+- callback <code>[postCallback](#postCallback)</code>  
 
 **Fires**
 
-- [before:post](before:post)
-- [event:post](event:post)
+- [before:post](#before_post)
+- [post](#event_post)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#delete"></a>
@@ -601,12 +753,12 @@ Delete resource.
 
 **Params**
 
-- callback `deleteCallback`  
+- callback <code>[deleteCallback](#deleteCallback)</code>  
 
 **Fires**
 
-- [before:delete](before:delete)
-- [event:delete](event:delete)
+- [before:delete](#before_delete)
+- [delete](#event_delete)
 
 **Returns**: `Resource`  
 <a name="module_mio.Resource#isNew"></a>
@@ -626,7 +778,7 @@ If an attribute name is specified, check if that attribute is dirty.
 **Returns**: `Boolean`  
 <a name="module_mio.Resource#changed"></a>
 ##resource.changed()
-Return dirty attributes (changed since last save).
+Return dirty attributes (changed since last put/patch/post/reset).
 
 **Returns**: `Object`  
 <a name="module_mio.Resource#has"></a>
@@ -653,7 +805,8 @@ Set given resource `attributes`.
 **Returns**: `Resource`  
 <a name="module_mio.Resource#reset"></a>
 ##resource.reset(attributes)
-Reset attributes for resource. Marks resource as clean.
+Reset attributes for resource. Marks resource as clean. Instance attributes
+not defined in `attributes` will be reset to `undefined`.
 
 **Params**
 
@@ -664,6 +817,16 @@ Reset attributes for resource. Marks resource as clean.
 - [reset](#event_reset)
 
 **Returns**: `Resource`  
+<a name="module_mio.Resource.url"></a>
+##Resource.url([method])
+Returns map of HTTP methods to resource URLs. If `method` is specified, the
+URL for that `method` is returned.
+
+**Params**
+
+- \[method\] `String`  
+
+**Returns**: `Object` | `String`  
 
 
 
@@ -677,6 +840,56 @@ Fired whenever a resource attribute is changed.
 - name `String` - name of the attribute  
 - value `Mixed`  
 - prev `Mixed`  
+
+
+<a name="before_get"></a>
+#event: "before:get"
+Runs before callback for `Resource.get` or `Resource#get`.
+
+
+<a name="before_put"></a>
+#event: "before:put"
+Runs before callback for `Resource.put` or `Resource#put`.
+
+
+<a name="before_patch"></a>
+#event: "before:patch"
+Runs before callback for `Resource.patch` or `Resource#patch`.
+
+
+<a name="before_post"></a>
+#event: "before:post"
+Runs before callback for `Resource.patch` or `Resource#patch`.
+
+
+<a name="before_delete"></a>
+#event: "before:delete"
+Runs before callback for `Resource.delete` or `Resource#delete`.
+
+
+<a name="event_get"></a>
+#event: "get"
+Runs at the beginning of callback for `Resource.get` or `Resource#get`.
+
+
+<a name="event_put"></a>
+#event: "put"
+Runs at the beginning of callback for `Resource.put` or `Resource#put`.
+
+
+<a name="event_patch"></a>
+#event: "patch"
+Runs at the beginning of callback for `Resource.patch` or `Resource#patch`.
+
+
+<a name="event_post"></a>
+#event: "post"
+Runs at the beginning of callback for `Resource.post` or `Resource#post`.
+
+
+<a name="event_delete"></a>
+#event: "delete"
+Runs at the beginning of callback for `Resource.delete` or `Resource#delete`.
 
 
 <a name="event_initialize"></a>
@@ -736,6 +949,68 @@ Run at the end of resource constructor.
 
 
 
+
+<a name="query"></a>
+#type: query
+**Properties**
+
+- where `Object`  
+- sort `Object`  
+- from `Mixed`  
+- size `Number`  
+- withRelated `String` | `Array.<String>`  
+
+**Type**: `Object`  
+
+<a name="getCallback"></a>
+#callback: getCallback
+Receives arguments passed from the last hook's `next`.
+
+**Params**
+
+- err `Error`  
+
+**Type**: `function`  
+
+<a name="putCallback"></a>
+#callback: putCallback
+Receives arguments passed from the last hook's `next`.
+
+**Params**
+
+- err `Error`  
+
+**Type**: `function`  
+
+<a name="patchCallback"></a>
+#callback: patchCallback
+Receives arguments passed from the last hook's `next`.
+
+**Params**
+
+- err `Error`  
+
+**Type**: `function`  
+
+<a name="postCallback"></a>
+#callback: postCallback
+Receives arguments passed from the last hook's `next`.
+
+**Params**
+
+- err `Error`  
+
+**Type**: `function`  
+
+<a name="deleteCallback"></a>
+#callback: deleteCallback
+Receives arguments passed from the last hook's `next`.
+
+**Params**
+
+- err `Error`  
+
+**Type**: `function`  
 
 <a name="plugin"></a>
 #callback: plugin
