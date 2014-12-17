@@ -1,7 +1,7 @@
 {
   "name": "mio",
   "description": "RESTful resources for both client and server using a simple, extensible, storage-agnostic prototype.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repo": "mio/mio",
   "keywords": [
     "REST",
