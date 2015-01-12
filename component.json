@@ -1,7 +1,7 @@
 {
   "name": "mio",
-  "description": "RESTful resources for both client and server using a simple, extensible, storage-agnostic prototype.",
-  "version": "1.0.3",
+  "description": "A common model layer between client and server for building REST APIs and web applications.",
+  "version": "1.0.4",
   "repo": "mio/mio",
   "keywords": [
     "REST",

@@ -1,17 +1,765 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.mio=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**
- * @module
+ * @module mio
  */
-
 exports.Resource = require('./resource');
+exports.Collection = require('./collection');
+exports.Query = require('./query');
 
-},{"./resource":2}],2:[function(require,module,exports){
+},{"./collection":2,"./query":3,"./resource":4}],2:[function(require,module,exports){
+var Query = require('./query');
+var extend = require('./util').extend;
+
+module.exports = Collection;
+
+/**
+ * A collection is the interface for working with multiple resources, and
+ * exposes the same set of HTTP verbs as `Resource`.
+ *
+ * Array.prototype methods are available for collections, but a collection
+ * is not an array. The array of resources is kept at `Collection#resources`.
+ * Methods such as `map` return arrays instead of the collection.
+ *
+ * @example
+ *
+ * ```javascript
+ * var resource1 = new Resource();
+ * var collection = new Resource.Collection([resource]);
+ *
+ * collection.push(new Resource());
+ * collection.splice(1, 1, new Resource());
+ *
+ * collection.at(0) === resource; // => true
+ * collection.length === 2;       // => true
+ * collection.indexOf(resource);  // => 0
+ * ```
+ *
+ * @param {Array.<module:mio.Resource>} resources
+ * @memberof module:mio
+ * @alias Resource.Collection
+ * @class
+ */
+function Collection (resources) {
+  var Resource = this.Resource;
+
+  /**
+   * @type {Array.<Resource>}
+   */
+  this.resources = (resources || []).map(function (resource) {
+    return Resource.create(resource);
+  });
+
+  /**
+   * Number of resources in the collection.
+   *
+   * @type {Number}
+   * @name length
+   * @memberof module:mio.Resource.Collection.prototype
+   */
+  Object.defineProperty(this, 'length', {
+    get: function () {
+      return this.resources.length;
+    }
+  });
+
+  if (!Resource) {
+    throw new Error("Resource is required");
+  }
+}
+
+/**
+ * Create a collection of resources and hydrate them if necessary.
+ *
+ * This is simply sugar for `new Collection(resources)`.
+ *
+ * @param {Array.<module:mio.Resource|Object>} resources
+ * @returns {module:mio.Resource.Collection}
+ */
+Collection.create = function(resources) {
+  if (resources instanceof this) {
+    return resources;
+  } else {
+    return new (this)(resources);
+  }
+};
+
+/**
+ * Extend collection prototype or class properties.
+ *
+ * @param {Object} prototype
+ * @param {Object} statics
+ * @param {String} statics.baseUrl
+ * @returns {module:mio.Resource.Collection}
+ */
+Collection.extend = function (prototype, statics) {
+  var child = extend.call(this, prototype, statics);
+
+  child.Resource = child.prototype.Resource;
+
+  if (!child.Resource) {
+    throw new Error("Resource is required");
+  }
+
+  return child;
+};
+
+/**
+ * Get a collection of resources using given `query`.
+ *
+ * @param {module:mio.Query} query
+ * @param {module:mio.Resource.get.get} callback
+ * @returns {module:mio.Resource.Collection}
+ * @fires module:mio.Resource.before.collection:get
+ * @fires module:mio.Resource.on.collection:get
+ */
+Collection.get = function (query, callback) {
+  var Collection = this;
+
+  if (arguments.length === 0) {
+    return new Query({
+      handler: this.get,
+      context: this
+    });
+  }
+
+  if (typeof query === 'function') {
+    callback = query;
+    query = {};
+  }
+
+  /**
+   * Runs before callback for `Resource.Collection.get`.
+   *
+   * @event collection:get
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.Collection.get`.
+   *
+   * @event collection:get
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+  this.Resource.trigger(
+    'collection:get',
+    new Query({ state: query }),
+    function (err, collection) {
+      if (err) return callback.call(this, err);
+
+      if (!collection) {
+        collection = new Collection([]);
+      }
+
+      callback.call(this, err, collection);
+    });
+
+  return this;
+};
+
+/**
+ * Replace a collection of resources using given `query`.
+ *
+ * @param {module:mio.Query} query
+ * @param {Object} representation
+ * @param {module:mio.Resource.put.put} callback
+ * @returns {module:mio.Resource.Collection}
+ * @fires module:mio.Resource.before.collection:put
+ * @fires module:mio.Resource.on.collection:put
+ */
+Collection.put = function (query, resources, callback) {
+  if (arguments.length === 1) {
+    resources = query;
+
+    return new Query({
+      handler: function (query, callback) {
+        this.put(query, resources, callback);
+      },
+      context: this
+    });
+  }
+
+  /**
+   * Runs before callback for `Resource.Collection.put`.
+   *
+   * @event collection:put
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {Array.<Object|module:mio.Resource>} resources
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.Collection.put`.
+   *
+   * @event collection:put
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {Array.<Object>|Array.<module:mio.Resource>} resources
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+  this.Resource.trigger(
+    'collection:put',
+    new Query({ state: query }),
+    resources,
+    callback
+  );
+
+  return this;
+};
+
+/**
+ * Update (patch) a collection of resources using given `query` and `changes`.
+ *
+ * @param {module:mio.Query} query
+ * @param {Object|Array.<Object>} changes
+ * @param {module:mio.Resource.patch.patch} callback
+ * @returns {module:mio.Resource.Collection}
+ * @fires module:mio.Resource.before.collection:patch
+ * @fires module:mio.Resource.on.collection:patch
+ */
+Collection.patch = function (query, changes, callback) {
+  if (arguments.length === 1) {
+    changes = query;
+
+    return new Query({
+      handler: function (query, callback) {
+        this.patch(query, changes, callback);
+      },
+      context: this
+    });
+  }
+
+  /**
+   * Runs before callback for `Resource.Collection.patch`.
+   *
+   * @event collection:patch
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {Object|Array.<Object>} patch
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.Collection.patch`.
+   *
+   * @event collection:patch
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {Object|Array.<Object>} patch
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+  this.Resource.trigger(
+    'collection:patch',
+    new Query({ state: query }),
+    changes,
+    callback
+  );
+
+  return this;
+};
+
+/**
+ * Create resources using given `representations`.
+ *
+ * @param {Array.<Object>} representations
+ * @param {module:mio.Resource.post.post} callback
+ * @returns {module:mio.Resource.Collection}
+ * @fires module:mio.Resource.before.collection:post
+ * @fires module:mio.Resource.on.collection:post
+ */
+Collection.post = function (representations, callback) {
+
+  /**
+   * Runs before callback for `Resource.Collection.post`.
+   *
+   * @event collection:post
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {Array.<Object>|Array.<module:mio.Resource>} resources
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.Collection.post`.
+   *
+   * @event collection:post
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {Array.<Object>|Array.<module:mio.Resource>} resources
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+  this.Resource.trigger('collection:post', representations, callback);
+  return this;
+};
+
+/**
+ * Delete resources using given `query`.
+ *
+ * @param {module:mio.Query} query
+ * @param {module:mio.Resource.delete.delete} callback
+ * @returns {module:mio.Resource.Collection}
+ * @fires module:mio.Resource.before.collection:delete
+ * @fires module:mio.Resource.on.collection:delete
+ */
+Collection.delete = function (query, callback) {
+  if (arguments.length === 0) {
+    return new Query({
+      handler: this.get,
+      context: this
+    });
+  }
+
+  if (typeof query === 'function') {
+    callback = query;
+    query = {};
+  }
+
+  /**
+   * Runs before callback for `Resource.Collection.delete`.
+   *
+   * @event collection:delete
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.Collection.delete`.
+   *
+   * @event collection:delete
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource.Collection} collection included if triggered
+   * by instance.
+   * @this {module:mio.Resource}
+   */
+  this.Resource.trigger(
+    'collection:delete',
+    new Query({ state: query }),
+    callback
+  );
+
+  return this;
+};
+
+/**
+ * Returns map of HTTP methods to collection URLs. If `method` is specified, the
+ * URL for that `method` is returned.
+ *
+ * @param {String=} method
+ * @returns {Object|String}
+ */
+Collection.url = function (method) {
+  var baseUrl = this.Resource.baseUrl;
+  var urls = this.urls;
+
+  if (!baseUrl) {
+    throw new Error("No Resource.baseUrl defined.");
+  }
+
+  if (!urls) {
+    urls = this.urls = {
+      'get': baseUrl,
+      'put': baseUrl,
+      'patch': baseUrl,
+      'post': baseUrl,
+      'delete': baseUrl,
+      'options': baseUrl
+    };
+  }
+
+  return method ? urls[method] : urls;
+};
+
+/**
+ * Returns map of HTTP methods to collection URLs. If `method` is specified, the
+ * URL for that `method` is returned.
+ *
+ * @param {String=} method
+ * @returns {Object|String}
+ */
+Collection.prototype.url = function (method) {
+  return this.constructor.url(method);
+};
+
+/**
+ * Returns resource at given `index`.
+ *
+ * @param {Number} index
+ * @returns {module:mio.Resource}
+ */
+Collection.prototype.at = function (index) {
+  return this.resources[index];
+};
+
+/**
+ * Returns array of resources in collection.
+ *
+ * @returns {Array.<module:mio.Resource>}
+ */
+Collection.prototype.toJSON = function () {
+  return this.resources;
+};
+
+/**
+ * Returns array of resources in collection.
+ *
+ * @returns {Array.<module:mio.Resource>}
+ */
+Collection.prototype.toArray = Collection.prototype.toJSON;
+
+/**
+ * Collections inherit `Array.prototype` methods. `Array.prototype` methods
+ * that return arrays such as `map` still return an array, not the collection.
+ *
+ * @function [ArrayMethod]
+ * @memberof module:mio.Resource.Collection.prototype
+ */
+[
+  'every',
+  'filter',
+  'forEach',
+  'indexOf',
+  'lastIndexOf',
+  'map',
+  'pop',
+  'push',
+  'reduce',
+  'reduceRight',
+  'reverse',
+  'shift',
+  'slice',
+  'some',
+  'sort',
+  'splice',
+  'unshift'
+].forEach(function (key) {
+  if (typeof Array.prototype[key] === 'function') {
+    Collection.prototype[key] = function () {
+      return this.resources[key].apply(this.resources, arguments);
+    };
+  }
+});
+
+},{"./query":3,"./util":5}],3:[function(require,module,exports){
+module.exports = Query;
+
+/**
+ * Compose queries functionally.
+ *
+ * @example
+ *
+ * ```javascript
+ * User.Collection.get()
+ *  .where({ active: true })
+ *  .sort({ created_at: "desc" })
+ *  .size(10)
+ *  .exec(function(err, users) {
+ *    // ...
+ *  });
+ * ```
+ *
+ * The above is equivelant to:
+ *
+ * ```javascript
+ * User.Collection.get({
+ *   where: { active: true },
+ *   sort:  { created_at: 'desc' },
+ *   size:  10
+ * }, function (err, users) {
+ *   // ...
+ * });
+ * ```
+ *
+ * @param {Object=} options
+ * @param {Object=} options.state set initial query state
+ * @param {Function=} options.handler method to execute for Query#exec
+ * @param {Object=} options.context context when executing `options.handler`
+ * @memberof module:mio
+ * @alias Query
+ * @constructor
+ */
+function Query(options) {
+  options = options || {};
+
+  this.context = options.context;
+  this.handler = options.handler;
+
+  /**
+   * @typedef query
+   * @type {Object}
+   * @property {Object} where
+   * @property {Object} sort
+   * @property {Mixed} from
+   * @property {Number} size
+   * @property {String|Array.<String>} withRelated
+   */
+  this.query = options.state || {};
+
+  if (!this.query.where) {
+    this.query.where = {};
+  }
+}
+
+/**
+ * Set `query.where` parameters individually or using a map.
+ *
+ * @example
+ *
+ * Specify multiple parameters using a map:
+ *
+ * ```javascript
+ * User.Collection.get().where({
+ *   active: true,
+ *   role: 'admin'
+ * }).exec(function (err, users) { ... });
+ * ```
+ *
+ * Specify individual parameters using a key and value:
+ *
+ * ```javascript
+ * User.Collection.get()
+ *   .where('active', true)
+ *   .where('role', 'admin')
+ *   .exec(function (err, users) { ... })
+ * ```
+ *
+ * @param {Object} where
+ * @param {Mixed=} value
+ * @returns {module:mio.Query}
+ */
+Query.prototype.where = function(where, value) {
+  var query = this.query;
+
+  if (arguments.length === 0) return query.where;
+
+  if (value) {
+    query.where[where] = value;
+  } else {
+    for (var key in where) {
+      query.where[key] = where[key];
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Set `query.sort` parameters.
+ *
+ * @param {Object} sort
+ * @returns {module:mio.Query}
+ */
+Query.prototype.sort = function(sort) {
+  var query = this.query;
+
+  query.sort = query.sort || {};
+
+  if (arguments.length === 0) return query.sort;
+
+  if (typeof sort === 'object') {
+    for (var key in sort) {
+      query.sort[key] = sort[key];
+    }
+  } else {
+    query.sort = sort;
+  }
+
+  return this;
+};
+
+/**
+ * Set `query.from` and `query.size` using a map.
+ *
+ * @param {Object} paginate
+ * @param {Number=} paginate.from
+ * @param {Number=} paginate.size
+ * @returns {module:mio.Query}
+ */
+Query.prototype.paginate = function(paginate) {
+  for (var key in paginate) {
+    this.query[key] = paginate[key]
+  }
+
+  return this;
+};
+
+/**
+ * Set `query.from` parameter.
+ *
+ * @param {Mixed} from treated as an offset if number
+ * @returns {module:mio.Query}
+ */
+Query.prototype.from = function(from) {
+  if (arguments.length === 0) return this.query.from;
+  this.query.from = from;
+  return this;
+};
+
+/**
+ * Set `query.size` parameter.
+ *
+ * @param {Number} size
+ * @returns {module:mio.Query}
+ */
+Query.prototype.size = function(size) {
+  if (arguments.length === 0) return this.query.size;
+  this.query.size = Number(size);
+  return this;
+};
+
+/**
+ * Set `query.page` parameter. Must be used after `query.size` is set. This
+ * method sets the proper `query.from` value from `page`.
+ *
+ * @param {Number} page first page is 1
+ * @returns {module:mio.Query}
+ */
+Query.prototype.page = function(page) {
+  var size = this.query.size;
+
+  if (arguments.length === 0) return size;
+
+  if (!size) {
+    throw new Error('page parameter requires size parameter to be set first');
+  }
+
+  this.query.from = Number((size * page) - size);
+
+  return this;
+};
+
+/**
+ * Include related resources.
+ *
+ * @example
+ *
+ * Include one or more related resources in query:
+ *
+ * ```javascript
+ * Book.get('0-945466-47-1')
+ *   .withRelated('author', 'reviews')
+ *   .exec(function (err, book) {
+ *     console.log(book.author);
+ *     console.log(book.reviews);
+ *   });
+ * ```
+ *
+ * Relation query parameters can be specified using a map:
+ *
+ * ```javascript
+ * // only fetches 5 of this user's posts
+ * User.get(1).withRelated({
+ *   posts: { limit: 5 }
+ * }).exec(function (err, user) {
+ *   console.log(user.posts.length); // => 5
+ * });
+ * ```
+ *
+ * @param {String|Array<String>|Object} relations
+ * @returns {module:mio.Query}
+ */
+Query.prototype.withRelated = function(relations) {
+  var query = this.query;
+
+  if (arguments.length === 0) {
+    return query.withRelated;
+  }
+
+  if (!query.withRelated) {
+    query.withRelated = {};
+  }
+
+  if (typeof relations === 'string') {
+    if (arguments.length === 1) {
+      query.withRelated[relations] = {
+        name: relations
+      };
+    } else {
+      for (var i = 0, l = arguments.length; i < l; i++) {
+        query.withRelated[arguments[i]] = {
+          name: arguments[i]
+        };
+      }
+    }
+  } else if (typeof relations === 'object') {
+    query.withRelated = relations;
+
+    for (var key in relations) {
+      if (relations[key].nested === true) {
+        relations[key].nested = {};
+      }
+
+      query.withRelated[key] = relations[key];
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Execute query.
+ *
+ * @param {Function} callback
+ */
+Query.prototype.exec = function(callback) {
+  var handler = this.handler;
+  var context = this.context || handler;
+  var query = this.query;
+
+  if (!handler) {
+    throw new Error("no handler defined to execute query");
+  }
+
+  return handler.call(context, query, callback);
+};
+
+/**
+ * Return query object JSON.
+ *
+ * @returns {Object}
+ */
+Query.prototype.toJSON = function () {
+  return this.query;
+};
+
+},{}],4:[function(require,module,exports){
+var Collection = require('./collection');
+var Query = require('./query');
+var extend = require('./util').extend;
+
 module.exports = Resource;
 
 /**
- * Create new `Resource` instance. Values set using the constructor are not
- * marked as dirty. Use `.set()` after instantiation for hydration of dirty
- * attributes.
+ * Values set using the constructor are not marked as dirty. Use `.set()`
+ * after instantiation for hydration of dirty attributes.
  *
  * @example
  *
@@ -21,10 +769,10 @@ module.exports = Resource;
  *
  * @param {Object} values optional
  * @constructor
- * @memberof module:mio
  * @alias Resource
- * @fires initialize
- * @fires create
+ * @memberof module:mio
+ * @fires module:mio.Resource.on.initialize
+ * @fires module:mio.Resource.on.create
  */
 function Resource(values) {
   if (!values) values = {};
@@ -33,7 +781,8 @@ function Resource(values) {
    * Run at the beginning of resource constructor.
    *
    * @event initialize
-   * @param {Resource} resource
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Resource} resource
    * @param {Object} values values passed to constructor
    */
   this.constructor.emit('initialize', this, values);
@@ -108,7 +857,8 @@ function Resource(values) {
            * Fired whenever a resource attribute is changed.
            *
            * @event change
-           * @param {Resource} resource
+           * @memberof module:mio.Resource.on
+           * @param {module:mio.Resource} resource
            * @param {String} name name of the attribute
            * @param {Mixed} value
            * @param {Mixed} prev
@@ -118,6 +868,7 @@ function Resource(values) {
            * Fired whenever [attr] is changed.
            *
            * @event change:[attr]
+           * @memberof module:mio.Resource.on
            * @param {Resource} resource
            * @param {Mixed} value
            * @param {Mixed} prev
@@ -154,16 +905,17 @@ function Resource(values) {
   /**
    * Run at the end of resource constructor.
    *
-   * **Note:** This event is not the same as {@link save}.
+   * **Note:** Not the same event as {@link module:mio.Resource.on.post}.
    *
    * @event create
+   * @memberof module:mio.Resource.on
    * @param {Resource} resource
    */
   this.constructor.emit('create', this);
 }
 
 /**
- * Extend `Resource` with attributes, prototype, or static properties.
+ * Extend `Resource` attributes and prototype or class properties.
  *
  * @example
  *
@@ -173,50 +925,37 @@ function Resource(values) {
  *     id: { primary: true }
  *   },
  * }, {
- *   use: [
- *     Validators,
- *     MongoDB(...)
- *   ]
+ *   baseUrl: '/users'
  * });
  * ```
  *
  * @param {Object} prototype extend resource prototype
- * @param {Object} prototype.attributes attribute definitions passed to `attr()`
+ * @param {Object} prototype.attributes attribute definitions passed to
+ * {@link Resource.attr}
  * @param {Object=} statics extend resource with static properties or methods
- * @param {Array=} statics.use array of plugins to use
+ * @param {String} baseUrl used by {@link Resource#url} to construct URLs
+ * @param {Array=} statics.use array of plugins passed to {@link Resource.use}
  * @param {Array=} statics.browser array of browser plugins to use
  * @param {Array=} statics.server array of server plugins to use
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
 Resource.extend = function (prototype, statics) {
-  var parent = this;
-  var child;
+  var attributes;
 
-  prototype = prototype || {};
+  statics = statics || {};
 
-  child = function resource () {
-    if (!(this instanceof child)) {
-      var self = Object.create(child.prototype);
-      child.apply(self, arguments);
-      return self;
-    }
+  if (prototype && prototype.attributes) {
+    attributes = prototype.attributes;
+    delete prototype.attributes;
+  }
 
-    return parent.apply(this, arguments);
-  };
-
-  child.extend = parent.extend;
-
-  var Surrogate = function() {
-    this.constructor = child;
-  };
-  Surrogate.prototype = parent.prototype;
-  child.prototype = new Surrogate();
+  var child = extend.call(this, prototype, statics);
 
   // static object properties to inherit with shallow copy
   var methods = ['attributes', 'hooks', 'listeners', 'options'];
 
   for (var i=0, l=methods.length; i<l; i++) {
-    var obj = parent[methods[i]];
+    var obj = this[methods[i]];
 
     child[methods[i]] = Object.create(null);
 
@@ -225,14 +964,23 @@ Resource.extend = function (prototype, statics) {
     }
   }
 
-  // static properties to inherit
-  for (var prop in parent) {
-    if (!child[prop]) {
-      child[prop] = parent[prop];
+  // define instance attributes using `Resource#attr()`
+  if (attributes) {
+    for (var attr in attributes) {
+      if (attributes.hasOwnProperty(attr)) {
+        child.attr(attr, attributes[attr]);
+      }
     }
   }
 
-  // extend class with static properties
+  // expose child collection
+  if (!statics.collection || typeof statics.collection === 'object') {
+    child.Collection = Collection.extend({
+      Resource: child
+    }, statics.collection);
+  }
+
+  // use plugins
   for (var prop in statics) {
     switch (prop) {
       case 'use':
@@ -244,27 +992,8 @@ Resource.extend = function (prototype, statics) {
           child[prop](statics[prop][i]);
         }
         break;
-      default:
-        child[prop] = statics[prop];
     }
   }
-
-  // extend prototype with properties
-  for (var prop in prototype) {
-    if (prototype.hasOwnProperty(prop)) {
-      if (prop === 'attributes') {
-
-        // define instance attributes using `Resource#attr()`
-        for (var key in prototype.attributes) {
-          child.attr(key, prototype.attributes[key]);
-        }
-      } else {
-        child.prototype[prop] = prototype[prop];
-      }
-    }
-  }
-
-  child.__super__ = parent.prototype;
 
   return child;
 };
@@ -275,14 +1004,22 @@ Resource.extend = function (prototype, statics) {
  * @example
  *
  * ```javascript
- *   User
- *     .attr('id', { primary: true })
- *     .attr('name')
- *     .attr('created', {
- *       default: function() {
- *         return new Date();
- *       }
- *     });
+ * User
+ *   .attr('id', { primary: true })
+ *   .attr('name')
+ *   .attr('created', {
+ *     default: function() {
+ *       return new Date();
+ *     }
+ *   });
+ * ```
+ *
+ * Passing a non-object for `options` sets that value as the default:
+ *
+ * ```javascript
+ * User.attr('created', function () {
+ *   return new Date();
+ * });
  * ```
  *
  * @param {String} name
@@ -292,8 +1029,8 @@ Resource.extend = function (prototype, statics) {
  * @param {Boolean=} options.serializable include in JSON (default: true)
  * @param {Function=} options.get accessor function
  * @param {Boolean=} options.primary use attribute as primary key
- * @returns {Resource}
- * @fires attribute
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.on.attribute
  */
 Resource.attr = function(name, options) {
   this.attributes = this.attributes || Object.create(null);
@@ -303,7 +1040,9 @@ Resource.attr = function(name, options) {
   }
 
   if (typeof options !== 'object') {
-    options = { 'default': options };
+    options = {
+      'default': options
+    };
   }
 
   if (options.primary) {
@@ -319,6 +1058,7 @@ Resource.attr = function(name, options) {
 
   /**
    * @event attribute
+   * @memberof module:mio.Resource.on
    * @param {String} name attribute name
    * @param {Object} options attribute options
    */
@@ -328,7 +1068,8 @@ Resource.attr = function(name, options) {
 };
 
 /**
- * Call the given plugin `fn` with the Resource as both argument and context.
+ * Call the given `plugin` function with the Resource as both argument and
+ * context.
  *
  * @example
  *
@@ -343,16 +1084,19 @@ Resource.attr = function(name, options) {
  *   });
  * ```
  *
- * @param {plugin} plugin
- * @returns {Resource}
+ * @param {module:mio.Resource.use.plugin} plugin
+ * @returns {module:mio.Resource}
  */
 Resource.use = function(plugin) {
   if (typeof plugin === 'function') {
 
     /**
+     * Called with Resource as argument and context.
+     *
      * @callback plugin
-     * @param {Resource} Resource
-     * @this {Resource}
+     * @memberof module:mio.Resource.use
+     * @param {module:mio.Resource} Resource
+     * @this {module:mio.Resource}
      */
     plugin.call(this, this);
   } else {
@@ -365,12 +1109,12 @@ Resource.use = function(plugin) {
 };
 
 /**
- * Use given `fn` only in browser.
+ * Use given `plugin` only in browser.
  *
- * @param {plugin} fn
- * @returns {Resource}
+ * @param {module:mio.Resource.use.plugin} plugin
+ * @returns {module:mio.Resource}
  */
-Resource.browser = function(fn) {
+Resource.browser = function(plugin) {
   if (typeof window === 'object') {
     this.use.apply(this, arguments);
   }
@@ -378,10 +1122,10 @@ Resource.browser = function(fn) {
 };
 
 /**
- * Use given `fn` only in node.
+ * Use given `plugin` only in node.
  *
- * @param {plugin} fn
- * @returns {Resource}
+ * @param {module:mio.Resource.use.plugin} plugin
+ * @returns {module:mio.Resource}
  */
 Resource.server = function(fn) {
   if (typeof window === 'undefined') {
@@ -391,455 +1135,305 @@ Resource.server = function(fn) {
 };
 
 /**
- * Create a new resource and hydrate with given `attrs`,
- * or if `attrs` is already a resource return it.
+ * Create a new resource and hydrate with given `attributes`,
+ * or if `attributes` is already a resource return it.
  *
- * This is simply sugar for `new Resource(attrs)`.
+ * This is simply sugar for `new Resource(attributes)`.
  *
- * @param {Object} attrs
- * @returns {Resource}
+ * @param {Object} attributes
+ * @returns {module:mio.Resource}
  */
-Resource.create = function(attrs) {
-  return ((attrs instanceof this) ? attrs : (new (this)(attrs)));
+Resource.create = function(attributes) {
+  if (attributes instanceof this) {
+    return attributes;
+  } else {
+    return new (this)(attributes);
+  }
 };
 
 /**
- * Find a resource with given `id` or `query`.
+ * Get a resource with given `query`.
+ *
+ * If `query` is a non-object (such as an ID) it's transformed into
+ * `{ where: { primary: query } }`.
  *
  * @example
  *
  * ```javascript
- * User.findOne(123, function (err, user) {
+ * User.get(123, function (err, user) {
  *   // ...
- * })
+ * });
  * ```
  *
- * @param {Number|Object} query
- * @param {findOneCallback} callback
- * @returns {Resource}
- * @fires before:findOne
- * @fires findOne
+ * @param {module:mio.Query} query
+ * @param {module:mio.Resource.get.get} callback
+ * @returns {module:mio.Resource|module:mio.Query}
+ * @fires module:mio.Resource.before.get
+ * @fires module:mio.Resource.on.get
  */
-Resource.findOne = function(query, callback) {
-  if (typeof query == 'number') {
+Resource.get = function(query, callback) {
+  if (typeof query === 'string' || typeof query === 'number') {
     query = { where: { id: query } };
   }
 
-  if (arguments.length === 0) {
-    return new this.Query(this, this.findOne);
+  if (arguments.length < 2) {
+    return new Query({
+      handler: this.get,
+      context: this,
+      state: query
+    });
   }
 
   /**
-   * Callback for {@link module:mio.Resource.findOne}.
+   * Runs before callback for `Resource.get` or `Resource#get`.
    *
-   * @callback findOneCallback
+   * @event get
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.get` or `Resource#get`.
+   *
+   * @event get
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback get
+   * @memberof module:mio.Resource.get
    * @param {Error} err
-   * @param {Resource} resource
-   * @this {Resource}
    */
-
-  /**
-   * Runs before {@link module:mio.Resource.findOne} callback.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next` **or a value as the second**, subsequent hooks are
-   * **not** executed and `next` arguments are passed to the callback
-   * for {@link module:mio.Resource.findOne}.
-   *
-   * @event before:findOne
-   * @param {Object} query
-   * @param {Function} next
-   */
-
-  /**
-   * Run at the beginning of {@link module:mio.Resource.findOne}'s callback.
-   *
-   * @event findOne
-   * @param {Object} query
-   * @param {Resource} resource
-   */
-  return this.trigger('findOne', query, callback);
+  return this.trigger('get', new Query({ state: query }), callback);
 };
 
-Resource.get = Resource.findOne;
+/**
+ * Replace or create resource using given `query` and `representation`.
+ *
+ * @param {module:mio.Query} query
+ * @param {Object} representation
+ * @param {module:mio.Resource.put.put} callback
+ * @returns {module:mio.Resource|module:mio.Query}
+ * @fires module:mio.Resource.before.put
+ * @fires module:mio.Resource.on.put
+ */
+Resource.put = function (query, rep, callback) {
+  if (arguments.length === 1) {
+    rep = query;
+
+    return new Query({
+      handler: function (query, callback) {
+        this.put(query, rep, callback);
+      },
+      context: this
+    });
+  }
+
+  /**
+   * Runs before callback for `Resource.put` or `Resource#put`.
+   *
+   * @event put
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {Object|module:mio.Resource} representation
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.put` or `Resource#put`.
+   *
+   * @event put
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {Object|module:mio.Resource} representation
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback put
+   * @memberof module:mio.Resource.put
+   * @param {Error} err
+   */
+  return this.trigger('put', new Query({ state: query }), rep, callback);
+};
 
 /**
- * Find collection of resources using given `query`.
+ * Patch resource using given `query` and corresponding set of `changes`.
+ *
+ * To patch multiple resources use `Resource.Collection.patch`.
  *
  * @example
  *
  * ```javascript
- * User.find({ active: true }, function (err, users) {
+ * User.patch({ active: true }, { active: false }, function(err) {
  *   // ...
  * });
  * ```
  *
- * Queries can also be composed using chainable methods:
- *
- * ```javascript
- * User.find()
- *  .where({ active: true })
- *  .sort({ created_at: "desc" })
- *  .size(10)
- *  .exec(function(err, users) {
- *    // ...
- *  });
- * ```
- *
- * @param {Object} query
- * @param {findCallback} callback
- * @returns {Resource}
- * @fires before:find
- * @fires find
- */
-Resource.find = function(query, callback) {
-  if (typeof query === 'function') {
-    callback = query;
-    query = {};
-  }
-
-  if (arguments.length === 0) {
-    return new this.Query(this, this.find);
-  }
-
-  /**
-   * Callback for {@link module:mio.Resource.find}.
-   *
-   * @callback findCallback
-   * @param {Error} err
-   * @param {Array<Resource>} resources
-   * @this {Resource}
-   */
-
-  /**
-   * Runs before {@link module:mio.Resource.find} callback.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next` **or a value as the second**, subsequent hooks are
-   * **not** executed and `next` arguments are passed to the callback
-   * for {@link module:mio.Resource.find}.
-   *
-   * @event before:find
-   * @param {Object} query
-   * @param {Function} next
-   */
-
-  /**
-   * Runs at the beginning of {@link module:mio.Resource.find}'s callback.
-   *
-   * @event find
-   * @param {Object} query
-   * @param {Array<Resource>} collection
-   */
-  return this.trigger('find', query, callback, []);
-};
-
-Resource.all = Resource.findAll = Resource.find;
-
-/**
- * Count resources using given `query`.
- *
- * @param {Object} query
- * @param {countCallback} callback
- * @returns {Resource}
- * @fires before:count
- * @fires count
- */
-Resource.count = function(query, callback) {
-  if (typeof query === 'function') {
-    callback = query;
-    query = {};
-  }
-
-  if (arguments.length === 0) {
-    return new this.Query(this, this.count);
-  }
-
-  /**
-   * Callback for {@link module:mio.Resource.count}.
-   *
-   * @callback countCallback
-   * @param {Error} err
-   * @param {Number} count
-   * @this {Resource}
-   */
-
-  /**
-   * Runs before {@link module:mio.Resource.count} callback.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next` **or a value as the second**, subsequent hooks are
-   * **not** executed and the `next` arguments are passed to the callback
-   * for {@link module:mio.Resource.count}.
-   *
-   * @event before:count
-   * @param {Object} query
-   * @param {Function} next
-   */
-
-  /**
-   * Run at the beginning of {@link module:mio.Resource.count}'s callback.
-   *
-   * @event count
-   * @param {Object} query
-   * @param {Number} count
-   */
-  return this.trigger('count', query, callback, 0);
-};
-
-/**
- * Update all resources using given `query` and corresponding set of `changes`.
- *
- * @example
- *
- * ```javascript
- * User.update({ active: true }, { active: false }, function(err) {
- *   // ...
- * });
- * ```
- *
- * @param {Object} query
+ * @param {module:mio.Query} query
  * @param {Object|Array} changes
- * @param {updateCallback} callback
- * @returns {Resource}
- * @fires before:updateMany
- * @fires updateMany
+ * @param {module:mio.Resource.patch.patch} callback
+ * @returns {module:mio.Resource|module:mio.Query}
+ * @fires module:mio.Resource.before.patch
+ * @fires module:mio.Resource.on.patch
  */
-Resource.update = function (query, changes, callback) {
+Resource.patch = function (query, changes, callback) {
+  if (arguments.length === 1) {
+    changes = query;
+
+    return new Query({
+      handler: function (query, callback) {
+        this.patch(query, changes, callback);
+      },
+      context: this
+    });
+  }
 
   /**
-   * Runs before {@link module:mio.Resource.update} callback.
+   * Runs before callback for `Resource.patch` or `Resource#patch`.
    *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next`, subsequent hooks are not executed and the `next`
-   * arguments are passed to the callback for
-   * {@link module:mio.Resource.update}.
-   *
-   * @event before:updateMany
-   * @param {Object} query
-   * @param {Object|Array} changes
-   * @param {Function} next
+   * @event patch
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {Object|Array.<Object>} patch
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
    */
 
   /**
-   * Run at the beginning of {@link module:mio.Resource.update}'s callback.
+   * Runs at the beginning of callback for `Resource.patch` or `Resource#patch`.
    *
-   * @event updateMany
-   * @param {Object} query
-   * @param {Object|Array} changes
+   * @event patch
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {Object|Array.<Object>} patch
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
    */
-  return this.trigger('updateMany', query, changes, function(err) {
 
-    /**
-     * Callback for {@link module:mio.Resource.update}.
-     *
-     * @callback updateCallback
-     * @param {Error} err
-     * @param {Object} query
-     * @param {Object|Array} changes
-     * @this {Resource}
-     */
-    callback.call(this, err, query, changes);
-  });
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback patch
+   * @memberof module:mio.Resource.patch
+   * @param {Error} err
+   */
+  return this.trigger('patch', new Query({ state: query }), changes, callback);
 };
 
 /**
- * Destroy many resources using given `query`.
+ * Post resource using given `representation`.
  *
- * @param {Object} query
- * @param {removeManyCallback} callback
- * @returns {Resource}
- * @fires before:removeMany
- * @fires removeMany
+ * To post multiple resources use `Resource.Collection.post`.
+ *
+ * @param {Object} representation
+ * @param {module:mio.Resource.post.post} callback
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.before.post
+ * @fires module:mio.Resource.on.post
  */
+Resource.post = function (representation, callback) {
 
-Resource.remove = function(query, callback) {
+  /**
+   * Runs before callback for `Resource.post` or `Resource#post`.
+   *
+   * @event post
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {Object|module:mio.Resource} representation
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Runs at the beginning of callback for `Resource.post` or `Resource#post`.
+   *
+   * @event post
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {Object|module:mio.Resource} representation
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
+   */
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback post
+   * @memberof module:mio.Resource.post
+   * @param {Error} err
+   */
+  return this.trigger('post', representation, callback);
+};
+
+/**
+ * Delete resource using given `query`.
+ *
+ * To delete multiple resources use `Resource.Collection.delete`.
+ *
+ * @param {module:mio.Query} query
+ * @param {module:mio.Resource.delete} callback
+ * @returns {module:mio.Resource|query}
+ * @fires module:mio.Resource.before.delete
+ * @fires module:mio.Resource.on.delete
+ */
+Resource.delete = function(query, callback) {
   if (typeof query === 'function') {
     callback = query;
     query = {};
   }
 
   if (arguments.length === 0) {
-    return new this.Query(this, this.remove);
+    return new Query({
+      handler: this.delete,
+      context: this
+    });
   }
 
   /**
-   * Runs before {@link module:mio.Resource.remove} callback.
+   * Runs before callback for `Resource.delete` or `Resource#delete`.
    *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next`, subsequent hooks are not executed and the `next`
-   * arguments are passed to the callback for
-   * {@link module:mio.Resource.remove}.
-   *
-   * @event before:removeMany
-   * @param {Object} query
-   * @param {Function} next
+   * @event delete
+   * @memberof module:mio.Resource.before
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource.trigger.next} next
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
    */
 
   /**
-   * Run at the beginning of {@link module:mio.Resource.remove}'s callback.
+   * Runs at the beginning of callback for `Resource.delete` or `Resource#delete`.
    *
-   * @event removeMany
-   * @param {Object} query
+   * @event delete
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Query} query
+   * @param {module:mio.Resource} resource included if triggered by instance.
+   * @this {module:mio.Resource}
    */
-  return this.trigger('removeMany', query, function(err) {
 
-    /**
-     * Callback for {@link module:mio.Resource.remove}.
-     *
-     * @callback removeManyCallback
-     * @param {Error} err
-     * @param {Object} query
-     * @this {Resource}
-     */
-    callback.call(this, err, query);
-  });
-};
-
-/**
- * Compose queries functionally.
- *
- * @example
- *
- * ```javascript
- * User.find()
- *  .where({ active: true })
- *  .sort({ created_at: "desc" })
- *  .size(10)
- *  .exec(function(err, users) {
- *    // ...
- *  });
- * ```
- *
- * @param {Resource} Resource
- * @param {Function} handler method to execute for Query#exec
- * @return {Object}
- * @private
- */
-Resource.Query = function Query(Resource, handler) {
-  this.Resource = Resource;
-  this.handler = handler;
-  this.query = {};
-};
-
-/**
- * Set `query.where` parameters.
- *
- * @param {Object} where
- * @return {Resource.Query}
- */
-Resource.Query.prototype.where = function(where) {
-  var query = this.query;
-
-  query.where = query.where || {};
-
-  for (var key in where) {
-    query.where[key] = where[key];
-  }
-
-  return this;
-};
-
-/**
- * Set `query.sort` parameters.
- *
- * @param {Object} sort
- * @return {Resource.Query}
- */
-Resource.Query.prototype.sort = function(sort) {
-  var query = this.query;
-
-  query.sort = query.sort || {};
-
-  if (typeof sort === 'object') {
-    for (var key in sort) {
-      query.sort[key] = sort[key];
-    }
-  } else {
-    query.sort = sort;
-  }
-
-  return this;
-};
-
-/**
- * Set `query.paginate` parameters.
- *
- * @param {Object} paginate
- * @param {Number=} paginate.from
- * @param {Number=} paginate.size
- * @return {Resource.Query}
- */
-Resource.Query.prototype.paginate = function(paginate) {
-  for (var key in paginate) {
-    this.query[key] = paginate[key]
-  }
-  return this;
-};
-
-/**
- * Set `query.from` parameter.
- *
- * @param {Mixed} from treated as an offset if number
- * @return {Resource.Query}
- */
-Resource.Query.prototype.from = function(from) {
-  this.query.from = from;
-  return this;
-};
-
-/**
- * Set `query.size` parameter.
- *
- * @param {Number} size
- * @return {Resource.Query}
- */
-Resource.Query.prototype.size = function(size) {
-  this.query.size = Number(size);
-  return this;
-};
-
-/**
- * Set `query.page` parameter. Must be used after `query.size` is set.
- *
- * @param {Number} page first page is 1
- * @return {Resource.Query}
- */
-Resource.Query.prototype.page = function(page) {
-  var size = this.query.size;
-
-  if (!size) {
-    throw new Error('page parameter requires size parameter to be set first');
-  }
-
-  this.query.from = Number((size * page) - size);
-
-  return this;
-};
-
-/**
- * Set `query.with` parameter.
- *
- * @param {String|Array<String>} relations
- * @return {Resource.Query}
- */
-Resource.Query.prototype.with = function(relations) {
-  if (typeof relations === 'string') {
-    this.query.with = [relations];
-  } else {
-    this.query.with = relations;
-  }
-  return this;
-};
-
-/**
- * Execute query.
- *
- * @param {Function} callback
- * @return {Resource}
- */
-Resource.Query.prototype.exec = function(callback) {
-  return this.handler.call(this.Resource, this.query, callback);
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback delete
+   * @memberof module:mio.Resource.delete
+   * @param {Error} err
+   */
+  return this.trigger('delete', new Query({ state: query }), callback);
 };
 
 /**
@@ -849,81 +1443,29 @@ Resource.Query.prototype.exec = function(callback) {
  * @param {String} type hasOne, hasMany, belongsTo, or belongsToMany
  * @param {String} attr attribute name
  * @param {Object} params
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  * @private
  */
 Resource.addRelation = function (type, attr, params) {
   var options = {
     relation: {
+      attribute: attr,
       type: type,
       target: params.target,
       foreignKey: params.foreignKey,
-      throughKey: params.throughKey,
-      through: params.through,
       nested: params.nested
     }
   };
 
   for (var key in params) {
     if (!params.hasOwnProperty || params.hasOwnProperty(key)) {
-      if (!key.match(/^(target|foreignKey|nested|throughKey|through)$/)) {
+      if (!key.match(/^(type|attribute|target|foreignKey|nested)$/)) {
         options[key] = params[key];
       }
     }
   }
 
   return this.attr(attr, options);
-};
-
-/**
- * A one-to-one relation, where the resource has exactly one of the specified
- * target resource, referenced by a foreign key on the target resource.
- *
- * @example
- *
- * ```javascript
- * Patient.hasOne('record', {
- *   target: Record,
- *   foreignKey: 'patient_id'
- * });
- * ```
- *
- * @param {String} attr name of the attribute populated with target resource
- * @param {Object} params additional parameters passed to `.attr()`
- * @param {Resource} params.target
- * @param {String} params.foreignKey foreign key on target resource. defaults to
- * resource table name appended with `_id`.
- * @param {Boolean} params.nested whether to always include (default: false)
- * @returns {Resource}
- */
-Resource.hasOne = function (attr, params) {
-  return this.addRelation('hasOne', attr, params);
-};
-
-/**
- * The `hasMany` relationship is for a resource with a one-to-many
- * relationship with the target resource. The resource is referenced by a
- * foreign key on the target resource.
- *
- * @example
- *
- * ```javascript
- * Author.hasMany('books', {
- *   target: Book,
- *   foreignKey: 'author_id'
- * });
- * ```
- *
- * @param {String} attr name of the attribute populated with target resource
- * @param {Object} params additional parameters passed to `.attr()`
- * @param {Resource} params.target
- * @param {String} params.foreignKey foreign key on target resource. defaults to
- * resource table name appended with `_id`.
- * @param {Boolean} params.nested always include relation in queries (default: false)
- * @returns {Resource}
- */
-Resource.hasMany = function (attr, params) {
-  return this.addRelation('hasMany', attr, params);
 };
 
 /**
@@ -940,71 +1482,139 @@ Resource.hasMany = function (attr, params) {
  *   target: Author,
  *   foreignKey: 'author_id'
  * }):
+ *
+ * Book.get(1).withRelated('author').exec(function (err, book) {
+ *   assert(book.author instanceof Author);
+ * });
  * ```
  *
  * @param {String} attr name of the attribute populated with target resource
  * @param {Object} params additional parameters passed to `.attr()`
- * @param {Resource|Function} params.target can be a function that returns
+ * @param {module:mio.Resource|Function} params.target can be a function that returns
  * constructor to avoid circular reference issues
- * @param {String} params.foreignKey foreign key on current resource. defaults
- * to `params.target` table name appended with `_id`
+ * @param {String} params.foreignKey foreign key on current resource.
  * @param {Boolean} params.nested whether to always include (default: false)
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
 Resource.belongsTo = function (attr, params) {
   return this.addRelation('belongsTo', attr, params);
 };
 
 /**
- * The `belongsToMany` relationship is for many-to-many relations, where the
- * current resource is joined to one or more of a target resource through
- * another table (or resource).
+ * A one-to-one relation, where the resource has exactly one of the specified
+ * target resource, referenced by a foreign key on the target resource.
  *
  * @example
  *
  * ```javascript
- * Post.belongsToMany('tags', {
- *   target: Tag,
- *   foreignKey: 'tag_id',
- *   throughKey: 'post_id',
- *   through: 'post_tag'
+ * Patient.hasOne('record', {
+ *   target: Record,
+ *   foreignKey: 'patient_id'
+ * });
+ *
+ * Patent.get(1).withRelated('record').exec(function (err, patient) {
+ *   assert(patient.record instanceof Record);
  * });
  * ```
  *
  * @param {String} attr name of the attribute populated with target resource
  * @param {Object} params additional parameters passed to `.attr()`
- * @param {Resource|Function} params.target can be a function that returns
- * constructor to avoid circular reference issues
- * @param {String|Resource} params.through table or resource for association
- * @param {String} params.foreignKey foreign key of the target resource.
- * defaults to `params.target` table name appended with `_id`
- * @param {String} params.throughKey foreign key of the current resource.
- * defaults to resource table name appended with `_id`
+ * @param {module:mio.Resource} params.target
+ * @param {String} params.foreignKey foreign key on target resource.
  * @param {Boolean} params.nested whether to always include (default: false)
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
-Resource.belongsToMany = function (attr, params) {
-  return this.addRelation('belongsToMany', attr, params);
+Resource.hasOne = function (attr, params) {
+  return this.addRelation('hasOne', attr, params);
 };
+
+/**
+ * The `hasMany` relationship is for a resource with a one-to-many
+ * relationship with the target resource. The resource is referenced by a
+ * foreign key on the target resource.
+ *
+ * ```javascript
+ * Organization.hasMany('members', {
+ *   target: User,
+ *   foreignKey: 'organization_id'
+ * });
+ *
+ * Organization.get(1).withRelated('members').exec(function (err, organization)
+ *   organization.members.forEach(function (member) {
+ *     assert(member instanceof User);
+ *   });
+ * });
+ * ```
+ *
+ * Many-to-many relationships can be modeled using an intermediary resource,
+ * where the current resource is joined to the target resources through an
+ * intermediary resource.
+ *
+ * ```javascript
+ * Membership
+ *   .belongsTo('organization', {
+ *     target: Organization,
+ *     foreignKey: 'organization_id'
+ *   })
+ *   .belongsTo('user', {
+ *     target: User,
+ *     foreignKey: 'user_id'
+ *   });
+ *
+ * Organization.hasMany('memberships', {
+ *   target: Membership,
+ *   foreignKey: 'organization_id'
+ * });
+ *
+ * Organization.get(1)
+ *   .withRelated('memberships'
+ *   .exec(function (err, organization) {
+ *     organization.memberships.forEach(function (member) {
+ *       assert(membership.member instanceof User);
+ *       assert(membership.organization instanceof Organization);
+ *     });
+ *   });
+ * ```
+ *
+ * While this strategy may seem verbose, it is robust and allows for
+ * relationships that keep state such as a membership role, or the date a post
+ * was tagged. Sometimes you need both the intermediary resource and the
+ * resources it relates, and other times you need solely the relationship
+ * (intermediary resource).
+ *
+ * @param {String} attr name of the attribute populated with target resource
+ * @param {Object} params additional parameters passed to `.attr()`
+ * @param {module:mio.Resource|Function} params.target can be a function that returns
+ * constructor to avoid circular reference issues
+ * @param {String} params.foreignKey foreign key on target resource.
+ * @param {Boolean} params.nested always include relation in queries (default: false)
+ * @returns {module:mio.Resource}
+ */
+Resource.hasMany = function (attr, params) {
+  return this.addRelation('hasMany', attr, params);
+};
+
+/**
+ *
+ * @param {String} attr name of the attribute populated with target resource
+ * @param {Object} params additional parameters passed to `.attr()`
+ * @param {Boolean} params.nested whether to always include (default: false)
+ * @returns {module:mio.Resource}
+ */
 
 /**
  * Register `listener` to be called when `event` is emitted.
  *
  * @param {String} event
  * @param {Function} listener
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
 Resource.on = function(event, listener) {
-  if (event === 'save') {
-    this.on(event + ':new', listener);
-    this.on(event + ':update', listener);
-  } else {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [listener];
-    }
-    else {
-      this.listeners[event].push(listener);
-    }
+  if (!this.listeners[event]) {
+    this.listeners[event] = [listener];
+  }
+  else {
+    this.listeners[event].push(listener);
   }
 
   return this;
@@ -1017,7 +1627,7 @@ Resource.prototype.on = Resource.on;
  *
  * @param {String} event
  * @param {Function} listener
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
 Resource.once = function(event, listener) {
   listener.once = true;
@@ -1031,7 +1641,7 @@ Resource.prototype.once = Resource.once;
  *
  * @param {String} event
  * @param {Mixed} ...
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
 Resource.emit = function(event) {
   var args = Array.prototype.slice.call(arguments, 1);
@@ -1057,27 +1667,34 @@ Resource.prototype.emit = Resource.emit;
  * Register `hook` to be called before `event`.
  *
  * Hooks are {@link module:mio.Resource.trigger|triggered} by various methods
- * such as {@link module:mio.Resource.findOne} or
- * {@link module:mio.Resource#save}, are asynchronous, and run in series.
+ * such as {@link module:mio.Resource.get} or
+ * {@link module:mio.Resource#post}, are asynchronous, and run in series.
  * Hooks receive a `next` function as the last argument, which must be called
  * to continue firing subsequent listeners. Subsequent hooks will not be run
  * if `next` receives any arguments. Arguments received by `next` are passed to
  * the callback of the method that fired the event.
  *
+ * @example
+ *
+ * ```javascript
+ * User.before('get', function (query, next) {
+ *   // do something before save such as validation and then call next()
+ * });
+ *
+ * User.on('patch', function (query, changed) {
+ *   // do something after update
+ * });
+ * ```
+ *
  * @param {String} event
  * @param {Function} hook
  */
 Resource.before = function(event, hook) {
-  if (event === 'save') {
-    this.before(event + ':new', hook);
-    this.before(event + ':update', hook);
-  } else {
-    if (!this.hooks[event]) {
-      this.hooks[event] = [hook];
-    }
-    else {
-      this.hooks[event].push(hook);
-    }
+  if (!this.hooks[event]) {
+    this.hooks[event] = [hook];
+  }
+  else {
+    this.hooks[event].push(hook);
   }
   return this;
 };
@@ -1087,41 +1704,41 @@ Resource.prototype.before = Resource.before;
 /**
  * Run {@link module:mio.Resource.before} hooks for given `event`.
  *
- * Hooks registered with {@link module:mio.Resource.before} are asynchronous and
- * run in series. Hooks receive a `next` function as the last argument, which
- * must be called to continue firing subsequent listeners. Arguments received by
- * `next` are passed to the callback of the method that fired the event. If
- * `next` receives any arguments, subsequent hooks will not be run.
+ * Hooks are {@link module:mio.Resource.trigger|triggered} by various methods
+ * such as {@link module:mio.Resource.get} or
+ * {@link module:mio.Resource#post}, are asynchronous, and run in series.
+ * Hooks receive a `next` function as the last argument, which must be called
+ * to continue firing subsequent listeners. Subsequent hooks will not be run
+ * if `next` receives any arguments. Arguments received by `next` are passed to
+ * the callback of the method that fired the event.
  *
  * @param {String} event
  * @param {Mixed} args multiple arguments can be passed
  * @param {Function} callback
- * @param {Mixed=} defaultResult
- * @returns {Resource}
+ * @returns {module:mio.Resource}
  */
-Resource.trigger = function(event, args, callback, defaultResult) {
+Resource.trigger = function(event, args, callback) {
   var Resource = this.dirtyAttributes ? this.constructor : this;
-  var resource = this.save && this;
+  var resource = this.isNew && this;
 
-  if (arguments.length > 3) {
-    args = Array.prototype.slice.call(arguments, 1);
-    callback = args.pop();
-    if (typeof callback !== 'function') {
-      defaultResult = callback;
-      callback = args.pop();
-    }
-  } else if (arguments.length === 2) {
-    callback = args;
+  args = Array.prototype.slice.call(arguments, 1);
+
+  if (args.length === 1) {
+    callback = args[0];
     args = [];
+  } else if (args.length === 2) {
+    callback = args[1];
+    args = [args[0]];
   } else {
-    args = [args];
+    callback = args.pop();
   }
 
   var hooks = Resource.hooks[event] || [];
   var instanceHooks = (resource && resource.hooks[event]) || [];
   var self = resource || Resource;
-  var nextArgs = (resource ? [resource].concat(args):args).concat([next]);
+  var nextArgs = args.concat(resource ? [next, resource] : [next]);
   var instanceNextArgs = args.concat([next]);
+  var instanceArgs = args.concat([resource]);
 
   if (hooks) {
     hooks = hooks.slice(0);
@@ -1131,10 +1748,18 @@ Resource.trigger = function(event, args, callback, defaultResult) {
     instanceHooks = instanceHooks.slice(0);
   }
 
-  // Call each "before:EVENT" handler in series.
+  /**
+   * Call the next hook in series, unless an `error` or `result` was received.
+   *
+   * @callback next
+   * @memberof module:mio.Resource.trigger
+   * @param {Error} error
+   * @param {module:mio.Resource|Array.<module:mio.Resource>} result
+   * @param {Mixed} ...
+   */
   function next (err, result) {
     if (err || result) {
-      done(err, result);
+      done.apply(this, arguments);
     }
     else if (hooks.length) {
       hooks.shift().apply(Resource, nextArgs);
@@ -1143,24 +1768,27 @@ Resource.trigger = function(event, args, callback, defaultResult) {
       instanceHooks.shift().apply(resource, instanceNextArgs);
     }
     else {
-      done(null, defaultResult);
+      done.apply(this, arguments);
     }
   }
 
   // Handle result and emit event(s).
-  function done (err, result) {
+  function done (err) {
     if (err) return callback.call(self, err);
+
+    var cbArgs = Array.prototype.slice.call(arguments, 1);
+    cbArgs.unshift(event);
 
     // Run `.on()` "EVENT" handlers.
     if (resource) {
-      Resource.emit.apply(Resource, [event, resource].concat(args));
-      resource.emit.apply(resource, [event].concat(args));
+      Resource.emit.apply(Resource, cbArgs.concat(instanceArgs));
+      resource.emit.apply(resource, cbArgs.concat(args));
     }
     else {
-      Resource.emit.apply(Resource, [event, result].concat(args));
+      Resource.emit.apply(Resource, cbArgs.concat(args));
     }
 
-    callback.call(self, null, result);
+    callback.apply(self, arguments);
   }
 
   next();
@@ -1171,172 +1799,101 @@ Resource.trigger = function(event, args, callback, defaultResult) {
 Resource.prototype.trigger = Resource.trigger;
 
 /**
- * Persist resource to storage. Runs "save" event handlers registered by
- * persistence plugins.
+ * Refresh the resource instance with the representation passed to the last
+ * hook's `next()`.
  *
- * @param {saveInstanceCallback} callback
- * @returns {Resource}
- * @fires before:save
- * @fires before:save:new
- * @fires before:save:update
- * @fires save
- * @fires save:new
- * @fires save:update
+ * @param {module:mio.Resource.get.get} callback
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.before.get
+ * @fires module:mio.Resource.on.get
  */
-Resource.prototype.save = function(callback) {
-  var resource = this;
-  var primaryKey = resource.constructor.primaryKey;
-  var changed = this.changed();
-  var op = (resource.isNew() ? 'save:new' : 'save:update');
+Resource.prototype.get = function (callback) {
+  var query = this.primaryKeyQuery();
 
-  if (!callback) callback = noop;
+  return this.trigger('get', query, function (err, representation) {
+    if (err) return callback.call(this, err);
 
-  /**
-   * Runs before {@link module:mio.Resource#save} callback for new or previously
-   * saved resources.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next`, subsequent hooks are not executed and the `next`
-   * arguments are passed to the callback for
-   * {@link module:mio.Resource#save}.
-   *
-   * @event before:save
-   * @see before:save:new
-   * @see before:save:update
-   * @param {Resource} resource
-   * @param {Object} changed map of dirty attributes
-   * @param {Function} next
-   */
+    if (representation) {
+      this.reset(representation);
+    }
 
-  /**
-   * Runs before {@link module:mio.Resource#save} callback for new resources
-   * that have not been saved.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next`, subsequent hooks are not executed and the `next`
-   * arguments are passed to the callback for
-   * {@link module:mio.Resource#save}.
-   *
-   * @event before:save:new
-   * @param {Resource} resource
-   * @param {Object} changed map of dirty attributes
-   * @param {Function} next
-   */
-
-  /**
-   * Runs before {@link module:mio.Resource#save} callback for resources that
-   * have been successfully saved.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next`, subsequent hooks are not executed and the `next`
-   * arguments are passed to the callback for
-   * {@link module:mio.Resource#save}.
-   *
-   * @event before:save:update
-   * @param {Resource} resource
-   * @param {Object} changed map of dirty attributes
-   * @param {Function} next
-   */
-
-  /**
-   * Run at the beginning of {@link module:mio.Resource#save}'s callback for
-   * new or previously saved resources.
-   *
-   * @event save
-   * @see save:new
-   * @see save:update
-   * @param {Resource} resource
-   * @param {Object} changed map of dirty attributes
-   */
-
-  /**
-   * Run at the beginning of {@link module:mio.Resource#save}'s callback for
-   * new resources that have not been saved.
-   *
-   * @event save:new
-   * @param {Resource} resource
-   * @param {Object} changed map of dirty attributes
-   */
-
-  /**
-   * Run at the beginning of {@link module:mio.Resource#save}'s callback for
-   * resources that have been successfully saved.
-   *
-   * @event save:update
-   * @param {Resource} resource
-   * @param {Object} changed map of dirty attributes
-   */
-  this.trigger(op, changed, function(err) {
-    if (err) return callback.call(resource, err);
-
-    resource.dirtyAttributes.length = 0;
-
-    /**
-     * Callback for {@link module:mio.Resource.prototype.save}.
-     *
-     * @callback saveInstanceCallback
-     * @param {Error} err
-     * @this {resource}
-     */
-    callback.call(resource);
+    callback.apply(this, arguments);
   });
-
-  return this;
 };
 
 /**
- * Remove resource from storage. Runs "remove" event handlers registered by
- * persistence plugins.
+ * Replace resource with instance representation.
  *
- * @param {removeCallback} callback
- * @returns {Resource}
- * @fires before:remove
- * @fires remove
+ * @param {module:mio.Resource.put.put} callback
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.before.put
+ * @fires module:mio.Resource.on.put
  */
-Resource.prototype.remove = function(callback) {
-  var resource = this;
-
-  if (!callback) callback = noop;
-
-  /**
-   * Runs before {@link module:mio.Resource#remove} callback.
-   *
-   * Asynchronous. Listeners run in series. If an error is passed as the first
-   * argument to `next`, subsequent hooks are not executed and the `next`
-   * arguments are passed to the callback for
-   * {@link module:mio.Resource#remove}.
-   *
-   * @event before:remove
-   * @param {Resource} resource
-   * @param {Function} next
-   */
-
-  /**
-   * Run at the beginning of {@link module:mio.Resource#remove}'s callback.
-   *
-   * @event remove
-   * @param {Resource} resource
-   */
-  this.trigger('remove', function(err) {
-    if (err) return callback.call(resource, err);
-
-    // Set primary key to null
-    resource.attributes[resource.constructor.primaryKey] = null;
-
-    /**
-     * Callback for {@link module:mio.Resource#remove}.
-     *
-     * @callback removeCallback
-     * @param {Error} err
-     * @this {resource}
-     */
-    callback.call(resource);
-  });
-
-  return this;
+Resource.prototype.put = function (callback) {
+  var query = this.primaryKeyQuery();
+  return this.trigger('put', query, this.toJSON(), callback);
 };
 
-Resource.prototype.destroy = Resource.prototype.remove;
+/**
+ * Patch resource with diff of instance representation.
+ *
+ * @param {module:mio.Resource.patch.patch} callback
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.before.patch
+ * @fires module:mio.Resource.on.patch
+ */
+Resource.prototype.patch = function (callback) {
+  var query = this.primaryKeyQuery();
+  return this.trigger('patch', query, this.changed(), callback);
+};
+
+/**
+ * Post resource and update instance.
+ *
+ * @param {postCallback} callback
+ * @returns {resource}
+ * @fires module:mio.Resource.before.post
+ * @fires module:mio.Resource.on.post
+ */
+Resource.prototype.post = function (callback) {
+  return this.trigger('post', this.changed(), function (err, representation) {
+    if (err) return callback.call(this, err);
+
+    if (representation) {
+      this.reset(representation);
+    }
+
+    callback.apply(this, arguments);
+  });
+};
+
+/**
+ * Delete resource.
+ *
+ * @param {module:mio.Resource.delete.delete} callback
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.before.delete
+ * @fires module:mio.Resource.on.delete
+ */
+Resource.prototype.delete = function (callback) {
+  return this.trigger('delete', this.primaryKeyQuery(), callback);
+};
+
+/**
+ * Return a query using the resources primary key.
+ *
+ * @returns {module:mio.Query}
+ * @private
+ */
+Resource.prototype.primaryKeyQuery = function () {
+  var query = new Query();
+
+  if (this.primary) {
+    query.where(this.constructor.primaryKey, this.primary);
+  }
+
+  return query;
+};
 
 /**
  * Check if resource is new and has not been saved.
@@ -1370,7 +1927,7 @@ Resource.prototype.isDirty = function(attr) {
 };
 
 /**
- * Return dirty attributes (changed since last save).
+ * Return dirty attributes (changed since last put/patch/post/reset).
  *
  * @returns {Object}
  */
@@ -1401,13 +1958,14 @@ Resource.prototype.has = function(attr) {
  * Set given resource `attributes`.
  *
  * @param {Object} attributes
- * @returns {Resource}
- * @fires set
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.on.set
  */
 Resource.prototype.set = function (attributes) {
 
   /**
    * @event set
+   * @memberof module:mio.Resource.on
    * @param {Resource} resource
    * @param {Object} attributes
    */
@@ -1424,17 +1982,19 @@ Resource.prototype.set = function (attributes) {
 };
 
 /**
- * Reset attributes for resource. Marks resource as clean.
+ * Reset attributes for resource. Marks resource as clean. Instance attributes
+ * not defined in `attributes` will be reset to `undefined`.
  *
  * @param {Object} attributes
- * @returns {Resource}
- * @fires reset
+ * @returns {module:mio.Resource}
+ * @fires module:mio.Resource.on.reset
  */
 Resource.prototype.reset = function (attributes) {
 
   /**
    * @event reset
-   * @param {Resource} resource
+   * @memberof module:mio.Resource.on
+   * @param {module:mio.Resource} resource
    * @param {Object} attributes
    */
   this.constructor.emit('reset', this, attributes);
@@ -1449,6 +2009,46 @@ Resource.prototype.reset = function (attributes) {
   }
 
   return this;
+};
+
+/**
+ * Returns map of HTTP methods to resource URLs. If `method` is specified, the
+ * URL for that `method` is returned.
+ *
+ * @param {String=} method
+ * @returns {Object|String}
+ */
+Resource.url = function (method) {
+  var baseUrl = this.baseUrl;
+  var urls = this.urls;
+
+  if (!baseUrl) {
+    throw new Error("No baseUrl defined.");
+  }
+
+  if (!urls) {
+    urls = this.urls = {
+      'get': baseUrl + '/:primary',
+      'put': baseUrl + '/:primary',
+      'patch': baseUrl + '/:primary',
+      'post': baseUrl,
+      'delete': baseUrl + '/:primary',
+      'options': baseUrl + '/:primary'
+    };
+  }
+
+  return method ? urls[method] : urls;
+};
+
+/**
+ * Returns map of HTTP methods to resource URLs. If `method` is specified, the
+ * URL for that `method` is returned.
+ *
+ * @param {String=} method
+ * @returns {Object|String}
+ */
+Resource.prototype.url = function (method) {
+  return this.constructor.url(method);
 };
 
 /**
@@ -1468,6 +2068,56 @@ Resource.prototype.toJSON = function () {
   }
 
   return json;
+};
+
+},{"./collection":2,"./query":3,"./util":5}],5:[function(require,module,exports){
+exports.extend = function (prototype, statics) {
+  var parent = this;
+  var child;
+
+  prototype = prototype || {};
+
+  child = function resource () {
+    if (!(this instanceof child)) {
+      var self = Object.create(child.prototype);
+      child.apply(self, arguments);
+      return self;
+    }
+
+    return parent.apply(this, arguments);
+  };
+
+  child.extend = parent.extend;
+
+  var Surrogate = function() {
+    this.constructor = child;
+  };
+  Surrogate.prototype = parent.prototype;
+  child.prototype = new Surrogate();
+
+  // static properties to inherit
+  for (var prop in parent) {
+    if (!child[prop]) {
+      child[prop] = parent[prop];
+    }
+  }
+
+  for (var prop in statics) {
+    if (!(prop === 'use' || prop === 'browser' || prop === 'server')) {
+      child[prop] = statics[prop];
+    }
+  }
+
+  // extend prototype with properties
+  for (var prop in prototype) {
+    if (prototype.hasOwnProperty(prop)) {
+      child.prototype[prop] = prototype[prop];
+    }
+  }
+
+  child.__super__ = parent.prototype;
+
+  return child;
 };
 
 },{}]},{},[1])(1)

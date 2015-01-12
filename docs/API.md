@@ -44,38 +44,44 @@
         * ["change:[attr]" (resource, value, prev)](#module_mio.Resource.on.change_[attr])
         * ["create" (resource)](#module_mio.Resource.on.event_create)
         * ["attribute" (name, options)](#module_mio.Resource.on.event_attribute)
-        * ["get"](#module_mio.Resource.on.event_get)
-        * ["put"](#module_mio.Resource.on.event_put)
-        * ["patch"](#module_mio.Resource.on.event_patch)
-        * ["post"](#module_mio.Resource.on.event_post)
-        * ["delete"](#module_mio.Resource.on.event_delete)
+        * ["get" (query, resource)](#module_mio.Resource.on.event_get)
+        * ["put" (query, representation, resource)](#module_mio.Resource.on.event_put)
+        * ["patch" (query, patch, resource)](#module_mio.Resource.on.event_patch)
+        * ["post" (query, representation, resource)](#module_mio.Resource.on.event_post)
+        * ["delete" (query, resource)](#module_mio.Resource.on.event_delete)
         * ["set" (resource, attributes)](#module_mio.Resource.on.event_set)
         * ["reset" (resource, attributes)](#module_mio.Resource.on.event_reset)
+        * ["collection:get" (query, collection)](#module_mio.Resource.on.collection_get)
+        * ["collection:put" (query, resources, collection)](#module_mio.Resource.on.collection_put)
+        * ["collection:patch" (query, patch, collection)](#module_mio.Resource.on.collection_patch)
+        * ["collection:post" (query, resources, collection)](#module_mio.Resource.on.collection_post)
+        * ["collection:delete" (query, collection)](#module_mio.Resource.on.collection_delete)
       * [.once(event, listener)](#module_mio.Resource.once) ⇒ <code>[Resource](#module_mio.Resource)</code>
       * [.emit(event, ...)](#module_mio.Resource.emit) ⇒ <code>[Resource](#module_mio.Resource)</code>
       * [.before(event, hook)](#module_mio.Resource.before)
-        * ["get"](#module_mio.Resource.before.event_get)
-        * ["put"](#module_mio.Resource.before.event_put)
-        * ["patch"](#module_mio.Resource.before.event_patch)
-        * ["post"](#module_mio.Resource.before.event_post)
-        * ["delete"](#module_mio.Resource.before.event_delete)
-        * ["collection:get"](#module_mio.Resource.before.collection_get)
-        * ["collection:put"](#module_mio.Resource.before.collection_put)
-        * ["collection:patch"](#module_mio.Resource.before.collection_patch)
-        * ["collection:post"](#module_mio.Resource.before.collection_post)
-        * ["collection:delete"](#module_mio.Resource.before.collection_delete)
+        * ["get" (query, next, resource)](#module_mio.Resource.before.event_get)
+        * ["put" (query, representation, next, resource)](#module_mio.Resource.before.event_put)
+        * ["patch" (query, patch, next, resource)](#module_mio.Resource.before.event_patch)
+        * ["post" (query, representation, next, resource)](#module_mio.Resource.before.event_post)
+        * ["delete" (query, next, resource)](#module_mio.Resource.before.event_delete)
+        * ["collection:get" (query, next, collection)](#module_mio.Resource.before.collection_get)
+        * ["collection:put" (query, resources, next, collection)](#module_mio.Resource.before.collection_put)
+        * ["collection:patch" (query, patch, next, collection)](#module_mio.Resource.before.collection_patch)
+        * ["collection:post" (query, resources, next, collection)](#module_mio.Resource.before.collection_post)
+        * ["collection:delete" (query, next, collection)](#module_mio.Resource.before.collection_delete)
       * [.trigger(event, args, callback)](#module_mio.Resource.trigger) ⇒ <code>[Resource](#module_mio.Resource)</code>
+        * [callback: .next](#module_mio.Resource.trigger.next) → <code>function</code>
       * [.url([method])](#module_mio.Resource.url) ⇒ <code>Object</code> \| <code>String</code>
   * [class: .Query](#module_mio.Query)
     * [new Query([options])](#new_module_mio.Query_new)
     * _instance_
-      * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[query](#query)</code>
-      * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[query](#query)</code>
-      * [.paginate(paginate)](#module_mio.Query#paginate) ⇒ <code>[query](#query)</code>
-      * [.from(from)](#module_mio.Query#from) ⇒ <code>[query](#query)</code>
-      * [.size(size)](#module_mio.Query#size) ⇒ <code>[query](#query)</code>
-      * [.page(page)](#module_mio.Query#page) ⇒ <code>[query](#query)</code>
-      * [.withRelated(relations)](#module_mio.Query#withRelated) ⇒ <code>[query](#query)</code>
+      * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.paginate(paginate)](#module_mio.Query#paginate) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.from(from)](#module_mio.Query#from) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.size(size)](#module_mio.Query#size) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.page(page)](#module_mio.Query#page) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.withRelated(relations)](#module_mio.Query#withRelated) ⇒ <code>[Query](#module_mio.Query)</code>
       * [.exec(callback)](#module_mio.Query#exec)
       * [.toJSON()](#module_mio.Query#toJSON) ⇒ <code>Object</code>
   * [class: .Resource.Collection](#module_mio.Resource.Collection)
@@ -83,10 +89,10 @@
     * _instance_
       * [.resources](#module_mio.Resource.Collection#resources) → <code>Array.&lt;Resource&gt;</code>
       * [.length](#module_mio.Resource.Collection#length) → <code>Number</code>
+      * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
       * [.url([method])](#module_mio.Resource.Collection#url) ⇒ <code>Object</code> \| <code>String</code>
       * [.at(index)](#module_mio.Resource.Collection#at) ⇒ <code>[Resource](#module_mio.Resource)</code>
       * [.toJSON()](#module_mio.Resource.Collection#toJSON) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
-      * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
       * [.[ArrayMethod]()](#module_mio.Resource.Collection#[ArrayMethod])
     * _static_
       * [.create(resources)](#module_mio.Resource.Collection.create) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
@@ -144,27 +150,33 @@
       * ["change:[attr]" (resource, value, prev)](#module_mio.Resource.on.change_[attr])
       * ["create" (resource)](#module_mio.Resource.on.event_create)
       * ["attribute" (name, options)](#module_mio.Resource.on.event_attribute)
-      * ["get"](#module_mio.Resource.on.event_get)
-      * ["put"](#module_mio.Resource.on.event_put)
-      * ["patch"](#module_mio.Resource.on.event_patch)
-      * ["post"](#module_mio.Resource.on.event_post)
-      * ["delete"](#module_mio.Resource.on.event_delete)
+      * ["get" (query, resource)](#module_mio.Resource.on.event_get)
+      * ["put" (query, representation, resource)](#module_mio.Resource.on.event_put)
+      * ["patch" (query, patch, resource)](#module_mio.Resource.on.event_patch)
+      * ["post" (query, representation, resource)](#module_mio.Resource.on.event_post)
+      * ["delete" (query, resource)](#module_mio.Resource.on.event_delete)
       * ["set" (resource, attributes)](#module_mio.Resource.on.event_set)
       * ["reset" (resource, attributes)](#module_mio.Resource.on.event_reset)
+      * ["collection:get" (query, collection)](#module_mio.Resource.on.collection_get)
+      * ["collection:put" (query, resources, collection)](#module_mio.Resource.on.collection_put)
+      * ["collection:patch" (query, patch, collection)](#module_mio.Resource.on.collection_patch)
+      * ["collection:post" (query, resources, collection)](#module_mio.Resource.on.collection_post)
+      * ["collection:delete" (query, collection)](#module_mio.Resource.on.collection_delete)
     * [.once(event, listener)](#module_mio.Resource.once) ⇒ <code>[Resource](#module_mio.Resource)</code>
     * [.emit(event, ...)](#module_mio.Resource.emit) ⇒ <code>[Resource](#module_mio.Resource)</code>
     * [.before(event, hook)](#module_mio.Resource.before)
-      * ["get"](#module_mio.Resource.before.event_get)
-      * ["put"](#module_mio.Resource.before.event_put)
-      * ["patch"](#module_mio.Resource.before.event_patch)
-      * ["post"](#module_mio.Resource.before.event_post)
-      * ["delete"](#module_mio.Resource.before.event_delete)
-      * ["collection:get"](#module_mio.Resource.before.collection_get)
-      * ["collection:put"](#module_mio.Resource.before.collection_put)
-      * ["collection:patch"](#module_mio.Resource.before.collection_patch)
-      * ["collection:post"](#module_mio.Resource.before.collection_post)
-      * ["collection:delete"](#module_mio.Resource.before.collection_delete)
+      * ["get" (query, next, resource)](#module_mio.Resource.before.event_get)
+      * ["put" (query, representation, next, resource)](#module_mio.Resource.before.event_put)
+      * ["patch" (query, patch, next, resource)](#module_mio.Resource.before.event_patch)
+      * ["post" (query, representation, next, resource)](#module_mio.Resource.before.event_post)
+      * ["delete" (query, next, resource)](#module_mio.Resource.before.event_delete)
+      * ["collection:get" (query, next, collection)](#module_mio.Resource.before.collection_get)
+      * ["collection:put" (query, resources, next, collection)](#module_mio.Resource.before.collection_put)
+      * ["collection:patch" (query, patch, next, collection)](#module_mio.Resource.before.collection_patch)
+      * ["collection:post" (query, resources, next, collection)](#module_mio.Resource.before.collection_post)
+      * ["collection:delete" (query, next, collection)](#module_mio.Resource.before.collection_delete)
     * [.trigger(event, args, callback)](#module_mio.Resource.trigger) ⇒ <code>[Resource](#module_mio.Resource)</code>
+      * [callback: .next](#module_mio.Resource.trigger.next) → <code>function</code>
     * [.url([method])](#module_mio.Resource.url) ⇒ <code>Object</code> \| <code>String</code>
 
 <a name="new_module_mio.Resource_new"></a>
@@ -180,6 +192,105 @@ after instantiation for hydration of dirty attributes.
 ```javascript
 var user = new User({ name: "alex" });
 ```
+<a name="module_mio.Resource#get"></a>
+####resource.get(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Refresh the resource instance with the representation passed to the last
+hook's `next()`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| callback | <code>[get](#module_mio.Resource.get.get)</code> |  |
+
+**Emits**: <code>[get](#module_mio.Resource.before.event_get)</code>, <code>[get](#module_mio.Resource.on.event_get)</code>  
+<a name="module_mio.Resource#put"></a>
+####resource.put(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Replace resource with instance representation.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| callback | <code>[put](#module_mio.Resource.put.put)</code> |  |
+
+**Emits**: <code>[put](#module_mio.Resource.before.event_put)</code>, <code>[put](#module_mio.Resource.on.event_put)</code>  
+<a name="module_mio.Resource#patch"></a>
+####resource.patch(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Patch resource with diff of instance representation.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| callback | <code>[patch](#module_mio.Resource.patch.patch)</code> |  |
+
+**Emits**: <code>[patch](#module_mio.Resource.before.event_patch)</code>, <code>[patch](#module_mio.Resource.on.event_patch)</code>  
+<a name="module_mio.Resource#post"></a>
+####resource.post(callback) ⇒ <code>resource</code>
+Post resource and update instance.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| callback | <code>postCallback</code> |  |
+
+**Emits**: <code>[post](#module_mio.Resource.before.event_post)</code>, <code>[post](#module_mio.Resource.on.event_post)</code>  
+<a name="module_mio.Resource#delete"></a>
+####resource.delete(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Delete resource.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| callback | <code>[delete](#module_mio.Resource.delete.delete)</code> |  |
+
+**Emits**: <code>[delete](#module_mio.Resource.before.event_delete)</code>, <code>[delete](#module_mio.Resource.on.event_delete)</code>  
+<a name="module_mio.Resource#isNew"></a>
+####resource.isNew() ⇒ <code>Boolean</code>
+Check if resource is new and has not been saved.
+
+<a name="module_mio.Resource#isDirty"></a>
+####resource.isDirty(attr) ⇒ <code>Boolean</code>
+Check if resource is dirty (has any changed attributes).
+If an attribute name is specified, check if that attribute is dirty.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| attr | <code>String</code> | optional attribute to check if dirty |
+
+<a name="module_mio.Resource#changed"></a>
+####resource.changed() ⇒ <code>Object</code>
+Return dirty attributes (changed since last put/patch/post/reset).
+
+<a name="module_mio.Resource#has"></a>
+####resource.has(attr) ⇒ <code>Boolean</code>
+Check if resource has given `attr`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| attr | <code>String</code> |  |
+
+<a name="module_mio.Resource#set"></a>
+####resource.set(attributes) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Set given resource `attributes`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| attributes | <code>Object</code> |  |
+
+**Emits**: <code>[set](#module_mio.Resource.on.event_set)</code>  
+<a name="module_mio.Resource#reset"></a>
+####resource.reset(attributes) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Reset attributes for resource. Marks resource as clean. Instance attributes
+not defined in `attributes` will be reset to `undefined`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| attributes | <code>Object</code> |  |
+
+**Emits**: <code>[reset](#module_mio.Resource.on.event_reset)</code>  
+<a name="module_mio.Resource#url"></a>
+####resource.url([method]) ⇒ <code>Object</code> \| <code>String</code>
+Returns map of HTTP methods to resource URLs. If `method` is specified, the
+URL for that `method` is returned.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| \[method\] | <code>String</code> |  |
+
 <a name="module_mio.Resource.extend"></a>
 ####Resource.extend(prototype, [statics], baseUrl) ⇒ <code>[Resource](#module_mio.Resource)</code>
 Extend `Resource` attributes and prototype or class properties.
@@ -536,13 +647,18 @@ Register `listener` to be called when `event` is emitted.
   * ["change:[attr]" (resource, value, prev)](#module_mio.Resource.on.change_[attr])
   * ["create" (resource)](#module_mio.Resource.on.event_create)
   * ["attribute" (name, options)](#module_mio.Resource.on.event_attribute)
-  * ["get"](#module_mio.Resource.on.event_get)
-  * ["put"](#module_mio.Resource.on.event_put)
-  * ["patch"](#module_mio.Resource.on.event_patch)
-  * ["post"](#module_mio.Resource.on.event_post)
-  * ["delete"](#module_mio.Resource.on.event_delete)
+  * ["get" (query, resource)](#module_mio.Resource.on.event_get)
+  * ["put" (query, representation, resource)](#module_mio.Resource.on.event_put)
+  * ["patch" (query, patch, resource)](#module_mio.Resource.on.event_patch)
+  * ["post" (query, representation, resource)](#module_mio.Resource.on.event_post)
+  * ["delete" (query, resource)](#module_mio.Resource.on.event_delete)
   * ["set" (resource, attributes)](#module_mio.Resource.on.event_set)
   * ["reset" (resource, attributes)](#module_mio.Resource.on.event_reset)
+  * ["collection:get" (query, collection)](#module_mio.Resource.on.collection_get)
+  * ["collection:put" (query, resources, collection)](#module_mio.Resource.on.collection_put)
+  * ["collection:patch" (query, patch, collection)](#module_mio.Resource.on.collection_patch)
+  * ["collection:post" (query, resources, collection)](#module_mio.Resource.on.collection_post)
+  * ["collection:delete" (query, collection)](#module_mio.Resource.on.collection_delete)
 
 <a name="module_mio.Resource.on.event_initialize"></a>
 #####event: "initialize" (resource, values)
@@ -578,7 +694,7 @@ Fired whenever [attr] is changed.
 #####event: "create" (resource)
 Run at the end of resource constructor.
 
-**Note:** This event is not the same as [post](post).
+**Note:** Not the same event as [module:mio.Resource.on.post](module:mio.Resource.on.post).
 
 | Param | Type | Description |
 | ----- | ---- | ----------- |
@@ -592,24 +708,52 @@ Run at the end of resource constructor.
 | options | <code>Object</code> | attribute options |
 
 <a name="module_mio.Resource.on.event_get"></a>
-#####event: "get"
+#####event: "get" (query, resource)
 Runs at the beginning of callback for `Resource.get` or `Resource#get`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.on.event_put"></a>
-#####event: "put"
+#####event: "put" (query, representation, resource)
 Runs at the beginning of callback for `Resource.put` or `Resource#put`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| representation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.on.event_patch"></a>
-#####event: "patch"
+#####event: "patch" (query, patch, resource)
 Runs at the beginning of callback for `Resource.patch` or `Resource#patch`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| patch | <code>Object</code> \| <code>Array.&lt;Object&gt;</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.on.event_post"></a>
-#####event: "post"
+#####event: "post" (query, representation, resource)
 Runs at the beginning of callback for `Resource.post` or `Resource#post`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| representation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.on.event_delete"></a>
-#####event: "delete"
+#####event: "delete" (query, resource)
 Runs at the beginning of callback for `Resource.delete` or `Resource#delete`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.on.event_set"></a>
 #####event: "set" (resource, attributes)
@@ -624,6 +768,54 @@ Runs at the beginning of callback for `Resource.delete` or `Resource#delete`.
 | ----- | ---- | ----------- |
 | resource | <code>[Resource](#module_mio.Resource)</code> |  |
 | attributes | <code>Object</code> |  |
+
+<a name="module_mio.Resource.on.collection_get"></a>
+#####event: "collection:get" (query, collection)
+Runs at the beginning of callback for `Resource.Collection.get`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
+
+<a name="module_mio.Resource.on.collection_put"></a>
+#####event: "collection:put" (query, resources, collection)
+Runs at the beginning of callback for `Resource.Collection.put`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| resources | <code>Array.&lt;Object&gt;</code> \| <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
+
+<a name="module_mio.Resource.on.collection_patch"></a>
+#####event: "collection:patch" (query, patch, collection)
+Runs at the beginning of callback for `Resource.Collection.patch`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| patch | <code>Object</code> \| <code>Array.&lt;Object&gt;</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
+
+<a name="module_mio.Resource.on.collection_post"></a>
+#####event: "collection:post" (query, resources, collection)
+Runs at the beginning of callback for `Resource.Collection.post`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| resources | <code>Array.&lt;Object&gt;</code> \| <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
+
+<a name="module_mio.Resource.on.collection_delete"></a>
+#####event: "collection:delete" (query, collection)
+Runs at the beginning of callback for `Resource.Collection.delete`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.once"></a>
 ####Resource.once(event, listener) ⇒ <code>[Resource](#module_mio.Resource)</code>
@@ -660,58 +852,134 @@ the callback of the method that fired the event.
 | event | <code>String</code> |  |
 | hook | <code>function</code> |  |
 
+**Example**  
+```javascript
+User.before('get', function (query, next) {
+  // do something before save such as validation and then call next()
+});
+
+User.on('patch', function (query, changed) {
+  // do something after update
+});
+```
 
 * [.before(event, hook)](#module_mio.Resource.before)
-  * ["get"](#module_mio.Resource.before.event_get)
-  * ["put"](#module_mio.Resource.before.event_put)
-  * ["patch"](#module_mio.Resource.before.event_patch)
-  * ["post"](#module_mio.Resource.before.event_post)
-  * ["delete"](#module_mio.Resource.before.event_delete)
-  * ["collection:get"](#module_mio.Resource.before.collection_get)
-  * ["collection:put"](#module_mio.Resource.before.collection_put)
-  * ["collection:patch"](#module_mio.Resource.before.collection_patch)
-  * ["collection:post"](#module_mio.Resource.before.collection_post)
-  * ["collection:delete"](#module_mio.Resource.before.collection_delete)
+  * ["get" (query, next, resource)](#module_mio.Resource.before.event_get)
+  * ["put" (query, representation, next, resource)](#module_mio.Resource.before.event_put)
+  * ["patch" (query, patch, next, resource)](#module_mio.Resource.before.event_patch)
+  * ["post" (query, representation, next, resource)](#module_mio.Resource.before.event_post)
+  * ["delete" (query, next, resource)](#module_mio.Resource.before.event_delete)
+  * ["collection:get" (query, next, collection)](#module_mio.Resource.before.collection_get)
+  * ["collection:put" (query, resources, next, collection)](#module_mio.Resource.before.collection_put)
+  * ["collection:patch" (query, patch, next, collection)](#module_mio.Resource.before.collection_patch)
+  * ["collection:post" (query, resources, next, collection)](#module_mio.Resource.before.collection_post)
+  * ["collection:delete" (query, next, collection)](#module_mio.Resource.before.collection_delete)
 
 <a name="module_mio.Resource.before.event_get"></a>
-#####event: "get"
+#####event: "get" (query, next, resource)
 Runs before callback for `Resource.get` or `Resource#get`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.before.event_put"></a>
-#####event: "put"
+#####event: "put" (query, representation, next, resource)
 Runs before callback for `Resource.put` or `Resource#put`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| representation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.before.event_patch"></a>
-#####event: "patch"
+#####event: "patch" (query, patch, next, resource)
 Runs before callback for `Resource.patch` or `Resource#patch`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| patch | <code>Object</code> \| <code>Array.&lt;Object&gt;</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.before.event_post"></a>
-#####event: "post"
-Runs before callback for `Resource.patch` or `Resource#patch`.
+#####event: "post" (query, representation, next, resource)
+Runs before callback for `Resource.post` or `Resource#post`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| representation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.before.event_delete"></a>
-#####event: "delete"
+#####event: "delete" (query, next, resource)
 Runs before callback for `Resource.delete` or `Resource#delete`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.before.collection_get"></a>
-#####event: "collection:get"
+#####event: "collection:get" (query, next, collection)
 Runs before callback for `Resource.Collection.get`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.before.collection_put"></a>
-#####event: "collection:put"
+#####event: "collection:put" (query, resources, next, collection)
 Runs before callback for `Resource.Collection.put`.
 
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| resources | <code>Array.&lt;(Object\|module:mio.Resource)&gt;</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
+
 <a name="module_mio.Resource.before.collection_patch"></a>
-#####event: "collection:patch"
+#####event: "collection:patch" (query, patch, next, collection)
 Runs before callback for `Resource.Collection.patch`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| patch | <code>Object</code> \| <code>Array.&lt;Object&gt;</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.before.collection_post"></a>
-#####event: "collection:post"
-Runs before callback for `Resource.Collection.patch`.
+#####event: "collection:post" (query, resources, next, collection)
+Runs before callback for `Resource.Collection.post`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| resources | <code>Array.&lt;Object&gt;</code> \| <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.before.collection_delete"></a>
-#####event: "collection:delete"
+#####event: "collection:delete" (query, next, collection)
 Runs before callback for `Resource.Collection.delete`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| query | <code>[Query](#module_mio.Query)</code> |  |
+| next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
+| collection | <code>[Resource.Collection](#module_mio.Resource.Collection)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.trigger"></a>
 ####Resource.trigger(event, args, callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
@@ -731,117 +999,18 @@ the callback of the method that fired the event.
 | args | <code>Mixed</code> | multiple arguments can be passed |
 | callback | <code>function</code> |  |
 
-**Example**  
-```javascript
-User.before('get', function (query, next) {
-  // do something before save such as validation and then call next()
-});
-
-User.on('patch', function (query, changed) {
-  // do something after update
-});
-```
-<a name="module_mio.Resource#get"></a>
-####resource.get(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Refresh the resource instance with the representation passed to the last
-hook's `next()`.
+<a name="module_mio.Resource.trigger.next"></a>
+#####callback: trigger.next → <code>function</code>
+Call the next hook in series, unless an `error` or `result` was received.
 
 | Param | Type | Description |
 | ----- | ---- | ----------- |
-| callback | <code>[get](#module_mio.Resource.get.get)</code> |  |
+| error | <code>Error</code> |  |
+| result | <code>[Resource](#module_mio.Resource)</code> \| <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code> |  |
+| ... | <code>Mixed</code> |  |
 
-**Emits**: <code>[get](#module_mio.Resource.before.event_get)</code>, <code>[get](#module_mio.Resource.on.event_get)</code>  
-<a name="module_mio.Resource#put"></a>
-####resource.put(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Replace resource with instance representation.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| callback | <code>[put](#module_mio.Resource.put.put)</code> |  |
-
-**Emits**: <code>[put](#module_mio.Resource.before.event_put)</code>, <code>[put](#module_mio.Resource.on.event_put)</code>  
-<a name="module_mio.Resource#patch"></a>
-####resource.patch(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Patch resource with diff of instance representation.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| callback | <code>[patch](#module_mio.Resource.patch.patch)</code> |  |
-
-**Emits**: <code>[patch](#module_mio.Resource.before.event_patch)</code>, <code>[patch](#module_mio.Resource.on.event_patch)</code>  
-<a name="module_mio.Resource#post"></a>
-####resource.post(callback) ⇒ <code>resource</code>
-Post resource and update instance.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| callback | <code>postCallback</code> |  |
-
-**Emits**: <code>[post](#module_mio.Resource.before.event_post)</code>, <code>[post](#module_mio.Resource.on.event_post)</code>  
-<a name="module_mio.Resource#delete"></a>
-####resource.delete(callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Delete resource.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| callback | <code>[delete](#module_mio.Resource.delete.delete)</code> |  |
-
-**Emits**: <code>[delete](#module_mio.Resource.before.event_delete)</code>, <code>[delete](#module_mio.Resource.on.event_delete)</code>  
-<a name="module_mio.Resource#isNew"></a>
-####resource.isNew() ⇒ <code>Boolean</code>
-Check if resource is new and has not been saved.
-
-<a name="module_mio.Resource#isDirty"></a>
-####resource.isDirty(attr) ⇒ <code>Boolean</code>
-Check if resource is dirty (has any changed attributes).
-If an attribute name is specified, check if that attribute is dirty.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| attr | <code>String</code> | optional attribute to check if dirty |
-
-<a name="module_mio.Resource#changed"></a>
-####resource.changed() ⇒ <code>Object</code>
-Return dirty attributes (changed since last put/patch/post/reset).
-
-<a name="module_mio.Resource#has"></a>
-####resource.has(attr) ⇒ <code>Boolean</code>
-Check if resource has given `attr`.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| attr | <code>String</code> |  |
-
-<a name="module_mio.Resource#set"></a>
-####resource.set(attributes) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Set given resource `attributes`.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| attributes | <code>Object</code> |  |
-
-**Emits**: <code>[set](#module_mio.Resource.on.event_set)</code>  
-<a name="module_mio.Resource#reset"></a>
-####resource.reset(attributes) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Reset attributes for resource. Marks resource as clean. Instance attributes
-not defined in `attributes` will be reset to `undefined`.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| attributes | <code>Object</code> |  |
-
-**Emits**: <code>[reset](#module_mio.Resource.on.event_reset)</code>  
 <a name="module_mio.Resource.url"></a>
 ####Resource.url([method]) ⇒ <code>Object</code> \| <code>String</code>
-Returns map of HTTP methods to resource URLs. If `method` is specified, the
-URL for that `method` is returned.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| \[method\] | <code>String</code> |  |
-
-<a name="module_mio.Resource#url"></a>
-####resource.url([method]) ⇒ <code>Object</code> \| <code>String</code>
 Returns map of HTTP methods to resource URLs. If `method` is specified, the
 URL for that `method` is returned.
 
@@ -855,13 +1024,13 @@ URL for that `method` is returned.
 * [class: .Query](#module_mio.Query)
   * [new Query([options])](#new_module_mio.Query_new)
   * _instance_
-    * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[query](#query)</code>
-    * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[query](#query)</code>
-    * [.paginate(paginate)](#module_mio.Query#paginate) ⇒ <code>[query](#query)</code>
-    * [.from(from)](#module_mio.Query#from) ⇒ <code>[query](#query)</code>
-    * [.size(size)](#module_mio.Query#size) ⇒ <code>[query](#query)</code>
-    * [.page(page)](#module_mio.Query#page) ⇒ <code>[query](#query)</code>
-    * [.withRelated(relations)](#module_mio.Query#withRelated) ⇒ <code>[query](#query)</code>
+    * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.paginate(paginate)](#module_mio.Query#paginate) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.from(from)](#module_mio.Query#from) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.size(size)](#module_mio.Query#size) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.page(page)](#module_mio.Query#page) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.withRelated(relations)](#module_mio.Query#withRelated) ⇒ <code>[Query](#module_mio.Query)</code>
     * [.exec(callback)](#module_mio.Query#exec)
     * [.toJSON()](#module_mio.Query#toJSON) ⇒ <code>Object</code>
 
@@ -899,7 +1068,7 @@ User.Collection.get({
 });
 ```
 <a name="module_mio.Query#where"></a>
-####query.where(where, [value]) ⇒ <code>[query](#query)</code>
+####query.where(where, [value]) ⇒ <code>[Query](#module_mio.Query)</code>
 Set `query.where` parameters individually or using a map.
 
 | Param | Type | Description |
@@ -926,7 +1095,7 @@ User.Collection.get()
   .exec(function (err, users) { ... })
 ```
 <a name="module_mio.Query#sort"></a>
-####query.sort(sort) ⇒ <code>[query](#query)</code>
+####query.sort(sort) ⇒ <code>[Query](#module_mio.Query)</code>
 Set `query.sort` parameters.
 
 | Param | Type | Description |
@@ -934,7 +1103,7 @@ Set `query.sort` parameters.
 | sort | <code>Object</code> |  |
 
 <a name="module_mio.Query#paginate"></a>
-####query.paginate(paginate) ⇒ <code>[query](#query)</code>
+####query.paginate(paginate) ⇒ <code>[Query](#module_mio.Query)</code>
 Set `query.from` and `query.size` using a map.
 
 | Param | Type | Description |
@@ -944,7 +1113,7 @@ Set `query.from` and `query.size` using a map.
 | \[paginate.size\] | <code>Number</code> |  |
 
 <a name="module_mio.Query#from"></a>
-####query.from(from) ⇒ <code>[query](#query)</code>
+####query.from(from) ⇒ <code>[Query](#module_mio.Query)</code>
 Set `query.from` parameter.
 
 | Param | Type | Description |
@@ -952,7 +1121,7 @@ Set `query.from` parameter.
 | from | <code>Mixed</code> | treated as an offset if number |
 
 <a name="module_mio.Query#size"></a>
-####query.size(size) ⇒ <code>[query](#query)</code>
+####query.size(size) ⇒ <code>[Query](#module_mio.Query)</code>
 Set `query.size` parameter.
 
 | Param | Type | Description |
@@ -960,7 +1129,7 @@ Set `query.size` parameter.
 | size | <code>Number</code> |  |
 
 <a name="module_mio.Query#page"></a>
-####query.page(page) ⇒ <code>[query](#query)</code>
+####query.page(page) ⇒ <code>[Query](#module_mio.Query)</code>
 Set `query.page` parameter. Must be used after `query.size` is set. This
 method sets the proper `query.from` value from `page`.
 
@@ -969,7 +1138,7 @@ method sets the proper `query.from` value from `page`.
 | page | <code>Number</code> | first page is 1 |
 
 <a name="module_mio.Query#withRelated"></a>
-####query.withRelated(relations) ⇒ <code>[query](#query)</code>
+####query.withRelated(relations) ⇒ <code>[Query](#module_mio.Query)</code>
 Include related resources.
 
 | Param | Type | Description |
@@ -1018,10 +1187,10 @@ Return query object JSON.
   * _instance_
     * [.resources](#module_mio.Resource.Collection#resources) → <code>Array.&lt;Resource&gt;</code>
     * [.length](#module_mio.Resource.Collection#length) → <code>Number</code>
+    * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
     * [.url([method])](#module_mio.Resource.Collection#url) ⇒ <code>Object</code> \| <code>String</code>
     * [.at(index)](#module_mio.Resource.Collection#at) ⇒ <code>[Resource](#module_mio.Resource)</code>
     * [.toJSON()](#module_mio.Resource.Collection#toJSON) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
-    * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
     * [.[ArrayMethod]()](#module_mio.Resource.Collection#[ArrayMethod])
   * _static_
     * [.create(resources)](#module_mio.Resource.Collection.create) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
@@ -1064,6 +1233,36 @@ collection.indexOf(resource);  // => 0
 ####resource.Collection.length → <code>Number</code>
 Number of resources in the collection.
 
+<a name="module_mio.Resource.Collection#toArray"></a>
+####resource.Collection.toArray ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
+Returns array of resources in collection.
+
+<a name="module_mio.Resource.Collection#url"></a>
+####resource.Collection.url([method]) ⇒ <code>Object</code> \| <code>String</code>
+Returns map of HTTP methods to collection URLs. If `method` is specified, the
+URL for that `method` is returned.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| \[method\] | <code>String</code> |  |
+
+<a name="module_mio.Resource.Collection#at"></a>
+####resource.Collection.at(index) ⇒ <code>[Resource](#module_mio.Resource)</code>
+Returns resource at given `index`.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| index | <code>Number</code> |  |
+
+<a name="module_mio.Resource.Collection#toJSON"></a>
+####resource.Collection.toJSON() ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
+Returns array of resources in collection.
+
+<a name="module_mio.Resource.Collection#[ArrayMethod]"></a>
+####resource.Collection.[ArrayMethod]()
+Collections inherit `Array.prototype` methods. `Array.prototype` methods
+that return arrays such as `map` still return an array, not the collection.
+
 <a name="module_mio.Resource.Collection.create"></a>
 ####Resource.Collection.create(resources) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
 Create a collection of resources and hydrate them if necessary.
@@ -1093,7 +1292,7 @@ Get a collection of resources using given `query`.
 | query | <code>[Query](#module_mio.Query)</code> |  |
 | callback | <code>[get](#module_mio.Resource.get.get)</code> |  |
 
-**Emits**: <code>[collection:get](#module_mio.Resource.before.collection_get)</code>, <code>module:mio.Resource.on.collection:get</code>  
+**Emits**: <code>[collection:get](#module_mio.Resource.before.collection_get)</code>, <code>[collection:get](#module_mio.Resource.on.collection_get)</code>  
 <a name="module_mio.Resource.Collection.put"></a>
 ####Resource.Collection.put(query, representation, callback) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
 Replace a collection of resources using given `query`.
@@ -1104,7 +1303,7 @@ Replace a collection of resources using given `query`.
 | representation | <code>Object</code> |  |
 | callback | <code>[put](#module_mio.Resource.put.put)</code> |  |
 
-**Emits**: <code>[collection:put](#module_mio.Resource.before.collection_put)</code>, <code>module:mio.Resource.on.collection:put</code>  
+**Emits**: <code>[collection:put](#module_mio.Resource.before.collection_put)</code>, <code>[collection:put](#module_mio.Resource.on.collection_put)</code>  
 <a name="module_mio.Resource.Collection.patch"></a>
 ####Resource.Collection.patch(query, changes, callback) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
 Update (patch) a collection of resources using given `query` and `changes`.
@@ -1115,7 +1314,7 @@ Update (patch) a collection of resources using given `query` and `changes`.
 | changes | <code>Object</code> \| <code>Array.&lt;Object&gt;</code> |  |
 | callback | <code>[patch](#module_mio.Resource.patch.patch)</code> |  |
 
-**Emits**: <code>[collection:patch](#module_mio.Resource.before.collection_patch)</code>, <code>module:mio.Resource.on.collection:patch</code>  
+**Emits**: <code>[collection:patch](#module_mio.Resource.before.collection_patch)</code>, <code>[collection:patch](#module_mio.Resource.on.collection_patch)</code>  
 <a name="module_mio.Resource.Collection.post"></a>
 ####Resource.Collection.post(representations, callback) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
 Create resources using given `representations`.
@@ -1125,7 +1324,7 @@ Create resources using given `representations`.
 | representations | <code>Array.&lt;Object&gt;</code> |  |
 | callback | <code>[post](#module_mio.Resource.post.post)</code> |  |
 
-**Emits**: <code>[collection:post](#module_mio.Resource.before.collection_post)</code>, <code>module:mio.Resource.on.collection:post</code>  
+**Emits**: <code>[collection:post](#module_mio.Resource.before.collection_post)</code>, <code>[collection:post](#module_mio.Resource.on.collection_post)</code>  
 <a name="module_mio.Resource.Collection.delete"></a>
 ####Resource.Collection.delete(query, callback) ⇒ <code>[Resource.Collection](#module_mio.Resource.Collection)</code>
 Delete resources using given `query`.
@@ -1135,7 +1334,7 @@ Delete resources using given `query`.
 | query | <code>[Query](#module_mio.Query)</code> |  |
 | callback | <code>[delete](#module_mio.Resource.delete.delete)</code> |  |
 
-**Emits**: <code>[collection:delete](#module_mio.Resource.before.collection_delete)</code>, <code>module:mio.Resource.on.collection:delete</code>  
+**Emits**: <code>[collection:delete](#module_mio.Resource.before.collection_delete)</code>, <code>[collection:delete](#module_mio.Resource.on.collection_delete)</code>  
 <a name="module_mio.Resource.Collection.url"></a>
 ####Resource.Collection.url([method]) ⇒ <code>Object</code> \| <code>String</code>
 Returns map of HTTP methods to collection URLs. If `method` is specified, the
@@ -1144,34 +1343,4 @@ URL for that `method` is returned.
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | \[method\] | <code>String</code> |  |
-
-<a name="module_mio.Resource.Collection#url"></a>
-####resource.Collection.url([method]) ⇒ <code>Object</code> \| <code>String</code>
-Returns map of HTTP methods to collection URLs. If `method` is specified, the
-URL for that `method` is returned.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| \[method\] | <code>String</code> |  |
-
-<a name="module_mio.Resource.Collection#at"></a>
-####resource.Collection.at(index) ⇒ <code>[Resource](#module_mio.Resource)</code>
-Returns resource at given `index`.
-
-| Param | Type | Description |
-| ----- | ---- | ----------- |
-| index | <code>Number</code> |  |
-
-<a name="module_mio.Resource.Collection#toJSON"></a>
-####resource.Collection.toJSON() ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
-Returns array of resources in collection.
-
-<a name="module_mio.Resource.Collection#toArray"></a>
-####resource.Collection.toArray ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
-Returns array of resources in collection.
-
-<a name="module_mio.Resource.Collection#[ArrayMethod]"></a>
-####resource.Collection.[ArrayMethod]()
-Collections inherit `Array.prototype` methods. `Array.prototype` methods
-that return arrays such as `map` still return an array, not the collection.
 

@@ -3,7 +3,7 @@
 > RESTful resources for both client and server.
 
 Mio provides a common model layer between client and server for building REST
-APIs and web applications that interact with them.
+APIs and web applications.
 
 Mio provides a consistent API across client and server for querying,
 manipulating, and persisting data. Create a REST API server from your mio
@@ -164,7 +164,7 @@ User.on('patch', function (query, changed) {
 });
 ```
 
-See the full [documentation for events](docs/API.md#module_mio.Resource.trigger).
+See the full [documentation for events](docs/API.md#module_mio.Resource.before).
 
 ### Relations
 
@@ -188,7 +188,7 @@ Book.get(1).withRelated(['author']).exec(function(err, book) {
 });
 ```
 
-See the [relations API](docs/API.md#module_mio.Resource.hasOne) for more
+See the [relations API](docs/API.md#module_mio.Resource.belongsTo) for more
 information.
 
 ### REST API
