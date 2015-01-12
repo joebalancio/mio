@@ -3,8 +3,8 @@ var expect = require('chai').expect;
 var mio = process.env.JSCOV
         ? require('../lib-cov/mio') : require('../lib/mio');
 
-describe('Model', function() {
-  it('is instanceof exports.Model', function() {
+describe('Resource', function() {
+  it('is instanceof exports.Resource', function() {
     var User = mio.Resource.extend();
     var user = new User();
     expect(user).to.be.an.instanceOf(User);
@@ -12,49 +12,49 @@ describe('Model', function() {
   });
 
   it('inherits from EventEmitter', function() {
-    var Model = mio.Resource.extend();
-    expect(Model).to.have.property('emit');
-    expect(Model).to.have.property('on');
+    var Resource = mio.Resource.extend();
+    expect(Resource).to.have.property('emit');
+    expect(Resource).to.have.property('on');
   });
 
   it('emits "initializing" event', function(done) {
-    var Model = mio.Resource.extend()
+    var Resource = mio.Resource.extend()
       .on('initialize', function(model, attrs) {
-        expect(model).to.have.property('constructor', Model);
+        expect(model).to.have.property('constructor', Resource);
         expect(attrs).to.be.an('object');
         done();
       });
-    new Model();
+    new Resource();
   });
 
   it('emits "initialized" event', function(done) {
-    var Model = mio.Resource.extend()
+    var Resource = mio.Resource.extend()
       .on('create', function(model) {
         expect(model).to.be.an('object');
-        expect(model).to.have.property('constructor', Model);
+        expect(model).to.have.property('constructor', Resource);
         done();
       });
-    new Model();
+    new Resource();
   });
 
   it('emits "change" events', function(done) {
-    var Model = mio.Resource.extend()
+    var Resource = mio.Resource.extend()
       .attr('id', { primary: true })
       .attr('name')
       .on('change', function(model, name, value, prev) {
         expect(model).to.be.an('object');
-        expect(model).to.have.property('constructor', Model);
+        expect(model).to.have.property('constructor', Resource);
         expect(name).to.equal('name');
         expect(value).to.equal('alex');
         expect(prev).to.equal(null);
         done();
       });
-    var model = new Model();
+    var model = new Resource();
     model.name = 'alex';
   });
 
   it('sets default values on initialization', function() {
-    var Model = mio.Resource.extend()
+    var Resource = mio.Resource.extend()
     .attr('id', {
       primary: true
     })
@@ -66,7 +66,7 @@ describe('Model', function() {
         return new Date();
       }
     });
-    var model = new Model({ id: 1 });
+    var model = new Resource({ id: 1 });
     expect(model.active).to.equal(true);
     expect(model.created_at).to.be.an.instanceOf(Date);
   });
@@ -96,25 +96,25 @@ describe('Model', function() {
   });
 
   describe('.primary', function() {
-    var Model = mio.Resource.extend().attr('id');
+    var Resource = mio.Resource.extend().attr('id');
 
     it('throws error on get if primary key is undefined', function() {
       expect(function() {
-        var model = new Model({ id: 1 });
+        var model = new Resource({ id: 1 });
         var id = model.primary;
       }).to.throw('Primary key has not been defined.');
     });
 
     it('throws error on set if primary key is undefined', function() {
       expect(function() {
-        var model = new Model({ id: 1 });
+        var model = new Resource({ id: 1 });
         model.primary = 1;
       }).to.throw('Primary key has not been defined.');
     });
 
     it('sets primary key attribute', function() {
-      Model = mio.Resource.extend().attr('id', { primary: true });
-      var model = new Model();
+      Resource = mio.Resource.extend().attr('id', { primary: true });
+      var model = new Resource();
       model.primary = 3;
       expect(model.primary).to.equal(3);
     });
@@ -163,12 +163,12 @@ describe('Model', function() {
     it('calls handler only once', function() {
       called = 0;
 
-      var Model = mio.Resource.extend().once('foo', function() {
+      var Resource = mio.Resource.extend().once('foo', function() {
         called++;
       });
 
-      Model.emit('foo');
-      Model.emit('foo');
+      Resource.emit('foo');
+      Resource.emit('foo');
 
       expect(called).to.equal(1);
     });
@@ -183,6 +183,9 @@ describe('Model', function() {
       });
 
       Resource
+        .before('test', function (next) {
+          next(new Error('should stop hook execution'));
+        })
         .before('post', function (changed, next) {
           next(new Error('should stop hook execution'));
         })
@@ -190,49 +193,55 @@ describe('Model', function() {
           done(new Error("second hook should not be called"));
         });
 
-      Resource.create().post(function(err) {
+      Resource.create().post(function (err) {
         expect(err).to.exist();
-        done();
+        expect(err.message).to.equal('should stop hook execution');
+
+        Resource.trigger('test', function (err) {
+          expect(err).to.exist();
+          expect(err.message).to.equal('should stop hook execution');
+          done();
+        });
       });
     });
   });
 
   describe('.attr()', function() {
     it('throws error if defining two primary keys', function() {
-      var Model = mio.Resource.extend();
-      Model.attr('id', { primary: true });
+      var Resource = mio.Resource.extend();
+      Resource.attr('id', { primary: true });
       expect(function() {
-        Model.attr('_id', { primary: true });
+        Resource.attr('_id', { primary: true });
       }).to.throw('Primary attribute already exists: id');
     });
 
     it('throws error if defining existing key', function() {
-      var Model = mio.Resource.extend();
-      Model.attr('id', { primary: true });
+      var Resource = mio.Resource.extend();
+      Resource.attr('id', { primary: true });
       expect(function() {
-        Model.attr('id');
+        Resource.attr('id');
       }).to.throw('id attribute already exists');
     });
 
     it('emits "attribute" event', function(done) {
-      var Model = mio.Resource.extend()
+      var Resource = mio.Resource.extend()
         .on('attribute', function(name, params) {
           expect(name).to.equal('id');
           expect(params).to.be.an('object');
           expect(params).to.have.property('primary', true);
           done();
         });
-      Model.attr('id', { primary: true });
+      Resource.attr('id', { primary: true });
     });
   });
 
   describe('.use()', function() {
     it('extends model', function() {
-      var Model = mio.Resource.extend();
-      Model.use(function() {
+      var Resource = mio.Resource.extend();
+      Resource.use(function() {
         this.test = 1;
       });
-      expect(Model).to.have.property('test', 1);
+      expect(Resource).to.have.property('test', 1);
     });
 
     it('throws error if plugin is not a function', function() {
@@ -262,9 +271,9 @@ describe('Model', function() {
 
   describe('.browser()', function() {
     it('only runs methods in browser', function() {
-      var Model = mio.Resource.extend();
+      var Resource = mio.Resource.extend();
       global.window = {};
-      Model.browser(function() {
+      Resource.browser(function() {
         this.test = 1;
       });
     });
@@ -272,8 +281,8 @@ describe('Model', function() {
 
   describe('.server()', function() {
     it('only runs methods in node', function() {
-      var Model = mio.Resource.extend();
-      Model.server(function() {
+      var Resource = mio.Resource.extend();
+      Resource.server(function() {
         this.test = 1;
       });
     });
@@ -281,15 +290,21 @@ describe('Model', function() {
 
   describe('.create()', function() {
     it('creates new models', function() {
-      var Model = mio.Resource.extend();
-      var model = Model.create();
-      expect(model).to.be.an.instanceOf(Model);
+      var Resource = mio.Resource.extend();
+      var model = Resource.create();
+      expect(model).to.be.an.instanceOf(Resource);
     });
 
     it('hydrates model from existing object', function() {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      var model = Model.create({ id: 1 });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var model = Resource.create({ id: 1 });
       expect(model).to.have.property('id', 1);
+    });
+
+    it('hydrates model from existing resource', function() {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var model = Resource.create({ id: 1 });
+      expect(Resource.create(model)).to.equal(model);
     });
   });
 
@@ -321,6 +336,8 @@ describe('Model', function() {
       expect(Patient.attributes).to.have.property('record');
       expect(Patient.attributes.record).to.have.property('serializable', false);
     });
+
+    it('throws error for missing target or foreignKey');
   });
 
   describe('.hasMany()', function () {
@@ -357,48 +374,27 @@ describe('Model', function() {
     });
   });
 
-  describe('.belongsToMany()', function () {
-    it('should define attribute for relation', function () {
-      var Post = mio.Resource.extend().belongsToMany('tags', {
-        target: mio.Resource.extend(),
-        foreignKey: 'tag_id',
-        throughKey: 'post_id',
-        through: 'post_tag'
-      });
-
-      expect(Post.attributes).to.have.property('tags');
-      expect(Post.attributes.tags).to.have.property('relation');
-
-      var relation = Post.attributes.tags.relation;
-
-      expect(relation).to.have.property('type', 'belongsToMany');
-      expect(relation).to.have.property('foreignKey', 'tag_id');
-      expect(relation).to.have.property('throughKey', 'post_id');
-      expect(relation).to.have.property('through', 'post_tag');
-    });
-  });
-
   describe('.get()', function() {
     it('finds models by id', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.get(1, function(err, model) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.get(1, function(err, model) {
         if (err) return done(err);
         done();
       });
     });
 
     it("triggers get hooks", function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Model
+      Resource
         .before('get', function(query, cb) {
           cb();
         })
         .before('get', function(query, cb) {
-          cb(null, new Model({ id: 1 }));
+          cb(null, new Resource({ id: 1 }));
         });
 
-      Model.get(1, function(err, model) {
+      Resource.get(1, function(err, model) {
         if (err) return done(err);
         expect(model).to.have.property('id', 1);
         done();
@@ -406,417 +402,518 @@ describe('Model', function() {
     });
 
     it('emits "before:get" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.before('get', function(query) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('get', function(query) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.get(1, function(err, model) {
+      Resource.get(1, function(err, model) {
         if (err) return done(err);
       });
     });
 
     it('emits "get" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Model.on('get', function(model) {
-        expect(model).to.be.an.instanceOf(Model);
+      Resource.on('get', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
         done();
       });
 
-      Model.before('get', function(query, cb) {
-        cb(null, new Model({ id: 1 }));
+      Resource.before('get', function(query, cb) {
+        cb(null, new Resource({ id: 1 }));
       });
 
-      Model.get(1, function(err, model) {
+      Resource.get(1, function(err, model) {
         if (err) return done(err);
       });
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Model.before('get', function(query, cb) {
+      Resource.before('get', function(query, cb) {
         cb(new Error('test'));
       });
 
-      Model.get(1, function(err, model) {
+      Resource.get(1, function(err, model) {
         expect(err).to.have.property('message', 'test')
         done();
       });
     });
   });
 
-  describe('.Collection.get()', function() {
-    it('finds collection of models using query', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.Collection.get(function(err, collection) {
-        if (err) return done(err);
-        expect(collection).to.be.an.instanceOf(Model.Collection);
-        Model.get({ id: 1 }, function(err, collection) {
-          done();
-        });
-      });
-    });
+  describe('.put()', function () {
+    it("triggers put hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-    it("emits collection hooks", function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-
-      Model
-        .before('collection:get', function(query, cb) {
+      Resource
+        .before('put', function(query, resource, cb) {
           cb();
         })
-        .before('collection:get', function(query, cb) {
-          cb(null, [new Model({ id: 1 })]);
+        .before('put', function(query, resource, cb) {
+          cb(null, new Resource({ id: 1 }));
         });
 
-      Model.Collection.get(function(err, collection) {
+      Resource.put({ id: 2 }).where({ id: 1 }).exec(function(err, model) {
         if (err) return done(err);
-        expect(collection).to.have.property('length', 1);
-        expect(collection[0]).to.have.property('constructor', Model);
+        expect(model).to.have.property('id', 1);
         done();
       });
     });
 
-    it('emits "before:collection:get" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.before('collection:get', function(query) {
+    it('emits "before:put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('put', function(query, resource) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.Collection.get({ id: 1 }, function(err, collection) {
+      Resource.put({ id: 1 }, { id: 2 }, function(err, model) {
         if (err) return done(err);
       });
     });
 
-    it('emits "collection:get" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.on('collection:get', function(collection, query) {
+    it('emits "put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.on('put', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
         done();
       });
-      Model.Collection.get({ id: 1 }, function(err, collection) {
+
+      Resource.before('put', function(query, resource, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      Resource.put({ id: 1 }, { id : 2 }, function(err, model) {
         if (err) return done(err);
       });
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Model.before('collection:get', function(query, cb) {
+      Resource.before('put', function(query, resource, cb) {
         cb(new Error('test'));
       });
 
-      Model.Collection.get(function(err, collection) {
+      Resource.put({ id: 1 }, { id: 2 }, function(err, model) {
         expect(err).to.have.property('message', 'test')
         done();
       });
     });
   });
 
-  describe('.Collection.patch()', function() {
-    it('updates models using query', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.Collection.patch({ id: 1 }, { id: 2 }, function(err) {
-        done();
-      });
-    });
+  describe('.patch()', function () {
+    it("triggers patch hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-    it('triggers "collection:patch" hooks', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-
-      Model
-        .before('collection:patch', function(query, changes, cb) {
+      Resource
+        .before('patch', function(query, resource, cb) {
           cb();
         })
-        .before('collection:patch', function(query, changes, cb) {
-          cb();
+        .before('patch', function(query, resource, cb) {
+          cb(null, new Resource({ id: 1 }));
         });
 
-      Model.Collection.patch({}, {}, function(err) {
+      Resource.patch({ id: 2 }).where({ id: 2 }).exec(function(err, model) {
         if (err) return done(err);
+        expect(model).to.have.property('id', 1);
         done();
       });
     });
 
-    it('emits "before:collection:patch" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.before('collection:patch', function(query) {
+    it('emits "before:patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('patch', function(query, resource) {
         expect(query).to.be.an('object');
         done();
       });
-      Model.Collection.patch({ id: 1 }, { id: 2 }, function(err) {
+      Resource.patch({ id: 1 }, { id: 2 }, function(err, model) {
         if (err) return done(err);
       });
     });
 
-    it('emits "collection:patch" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.on('collection:patch', function() {
+    it('emits "patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.on('patch', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
         done();
       });
-      Model.Collection.patch({ id: 1 }, { id: 2 }, function(err) {
+
+      Resource.before('patch', function(query, resource, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      Resource.patch({ id: 1 }, { id : 2 }, function(err, model) {
         if (err) return done(err);
       });
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Model
-        .before('collection:patch', function(query, changes, cb) {
-          cb();
-        })
-        .before('collection:patch', function(query, changes, cb) {
-          cb(new Error('test'));
-        });
+      Resource.before('patch', function(query, resource, cb) {
+        cb(new Error('test'));
+      });
 
-      Model.Collection.patch({}, {}, function(err) {
+      Resource.patch({ id: 1 }, { id: 2 }, function(err, model) {
         expect(err).to.have.property('message', 'test')
         done();
       });
     });
   });
 
+  describe('.post()', function () {
+    it("triggers post hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-  describe('.Collection.delete()', function() {
-    it('deletes models using query', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.Collection.delete({ id: 1 }, function(err) {
-        if (err) return done(err);
-        done();
-      });
-    });
-
-    it('triggers "collection:delete" hooks', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-
-      Model
-        .before('collection:delete', function(query, cb) {
+      Resource
+        .before('post', function(resource, cb) {
           cb();
         })
-        .before('collection:delete', function(query, cb) {
-          cb();
+        .before('post', function(resource, cb) {
+          cb(null, new Resource({ id: 1 }));
         });
 
-      Model.Collection.delete({}, function(err) {
+      Resource.post({ id: 2 }, function(err, model) {
         if (err) return done(err);
+        expect(model).to.have.property('id', 1);
         done();
       });
     });
 
-    it('emits "before:collection:delete" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.before('collection:delete', function(query) {
-        expect(query).to.be.an('object');
+    it('emits "before:post" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('post', function(resource) {
+        expect(resource).to.be.an('object');
         done();
       });
-      Model.Collection.delete({ id: 1 }, function(err) {
+      Resource.post({ id: 2 }, function(err, model) {
         if (err) return done(err);
       });
     });
 
-    it('emits "collection:delete" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.on('collection:delete', function() {
+    it('emits "post" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.on('post', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
         done();
       });
-      Model.Collection.delete({ id: 1 }, function(err) {
+
+      Resource.before('post', function(resource, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      Resource.post({ id : 2 }, function(err, model) {
         if (err) return done(err);
       });
     });
 
     it('passes error from adapter to callback', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Model
-        .before('collection:delete', function(query, cb) {
-          cb();
-        })
-        .before('collection:delete', function(query, cb) {
-          cb(new Error('test'));
-        });
+      Resource.before('post', function(resource, cb) {
+        cb(new Error('test'));
+      });
 
-      Model.Collection.delete(function(err) {
+      Resource.post({ id: 2 }, function(err, model) {
         expect(err).to.have.property('message', 'test')
         done();
       });
     });
   });
 
-  describe('.query()', function() {
-    it('returns query object', function() {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      var query = Model.Collection.get();
-      expect(query).to.be.an('object');
-      expect(query).to.have.property('where');
-      expect(query).to.have.property('sort');
-      expect(query).to.have.property('paginate');
-      expect(query).to.have.property('from');
-      expect(query).to.have.property('size');
-      expect(query).to.have.property('withRelated');
-      expect(query).to.have.property('exec');
-    });
+  describe('.delete()', function () {
+    it("triggers delete hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-    it('is chainable', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.get()
-      .where({ name: 'alex' })
-      .sort('asc')
-      .size(10)
-      .withRelated('related')
-      .exec(function(err) {
-        if (err) return done(err);
-
-        Model.Collection.get()
-        .where({ name: 'alex' })
-        .sort('asc')
-        .size(10)
-        .withRelated(['related'])
-        .exec(function(err) {
-          if (err) return done(err);
-
-          Model.Collection.delete()
-          .where({ name: 'alex' })
-          .sort('asc')
-          .size(10)
-          .exec(done);
+      Resource
+        .before('delete', function(query, cb) {
+          cb();
+        })
+        .before('delete', function(query, cb) {
+          cb(null, new Resource({ id: 1 }));
         });
-      });
-    });
 
-    it('modifies query', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.before('collection:get', function(query, next) {
-        expect(query).to.have.keys([
-          'from',
-          'page',
-          'size',
-          'sort',
-          'where'
-        ]);
+      Resource.delete({ id: 1 }, function(err, model) {
+        if (err) return done(err);
+        expect(model).to.have.property('id', 1);
         done();
       });
-      Model.Collection.get()
-        .where({ name: 'alex' })
-        .sort('asc')
-        .paginate({ page: 1 })
-        .from(10)
-        .size(10)
-        .exec(function() {});
+    });
+
+    it('returns chainable query builder', function (done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.before('delete', function (query, next) {
+        expect(query).to.be.an('object');
+        expect(query).to.have.property('query');
+        expect(query.query).to.have.property('where');
+        expect(query.query.where).to.have.property('id', 1);
+        next();
+      });
+
+      Resource.delete().where({ id: 1 }).exec(done);
+    });
+
+    it('emits "before:delete" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('delete', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.delete({ id: 1 }, function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "delete" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.on('delete', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
+        done();
+      });
+
+      Resource.before('delete', function(query, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      Resource.delete({ id: 1 }, function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.before('delete', function(query, cb) {
+        cb(new Error('test'));
+      });
+
+      Resource.delete(function(err, model) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
     });
   });
 
-  describe('#isNew()', function() {
-    it('checks whether primary attribute is set', function() {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      var m1 = Model.create();
-      expect(m1.isNew()).to.equal(true);
-      var m2 = Model.create({ id: 1 });
-      expect(m2.isNew()).to.equal(false);
+  describe('#get()', function() {
+    it('finds models by id', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+      resource.get(function(err, model) {
+        if (err) return done(err);
+        done();
+      });
     });
 
-    it('throws error if primary key has not been defined', function() {
-      var Model = mio.Resource.extend().attr('id');
-      var model = Model.create();
-      expect(function() {
-        model.isNew();
-      }).to.throw("Primary key has not been defined.");
-    });
-  });
+    it("triggers get hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
 
-  describe('#has()', function() {
-    it('checks for attribute definition', function() {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      var model = Model.create({ id: 1 });
-      expect(model.has('name')).to.equal(false);
-      expect(model.has('id')).to.equal(true);
-    });
-  });
-
-  describe('#set()', function() {
-    it('sets values for defined attributes', function() {
-      var Model = mio.Resource.extend()
-        .attr('id', { primary: true })
-        .attr('name');
-      var model = Model.create().set({ id: 1, name: 'alex', age: 26 });
-      expect(model.id).to.equal(1);
-      expect(model.name).to.equal('alex');
-      expect(model).to.not.have.property('age');
-    });
-
-    it('emits "setting" event', function(done) {
-      var Model = mio.Resource.extend()
-        .attr('id', { primary: true })
-        .attr('name')
-        .on('set', function(model, attrs) {
-          expect(model).to.have.property('constructor', Model);
-          expect(attrs).to.have.property('name', 'alex');
-          done();
+      Resource
+        .before('get', function(query, cb) {
+          cb();
+        })
+        .before('get', function(query, cb) {
+          cb(null, new Resource({ id: 1 }));
         });
-      var model = new Model();
-      model.set({ name: 'alex' });
+
+      resource.get(function(err, model) {
+        if (err) return done(err);
+        expect(model).to.have.property('id', 1);
+        done();
+      });
+    });
+
+    it('emits "before:get" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.before('get', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+
+      resource.get(function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "get" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.on('get', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
+        done();
+      });
+
+      Resource.before('get', function(query, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      resource.get(function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.before('get', function(query, cb) {
+        cb(new Error('test'));
+      });
+
+      resource.get(function(err, model) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
     });
   });
 
-  describe('#reset()', function() {
-    it('resets values for defined attributes', function() {
-      var Model = mio.Resource.extend()
-        .attr('id', { primary: true })
-        .attr('name');
-      var model = Model.create().reset({ id: 1, name: 'alex', age: 26 });
-      expect(model.id).to.equal(1);
-      expect(model.name).to.equal('alex');
-      expect(model).to.not.have.property('age');
-    });
+  describe('#put()', function () {
+    it("triggers put hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
 
-    it('emits "setting" event', function(done) {
-      var Model = mio.Resource.extend()
-        .attr('id', { primary: true })
-        .attr('name')
-        .on('reset', function(model, attrs) {
-          expect(model).to.have.property('constructor', Model);
-          expect(attrs).to.have.property('name', 'alex');
-          done();
+      Resource
+        .before('put', function(query, resource, cb) {
+          cb();
+        })
+        .before('put', function(query, resource, cb) {
+          cb(null, new Resource({ id: 1 }));
         });
-      var model = new Model();
-      model.reset({ name: 'alex' });
+
+      resource.put(function(err, model) {
+        if (err) return done(err);
+        expect(model).to.have.property('id', 1);
+        done();
+      });
+    });
+
+    it('emits "before:put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.before('put', function(query, resource) {
+        expect(query).to.be.an('object');
+        done();
+      });
+
+      resource.put(function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.on('put', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
+        done();
+      });
+
+      Resource.before('put', function(query, resource, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      resource.put(function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.before('put', function(query, resource, cb) {
+        cb(new Error('test'));
+      });
+
+      resource.put(function(err, model) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
     });
   });
 
-  describe('#isDirty()', function() {
-    it('returns whether model is changed/dirty', function() {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      var model = Model.create();
-      expect(model.isDirty()).to.equal(false);
-      model.id = 1;
-      expect(model.isDirty()).to.equal(true);
+  describe('#patch()', function () {
+    it("triggers patch hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource
+        .before('patch', function(query, resource, cb) {
+          cb();
+        })
+        .before('patch', function(query, resource, cb) {
+          cb(null, new Resource({ id: 1 }));
+        });
+
+      resource.patch(function(err, model) {
+        if (err) return done(err);
+        expect(model).to.have.property('id', 1);
+        done();
+      });
     });
 
-    it('returns whether attribute is changed/dirty', function() {
-      var Model = mio.Resource.extend()
-        .attr('id', { primary: true })
-        .attr('name', { required: true });
+    it('emits "before:patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
 
-      var model = new Model();
-      model.name = 'alex';
-      expect(model.isDirty('name')).to.equal(true);
+      Resource.before('patch', function(query, resource) {
+        expect(query).to.be.an('object');
+        done();
+      });
+
+      resource.patch(function(err, model) {
+        if (err) return done(err);
+      });
     });
-  });
 
-  describe('#changed()', function() {
-    it('returns attributes changed since last save', function() {
-      var Model = mio.Resource.extend()
-        .attr('id', { primary: true })
-        .attr('name');
-      var model = Model.create({ id: 1 });
-      model.name = 'alex';
-      expect(model.changed()).to.have.property('name', 'alex');
+    it('emits "patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.on('patch', function(model) {
+        expect(model).to.be.an.instanceOf(Resource);
+        done();
+      });
+
+      Resource.before('patch', function(query, resource, cb) {
+        cb(null, new Resource({ id: 1 }));
+      });
+
+      resource.patch(function(err, model) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var resource = new Resource({ id: 1 });
+
+      Resource.before('patch', function(query, resource, cb) {
+        cb(new Error('test'));
+      });
+
+      resource.patch(function(err, model) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
     });
   });
 
   describe('#post()', function() {
     it('triggers "post" hooks', function(done) {
-      var Model = mio.Resource.extend()
+      var Resource = mio.Resource.extend()
         .attr('id', { primary: true, required: true })
         .before('post', function(changed, cb, model) {
           expect(changed).to.have.property('id', 1);
@@ -824,10 +921,10 @@ describe('Model', function() {
         })
         .before('post', function(changed, cb, model) {
           expect(changed).to.have.property('id', 1);
-          cb();
+          cb(null, model);
         });
 
-      var model = Model.create().set({ id: 1 });
+      var model = Resource.create().set({ id: 1 });
 
       model.post(function(err) {
         expect(model.id).to.equal(1);
@@ -836,13 +933,13 @@ describe('Model', function() {
     });
 
     it("passes error from adapter to callback", function(done) {
-      var Model = mio.Resource.extend()
+      var Resource = mio.Resource.extend()
         .attr('id', { primary: true })
         .before('post', function(changed, cb) {
           cb(new Error("test"));
         });
 
-      var model = Model.create();
+      var model = Resource.create();
 
       model.post(function(err) {
         expect(err.message).to.equal('test');
@@ -851,23 +948,23 @@ describe('Model', function() {
     });
 
     it('emits "before:post" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
       var called = false;
-      Model.before('post', function(changed, next, model) {
+      Resource.before('post', function(changed, next, model) {
         called = true;
-        expect(model).to.have.property('constructor', Model);
+        expect(model).to.have.property('constructor', Resource);
         expect(changed).to.be.an('object');
         next();
       });
-      Model.create().set('id', 1).post(function(err) {
+      Resource.create().set('id', 1).post(function(err) {
         expect(called).to.equal(true);
         done(err);
       });
     });
 
     it('emits "post" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      var model = Model.create().set('id', 1);
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var model = Resource.create().set('id', 1);
       model.on('post', function() {
         done();
       }).post(function(err) { });
@@ -876,7 +973,7 @@ describe('Model', function() {
 
   describe('#delete()', function() {
     it('triggers "delete" hooks', function(done) {
-      var Model = mio.Resource.extend()
+      var Resource = mio.Resource.extend()
         .attr('id', { primary: true, required: true })
         .before('delete', function(model, cb) {
           cb();
@@ -884,7 +981,7 @@ describe('Model', function() {
         .before('delete', function(model, cb) {
           cb();
         });
-      var model = Model.create({ id: 1 });
+      var model = Resource.create({ id: 1 });
       model.delete(function(err) {
         expect(err).to.eql(undefined);
         done();
@@ -892,12 +989,12 @@ describe('Model', function() {
     });
 
     it("passes error from adapter to callback", function(done) {
-      var Model = mio.Resource.extend()
+      var Resource = mio.Resource.extend()
         .attr('id', { primary: true, required: true })
         .before('delete', function(model, cb) {
           cb(new Error('test'));
         });
-      var model = Model.create({ id: 1 });
+      var model = Resource.create({ id: 1 });
       model.delete(function(err) {
         expect(err).to.have.property('message', 'test');
         done();
@@ -905,26 +1002,159 @@ describe('Model', function() {
     });
 
     it('emits "before:delete" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.before('delete', function(query, next, model) {
-        expect(model).to.have.property('constructor', Model);
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('delete', function(query, next, model) {
+        expect(model).to.have.property('constructor', Resource);
         next();
       });
-      var model = Model.create({ id: 1 });
+      var model = Resource.create({ id: 1 });
       model.before('delete', function() {
         done();
       }).delete(function(err) { });
     });
 
     it('emits "delete" event', function(done) {
-      var Model = mio.Resource.extend().attr('id', { primary: true });
-      Model.on('delete', function(query, model) {
-        expect(model).to.be.an.instanceOf(Model);
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('delete', function(query, model) {
+        expect(model).to.be.an.instanceOf(Resource);
       });
-      var model = Model.create({ id: 1 });
+      var model = Resource.create({ id: 1 });
       model.on('delete', function() {
         done();
       }).delete(function(err) { });
+    });
+  });
+
+  describe('#url()', function () {
+    it('returns map of URLs', function () {
+      var urls = mio.Resource.extend({}, {
+        baseUrl: '/users'
+      }).create().url();
+
+      expect(urls).to.be.an('object');
+    });
+
+    it('returns URL for method given', function () {
+      var url = mio.Resource.extend({}, {
+        baseUrl: '/users'
+      }).create().url('put');
+
+      expect(url).to.equal('/users/:primary');
+    });
+
+    it('throws error if no baseUrl is defined', function () {
+      expect(function () {
+        mio.Resource.extend().create().url();
+      }).to.throw(/No baseUrl defined/i);
+    });
+  });
+
+  describe('#isNew()', function() {
+    it('checks whether primary attribute is set', function() {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var m1 = Resource.create();
+      expect(m1.isNew()).to.equal(true);
+      var m2 = Resource.create({ id: 1 });
+      expect(m2.isNew()).to.equal(false);
+    });
+
+    it('throws error if primary key has not been defined', function() {
+      var Resource = mio.Resource.extend().attr('id');
+      var model = Resource.create();
+      expect(function() {
+        model.isNew();
+      }).to.throw("Primary key has not been defined.");
+    });
+  });
+
+  describe('#has()', function() {
+    it('checks for attribute definition', function() {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var model = Resource.create({ id: 1 });
+      expect(model.has('name')).to.equal(false);
+      expect(model.has('id')).to.equal(true);
+    });
+  });
+
+  describe('#set()', function() {
+    it('sets values for defined attributes', function() {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name');
+      var model = Resource.create().set({ id: 1, name: 'alex', age: 26 });
+      expect(model.id).to.equal(1);
+      expect(model.name).to.equal('alex');
+      expect(model).to.not.have.property('age');
+    });
+
+    it('emits "setting" event', function(done) {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name')
+        .on('set', function (model, attrs) {})
+        .on('set', function (model, attrs) {
+          expect(model).to.have.property('constructor', Resource);
+          expect(attrs).to.have.property('name', 'alex');
+          done();
+        });
+      var model = new Resource();
+      model.set({ name: 'alex' });
+    });
+  });
+
+  describe('#reset()', function() {
+    it('resets values for defined attributes', function() {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name');
+      var model = Resource.create().reset({ id: 1, name: 'alex', age: 26 });
+      expect(model.id).to.equal(1);
+      expect(model.name).to.equal('alex');
+      expect(model).to.not.have.property('age');
+    });
+
+    it('emits "setting" event', function(done) {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name')
+        .on('reset', function(model, attrs) {
+          expect(model).to.have.property('constructor', Resource);
+          expect(attrs).to.have.property('name', 'alex');
+          done();
+        });
+      var model = new Resource();
+      model.reset({ name: 'alex' });
+    });
+  });
+
+  describe('#isDirty()', function() {
+    it('returns whether model is changed/dirty', function() {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var model = Resource.create();
+      expect(model.isDirty()).to.equal(false);
+      model.id = 1;
+      expect(model.isDirty()).to.equal(true);
+    });
+
+    it('returns whether attribute is changed/dirty', function() {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name', { required: true });
+
+      var model = new Resource();
+      model.name = 'alex';
+      expect(model.isDirty('name')).to.equal(true);
+    });
+  });
+
+  describe('#changed()', function() {
+    it('returns attributes changed since last save', function() {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name');
+      var model = Resource.create({ id: 1 });
+      model.name = 'alex';
+      expect(model.changed()).to.have.property('name', 'alex');
     });
   });
 
@@ -942,6 +1172,517 @@ describe('Model', function() {
       var json = resource.toJSON();
       expect(json).to.have.property('name', 'alex');
       expect(json).not.to.have.property('active');
+    });
+  });
+});
+
+describe('Query', function() {
+  it('is chainable', function(done) {
+    var Resource = mio.Resource.extend().attr('id', { primary: true });
+    Resource.get()
+    .where({ name: 'alex' })
+    .sort('asc')
+    .size(10)
+    .withRelated('related')
+    .exec(function(err) {
+      if (err) return done(err);
+
+      Resource.Collection.get()
+      .where({ name: 'alex' })
+      .sort({ name: 'asc' })
+      .size(10)
+      .withRelated(['related'])
+      .exec(function(err) {
+        if (err) return done(err);
+
+        Resource.Collection.delete()
+        .where({ name: 'alex' })
+        .size(5)
+        .page(2)
+        .exec(done);
+      });
+    });
+  });
+
+  it('modifies query', function(done) {
+    var Resource = mio.Resource.extend().attr('id', { primary: true });
+    Resource.before('collection:get', function(query, next) {
+      expect(query.query).to.have.keys([
+        'from',
+        'page',
+        'size',
+        'sort',
+        'where'
+      ]);
+      done();
+    });
+    Resource.Collection.get()
+      .where({ name: 'alex' })
+      .sort('asc')
+      .paginate({ page: 1 })
+      .from(10)
+      .size(10)
+      .exec(function() {});
+  });
+
+  describe('#page()', function () {
+    it('throws error if used before #size()', function () {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      expect(function () {
+        Resource.Collection.get().page(1);
+      }).to.throw(/to be set first/);
+    });
+  });
+
+  describe('#exec()', function () {
+    it('throws error if no handler is defined', function () {
+      expect(function () {
+        (new mio.Query).exec();
+      }).to.throw(/no handler defined/);
+    });
+  });
+
+  describe('#toJSON()', function () {
+    it('returns query', function () {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      var json = Resource.get().where({ name: 'Alex' }).toJSON();
+      expect(json).to.be.an('object');
+      expect(json).to.have.property('where');
+      expect(json.where).to.have.property('name', 'Alex');
+    });
+  });
+});
+
+
+describe('Collection', function () {
+  it('requires Resource', function () {
+    var User = mio.Resource.extend();
+
+    expect(function () {
+      mio.Collection.extend();
+    }).to.throw(/Resource is required/);
+
+    expect(function () {
+      new mio.Collection();
+    }).to.throw(/Resource is required/);
+  });
+
+  describe('.create()', function () {
+    it('returns collection if already instantiated', function () {
+      var Resource = mio.Resource.extend();
+      var collection = Resource.Collection.create();
+      expect(Resource.Collection.create(collection)).to.equal(collection);
+    });
+  });
+
+  describe('.url()', function () {
+    it('returns map of URLs', function () {
+      var urls = mio.Resource.extend({}, {
+        baseUrl: '/users'
+      }).Collection.url();
+      expect(urls).to.be.an('object');
+    });
+
+    it('returns URL for method given', function () {
+      var url = mio.Resource.extend({}, {
+        baseUrl: '/users'
+      }).Collection.url('put');
+      expect(url).to.equal('/users');
+    });
+
+    it('throws error if no baseUrl is defined', function () {
+      expect(function () {
+        mio.Resource.extend().Collection.url();
+      }).to.throw(/No Resource.baseUrl defined/i);
+    });
+  });
+
+  describe('.get()', function() {
+    it('finds collection of models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.get(function(err, collection) {
+        if (err) return done(err);
+        expect(collection).to.be.an.instanceOf(Resource.Collection);
+        Resource.get({ id: 1 }, function(err, collection) {
+          done();
+        });
+      });
+    });
+
+    it("emits collection hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:get', function(query, cb) {
+          cb();
+        })
+        .before('collection:get', function(query, cb) {
+          cb(null, [new Resource({ id: 1 })]);
+        });
+
+      Resource.Collection.get(function(err, collection) {
+        if (err) return done(err);
+        expect(collection).to.have.property('length', 1);
+        expect(collection[0]).to.have.property('constructor', Resource);
+        done();
+      });
+    });
+
+    it('emits "before:collection:get" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('collection:get', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.get({ id: 1 }, function(err, collection) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:get" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:get', function(collection, query) {
+        done();
+      });
+      Resource.Collection.get({ id: 1 }, function(err, collection) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.before('collection:get', function(query, cb) {
+        cb(new Error('test'));
+      });
+
+      Resource.Collection.get(function(err, collection) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('.put()', function() {
+    it('updates models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.put({ id: 2 }).where({ id: 1 }).exec(function(err) {
+        done();
+      });
+    });
+
+    it('triggers "collection:put" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:put', function(query, changes, cb) {
+          cb();
+        })
+        .before('collection:put', function(query, changes, cb) {
+          cb();
+        });
+
+      Resource.Collection.put({}, {}, function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "before:collection:put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('collection:put', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.put({ id: 1 }, { id: 2 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:put', function() {
+        done();
+      });
+      Resource.Collection.put({ id: 1 }, { id: 2 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:put', function(query, changes, cb) {
+          cb();
+        })
+        .before('collection:put', function(query, changes, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.put({}, {}, function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('.patch()', function() {
+    it('updates models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.patch({ id: 2 }).where({ id: 2 }).exec(function(err) {
+        done();
+      });
+    });
+
+    it('triggers "collection:patch" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:patch', function(query, changes, cb) {
+          cb();
+        })
+        .before('collection:patch', function(query, changes, cb) {
+          cb();
+        });
+
+      Resource.Collection.patch({}, {}, function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "before:collection:patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('collection:patch', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.patch({ id: 1 }, { id: 2 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:patch', function() {
+        done();
+      });
+      Resource.Collection.patch({ id: 1 }, { id: 2 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:patch', function(query, changes, cb) {
+          cb();
+        })
+        .before('collection:patch', function(query, changes, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.patch({}, {}, function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('.post()', function() {
+    it('updates models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.post([{ id: 2 }], function(err) {
+        done();
+      });
+    });
+
+    it('triggers "collection:post" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:post', function(resources, cb) {
+          cb();
+        })
+        .before('collection:post', function(resources, cb) {
+          cb();
+        });
+
+      Resource.Collection.post([], function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "before:collection:post" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('collection:post', function(resources) {
+        expect(resources).to.be.an('array');
+        done();
+      });
+      Resource.Collection.post([{ id: 1 }, { id: 2 }], function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:post" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:post', function() {
+        done();
+      });
+      Resource.Collection.post([{ id: 1 }, { id: 2 }], function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:post', function(resources, cb) {
+          cb();
+        })
+        .before('collection:post', function(resources, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.post([], function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('.delete()', function() {
+    it('deletes models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.delete({ id: 1 }, function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('triggers "collection:delete" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:delete', function(query, cb) {
+          cb();
+        })
+        .before('collection:delete', function(query, cb) {
+          cb();
+        });
+
+      Resource.Collection.delete({}, function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "before:collection:delete" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.before('collection:delete', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.delete({ id: 1 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:delete" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:delete', function() {
+        done();
+      });
+      Resource.Collection.delete({ id: 1 }, function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .before('collection:delete', function(query, cb) {
+          cb();
+        })
+        .before('collection:delete', function(query, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.delete(function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('#length', function () {
+    it('keeps internal array length', function () {
+      var Resource = mio.Resource.extend({
+        id: { primary: true }
+      }, {
+        baseUrl: '/users'
+      });
+
+      var collection = new Resource.Collection();
+
+      expect(collection).to.have.property('length', 0);
+      collection.push(new Resource());
+      expect(collection).to.have.property('length', 1);
+      collection.pop();
+      expect(collection).to.have.property('length', 0);
+      collection.push(new Resource());
+      collection.splice(1, 0, new Resource());
+      expect(collection).to.have.property('length', 2);
+    });
+  });
+
+  describe('#at()', function () {
+    it('returns resource at given index', function () {
+      var Resource = mio.Resource.extend();
+      var r1 = Resource.create();
+      var r2 = Resource.create();
+      var r3 = Resource.create();
+      var collection = new Resource.Collection([
+        r1, r2, r3
+      ]);
+      expect(collection.at(0)).to.equal(r1);
+      expect(collection.at(2)).to.equal(r3);
+      expect(collection.at(3)).to.equal(undefined);
+    });
+  });
+
+  describe('#url()', function () {
+    it('returns map of URLs', function () {
+      var urls = mio.Resource.extend({}, {
+        baseUrl: '/users'
+      }).Collection.create().url();
+      expect(urls).to.be.an('object');
+    });
+
+    it('returns URL for method given', function () {
+      var url = mio.Resource.extend({}, {
+        baseUrl: '/users'
+      }).Collection.create().url('put');
+      expect(url).to.equal('/users');
+    });
+
+    it('throws error if no baseUrl is defined', function () {
+      expect(function () {
+        mio.Resource.extend().Collection.create().url();
+      }).to.throw(/No Resource.baseUrl defined/i);
+    });
+  });
+
+  describe('#toJSON()', function () {
+    it('returns array of resources', function () {
+      var collection = new mio.Resource.extend().Collection();
+      expect(collection.toJSON()).to.be.instanceOf(Array);
     });
   });
 });

@@ -5,14 +5,17 @@
 Mio provides a common model layer between client and server for building REST
 APIs and web applications that interact with them.
 
-Create a REST API server from your resources and interact with them from the
-browser using the same interface. No need for any route handling or AJAX
-boilerplate. Automatic client-server communication is provided by
-[mio-ajax](https://github.com/mio/ajax) in the browser and
-[mio-express](https://github.com/mio/express) on the server.
+Mio provides a consistent API across client and server for querying,
+manipulating, and persisting data. Create a REST API server from your mio
+resources and interact with them from the browser using the same interface. No
+need for any route handling or AJAX boilerplate.
 
-* Small readable core (only ~200 SLOC)
-* Simple enumerable attributes using ECMAScript getters and setters
+Mio models are designed to be RESTful and avoid leaky abstractions for mapping
+to HTTP methods. For example, providing `Resource.get()` instead of `findOne()`
+and `Resource.post()` where most libraries would provide `create()`.
+
+* Small readable core (only ~300 SLOC)
+* Simple enumerable objects
 * Hooks and events before and after CRUD operations and object lifecycle
 * Backbone-style API for extending resources
 * Modular. Plugins provide storage, validation, etc.
@@ -161,7 +164,7 @@ User.on('patch', function (query, changed) {
 });
 ```
 
-See the full [documentation for events](docs/API.md#events).
+See the full [documentation for events](docs/API.md#module_mio.Resource.trigger).
 
 ### Relations
 
@@ -170,29 +173,18 @@ plugin.
 
 ```javascript
 Author.hasMany('books', {
-  model: Book,
-
+  target: Book,
   foreignKey: 'author_id'
 });
 
 Book.belongsTo('author', {
-  model: Author,
+  target: Author,
   foreignKey: 'author_id'
 });
 
 // fetch book with related author included
 Book.get(1).withRelated(['author']).exec(function(err, book) {
   console.log(book.author);
-});
-
-// fetch author for book
-book.related('author', function(err, author) {
-  // ...
-});
-
-// fetch books for author
-author.related('books').where({ published: true }).exec(function(err, books) {
-  // ...
 });
 ```
 
@@ -261,8 +253,7 @@ And in the browser:
 var User = require('./models/User');
 var Ajax = require('mio-ajax');
 
-User
-  .use(Ajax());
+User.use(Ajax());
 
 var user = User().set({ name: "alex" }).post(function(err) {
   // ...

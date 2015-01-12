@@ -77,7 +77,12 @@ gulp.task('wrap-umd', function() {
 gulp.task('dist', ['wrap-umd', 'docs']);
 
 gulp.task('docs', function(done) {
-  jsdoc2md.render('./lib/**.js', {
+  jsdoc2md.render([
+    'lib/mio.js',
+    'lib/resource.js',
+    'lib/query.js',
+    'lib/collection.js'
+  ], {
     template: './lib/API.md.hbs'
   })
   .on('error', done)
