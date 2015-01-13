@@ -1225,16 +1225,6 @@ describe('Query', function() {
       .exec(function() {});
   });
 
-  describe('#page()', function () {
-    it('throws error if used before #size()', function () {
-      var Resource = mio.Resource.extend().attr('id', { primary: true });
-
-      expect(function () {
-        Resource.Collection.get().page(1);
-      }).to.throw(/to be set first/);
-    });
-  });
-
   describe('#exec()', function () {
     it('throws error if no handler is defined', function () {
       expect(function () {
@@ -1253,7 +1243,6 @@ describe('Query', function() {
     });
   });
 });
-
 
 describe('Collection', function () {
   it('requires Resource', function () {
