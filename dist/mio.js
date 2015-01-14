@@ -39,8 +39,18 @@ module.exports = Collection;
  * @alias Resource.Collection
  * @class
  */
-function Collection (resources) {
+function Collection (resources, options) {
   var Resource = this.Resource;
+
+  if (!Resource) {
+    throw new Error("Resource is required");
+  }
+
+  this.query = new Query({
+    context: this,
+    handler: 'get',
+    state: options && options.query.toJSON()
+  });
 
   /**
    * @type {Array.<Resource>}
@@ -56,15 +66,23 @@ function Collection (resources) {
    * @name length
    * @memberof module:mio.Resource.Collection.prototype
    */
-  Object.defineProperty(this, 'length', {
-    get: function () {
-      return this.resources.length;
+  Object.defineProperties(this, {
+    length: {
+      get: function () {
+        return this.resources.length;
+      }
+    },
+    from: {
+      get: function () {
+        return this.query.from();
+      }
+    },
+    size: {
+      get: function () {
+        return this.query.size();
+      }
     }
   });
-
-  if (!Resource) {
-    throw new Error("Resource is required");
-  }
 }
 
 /**
@@ -420,6 +438,46 @@ Collection.prototype.at = function (index) {
 };
 
 /**
+ * Retrieve next page of collection.
+ *
+ * @example
+ *
+ * ```javascript
+ * User.Collection.get().exec(function (err, users) {
+ *   users.nextPage().exec(function (err, users) {
+ *     // ...
+ *   });
+ * });
+ * ```
+ *
+ * @param {Number} number page number
+ * @returns {module:mio.Query}
+ */
+Collection.prototype.nextPage = function () {
+  return this.query.page(this.query.page() + 1);
+};
+
+/**
+ * Retrieve specified `page` of collection.
+ *
+ * @example
+ *
+ * ```javascript
+ * User.Collection.get().exec(function (err, users) {
+ *   users.page(3).exec(function (err, users) {
+ *     // ...
+ *   });
+ * });
+ * ```
+ *
+ * @param {Number} page page number
+ * @returns {module:mio.Query}
+ */
+Collection.prototype.page = function (page) {
+  return this.query.page(page);
+};
+
+/**
  * Returns array of resources in collection.
  *
  * @returns {Array.<module:mio.Resource>}
@@ -511,6 +569,13 @@ function Query(options) {
 
   this.context = options.context;
   this.handler = options.handler;
+  this.Resource = context.Resource || context;
+
+  if (this.Resource && this.Resource.maxSize) {
+    this.maxSize = this.Resource.maxSize;
+  } else {
+    this.maxSize = 25;
+  }
 
   /**
    * @typedef query
@@ -525,6 +590,18 @@ function Query(options) {
 
   if (!this.query.where) {
     this.query.where = {};
+  }
+
+  if (!this.query.from) {
+    this.query.from = 0;
+  }
+
+  if (!this.query.size) {
+    this.query.size = this.maxSize;
+  }
+
+  if (this.query.size > this.maxSize) {
+    this.query.size = this.maxSize;
   }
 }
 
@@ -631,6 +708,9 @@ Query.prototype.from = function(from) {
  */
 Query.prototype.size = function(size) {
   if (arguments.length === 0) return this.query.size;
+  if (size > this.maxSize) {
+    size = this.maxSize;
+  }
   this.query.size = Number(size);
   return this;
 };
@@ -645,10 +725,8 @@ Query.prototype.size = function(size) {
 Query.prototype.page = function(page) {
   var size = this.query.size;
 
-  if (arguments.length === 0) return size;
-
-  if (!size) {
-    throw new Error('page parameter requires size parameter to be set first');
+  if (arguments.length === 0) {
+    return Math.floor(this.query.from / size) + 1;
   }
 
   this.query.from = Number((size * page) - size);
@@ -1039,7 +1117,7 @@ Resource.attr = function(name, options) {
     throw new Error(name + " attribute already exists");
   }
 
-  if (typeof options !== 'object') {
+  if (options === null || typeof options !== 'object') {
     options = {
       'default': options
     };
