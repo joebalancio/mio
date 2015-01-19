@@ -92,6 +92,8 @@
       * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
       * [.url([method])](#module_mio.Resource.Collection#url) ⇒ <code>Object</code> \| <code>String</code>
       * [.at(index)](#module_mio.Resource.Collection#at) ⇒ <code>[Resource](#module_mio.Resource)</code>
+      * [.nextPage(number)](#module_mio.Resource.Collection#nextPage) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.page(page)](#module_mio.Resource.Collection#page) ⇒ <code>[Query](#module_mio.Query)</code>
       * [.toJSON()](#module_mio.Resource.Collection#toJSON) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
       * [.[ArrayMethod]()](#module_mio.Resource.Collection#[ArrayMethod])
     * _static_
@@ -1190,6 +1192,8 @@ Return query object JSON.
     * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
     * [.url([method])](#module_mio.Resource.Collection#url) ⇒ <code>Object</code> \| <code>String</code>
     * [.at(index)](#module_mio.Resource.Collection#at) ⇒ <code>[Resource](#module_mio.Resource)</code>
+    * [.nextPage(number)](#module_mio.Resource.Collection#nextPage) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.page(page)](#module_mio.Resource.Collection#page) ⇒ <code>[Query](#module_mio.Query)</code>
     * [.toJSON()](#module_mio.Resource.Collection#toJSON) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
     * [.[ArrayMethod]()](#module_mio.Resource.Collection#[ArrayMethod])
   * _static_
@@ -1254,6 +1258,38 @@ Returns resource at given `index`.
 | ----- | ---- | ----------- |
 | index | <code>Number</code> |  |
 
+<a name="module_mio.Resource.Collection#nextPage"></a>
+####resource.Collection.nextPage(number) ⇒ <code>[Query](#module_mio.Query)</code>
+Retrieve next page of collection.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| number | <code>Number</code> | page number |
+
+**Example**  
+```javascript
+User.Collection.get().exec(function (err, users) {
+  users.nextPage().exec(function (err, users) {
+    // ...
+  });
+});
+```
+<a name="module_mio.Resource.Collection#page"></a>
+####resource.Collection.page(page) ⇒ <code>[Query](#module_mio.Query)</code>
+Retrieve specified `page` of collection.
+
+| Param | Type | Description |
+| ----- | ---- | ----------- |
+| page | <code>Number</code> | page number |
+
+**Example**  
+```javascript
+User.Collection.get().exec(function (err, users) {
+  users.page(3).exec(function (err, users) {
+    // ...
+  });
+});
+```
 <a name="module_mio.Resource.Collection#toJSON"></a>
 ####resource.Collection.toJSON() ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
 Returns array of resources in collection.

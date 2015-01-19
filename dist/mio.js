@@ -8,7 +8,7 @@ exports.Query = require('./query');
 
 },{"./collection":2,"./query":3,"./resource":4}],2:[function(require,module,exports){
 var Query = require('./query');
-var extend = require('./util').extend;
+var util = require('./util');
 
 module.exports = Collection;
 
@@ -39,8 +39,18 @@ module.exports = Collection;
  * @alias Resource.Collection
  * @class
  */
-function Collection (resources) {
+function Collection (resources, options) {
   var Resource = this.Resource;
+
+  if (!Resource) {
+    throw new Error("Resource is required");
+  }
+
+  this.query = new Query({
+    context: this,
+    handler: 'get',
+    state: options && options.query.toJSON()
+  });
 
   /**
    * @type {Array.<Resource>}
@@ -56,15 +66,23 @@ function Collection (resources) {
    * @name length
    * @memberof module:mio.Resource.Collection.prototype
    */
-  Object.defineProperty(this, 'length', {
-    get: function () {
-      return this.resources.length;
+  Object.defineProperties(this, {
+    length: {
+      get: function () {
+        return this.resources.length;
+      }
+    },
+    from: {
+      get: function () {
+        return this.query.from();
+      }
+    },
+    size: {
+      get: function () {
+        return this.query.size();
+      }
     }
   });
-
-  if (!Resource) {
-    throw new Error("Resource is required");
-  }
 }
 
 /**
@@ -92,7 +110,10 @@ Collection.create = function(resources) {
  * @returns {module:mio.Resource.Collection}
  */
 Collection.extend = function (prototype, statics) {
-  var child = extend.call(this, prototype, statics);
+  prototype = util.setEnvSpecificKeys(prototype || {});
+  statics = util.setEnvSpecificKeys(statics || {});
+
+  var child = util.extend.call(this, prototype, statics);
 
   child.Resource = child.prototype.Resource;
 
@@ -380,20 +401,22 @@ Collection.url = function (method) {
   var baseUrl = this.Resource.baseUrl;
   var urls = this.urls;
 
-  if (!baseUrl) {
-    throw new Error("No Resource.baseUrl defined.");
+  if (!urls) {
+    if (baseUrl) {
+      urls = {
+        'get': baseUrl,
+        'put': baseUrl,
+        'patch': baseUrl,
+        'post': baseUrl,
+        'delete': baseUrl,
+        'options': baseUrl
+      };
+    } else {
+      urls = {};
+    }
   }
 
-  if (!urls) {
-    urls = this.urls = {
-      'get': baseUrl,
-      'put': baseUrl,
-      'patch': baseUrl,
-      'post': baseUrl,
-      'delete': baseUrl,
-      'options': baseUrl
-    };
-  }
+  this.urls = urls;
 
   return method ? urls[method] : urls;
 };
@@ -417,6 +440,46 @@ Collection.prototype.url = function (method) {
  */
 Collection.prototype.at = function (index) {
   return this.resources[index];
+};
+
+/**
+ * Retrieve next page of collection.
+ *
+ * @example
+ *
+ * ```javascript
+ * User.Collection.get().exec(function (err, users) {
+ *   users.nextPage().exec(function (err, users) {
+ *     // ...
+ *   });
+ * });
+ * ```
+ *
+ * @param {Number} number page number
+ * @returns {module:mio.Query}
+ */
+Collection.prototype.nextPage = function () {
+  return this.query.page(this.query.page() + 1);
+};
+
+/**
+ * Retrieve specified `page` of collection.
+ *
+ * @example
+ *
+ * ```javascript
+ * User.Collection.get().exec(function (err, users) {
+ *   users.page(3).exec(function (err, users) {
+ *     // ...
+ *   });
+ * });
+ * ```
+ *
+ * @param {Number} page page number
+ * @returns {module:mio.Query}
+ */
+Collection.prototype.page = function (page) {
+  return this.query.page(page);
 };
 
 /**
@@ -511,6 +574,13 @@ function Query(options) {
 
   this.context = options.context;
   this.handler = options.handler;
+  this.Resource = this.context && (this.context.Resource || this.context);
+
+  if (this.Resource && this.Resource.maxSize) {
+    this.maxSize = this.Resource.maxSize;
+  } else {
+    this.maxSize = 25;
+  }
 
   /**
    * @typedef query
@@ -525,6 +595,18 @@ function Query(options) {
 
   if (!this.query.where) {
     this.query.where = {};
+  }
+
+  if (!this.query.from) {
+    this.query.from = 0;
+  }
+
+  if (!this.query.size) {
+    this.query.size = this.maxSize;
+  }
+
+  if (this.query.size > this.maxSize) {
+    this.query.size = this.maxSize;
   }
 }
 
@@ -631,6 +713,9 @@ Query.prototype.from = function(from) {
  */
 Query.prototype.size = function(size) {
   if (arguments.length === 0) return this.query.size;
+  if (size > this.maxSize) {
+    size = this.maxSize;
+  }
   this.query.size = Number(size);
   return this;
 };
@@ -645,10 +730,8 @@ Query.prototype.size = function(size) {
 Query.prototype.page = function(page) {
   var size = this.query.size;
 
-  if (arguments.length === 0) return size;
-
-  if (!size) {
-    throw new Error('page parameter requires size parameter to be set first');
+  if (arguments.length === 0) {
+    return Math.floor(this.query.from / size) + 1;
   }
 
   this.query.from = Number((size * page) - size);
@@ -753,7 +836,7 @@ Query.prototype.toJSON = function () {
 },{}],4:[function(require,module,exports){
 var Collection = require('./collection');
 var Query = require('./query');
-var extend = require('./util').extend;
+var util = require('./util');
 
 module.exports = Resource;
 
@@ -940,27 +1023,33 @@ function Resource(values) {
  * @returns {module:mio.Resource}
  */
 Resource.extend = function (prototype, statics) {
-  var attributes;
+  prototype = util.setEnvSpecificKeys(prototype || {});
+  statics = util.setEnvSpecificKeys(statics || {});
 
-  statics = statics || {};
+  var attributes = util.pluck(prototype, ['attributes']).attributes;
+  var plucked = util.pluck(statics, [
+    'on',
+    'before',
+    'server',
+    'browser',
+    'use'
+  ]);
 
-  if (prototype && prototype.attributes) {
-    attributes = prototype.attributes;
-    delete prototype.attributes;
-  }
-
-  var child = extend.call(this, prototype, statics);
+  var child = util.extend.call(this, prototype, statics);
 
   // static object properties to inherit with shallow copy
   var methods = ['attributes', 'hooks', 'listeners', 'options'];
-
-  for (var i=0, l=methods.length; i<l; i++) {
+  for (var i = 0, l = methods.length; i < l; i++) {
     var obj = this[methods[i]];
 
     child[methods[i]] = Object.create(null);
 
     for (var key in obj) {
-      child[methods[i]][key] = obj[key];
+      if (obj[key] instanceof Array) {
+        child[methods[i]][key] = obj[key].slice(0);
+      } else {
+        child[methods[i]][key] = obj[key];
+      }
     }
   }
 
@@ -981,18 +1070,20 @@ Resource.extend = function (prototype, statics) {
   }
 
   // use plugins
-  for (var prop in statics) {
-    switch (prop) {
-      case 'use':
-      case 'browser':
-      case 'server':
+  ['browser', 'server', 'use'].forEach(function (key) {
+    plucked[key] && plucked[key].forEach(function (plugin) {
+      child[key](plugin);
+    });
+  });
 
-        // extend by using plugin
-        for (var i=0, l=statics[prop].length; i<l; i++) {
-          child[prop](statics[prop][i]);
-        }
-        break;
-    }
+  // register hooks
+  for (var events in plucked.before) {
+    child.before(event, plucked.before[event]);
+  }
+
+  // register event listeners
+  for (var event in plucked.on) {
+    child.on(event, plucked.on[event]);
   }
 
   return child;
@@ -1039,7 +1130,7 @@ Resource.attr = function(name, options) {
     throw new Error(name + " attribute already exists");
   }
 
-  if (typeof options !== 'object') {
+  if (options === null || typeof options !== 'object') {
     options = {
       'default': options
     };
@@ -1610,11 +1701,17 @@ Resource.hasMany = function (attr, params) {
  * @returns {module:mio.Resource}
  */
 Resource.on = function(event, listener) {
-  if (!this.listeners[event]) {
-    this.listeners[event] = [listener];
-  }
-  else {
-    this.listeners[event].push(listener);
+  if (listener instanceof Array) {
+    for (var i = 0, l = listener.length; i < l; i++) {
+      this.on(event, listener[i]);
+    }
+  } else {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [listener];
+    }
+    else {
+      this.listeners[event].push(listener);
+    }
   }
 
   return this;
@@ -1690,12 +1787,19 @@ Resource.prototype.emit = Resource.emit;
  * @param {Function} hook
  */
 Resource.before = function(event, hook) {
-  if (!this.hooks[event]) {
-    this.hooks[event] = [hook];
+  if (hook instanceof Array) {
+    for (var i = 0, l = hook.length; i < l; i++) {
+      this.before(event, hook[i]);
+    }
+  } else {
+    if (!this.hooks[event]) {
+      this.hooks[event] = [hook];
+    }
+    else {
+      this.hooks[event].push(hook);
+    }
   }
-  else {
-    this.hooks[event].push(hook);
-  }
+
   return this;
 };
 
@@ -2022,20 +2126,22 @@ Resource.url = function (method) {
   var baseUrl = this.baseUrl;
   var urls = this.urls;
 
-  if (!baseUrl) {
-    throw new Error("No baseUrl defined.");
+  if (!urls) {
+    if (baseUrl) {
+      urls = {
+        'get': baseUrl + '/:primary',
+        'put': baseUrl + '/:primary',
+        'patch': baseUrl + '/:primary',
+        'post': baseUrl,
+        'delete': baseUrl + '/:primary',
+        'options': baseUrl + '/:primary'
+      };
+    } else {
+      urls = {};
+    }
   }
 
-  if (!urls) {
-    urls = this.urls = {
-      'get': baseUrl + '/:primary',
-      'put': baseUrl + '/:primary',
-      'patch': baseUrl + '/:primary',
-      'post': baseUrl,
-      'delete': baseUrl + '/:primary',
-      'options': baseUrl + '/:primary'
-    };
-  }
+  this.urls = urls;
 
   return method ? urls[method] : urls;
 };
@@ -2075,8 +2181,6 @@ exports.extend = function (prototype, statics) {
   var parent = this;
   var child;
 
-  prototype = prototype || {};
-
   child = function resource () {
     if (!(this instanceof child)) {
       var self = Object.create(child.prototype);
@@ -2103,7 +2207,7 @@ exports.extend = function (prototype, statics) {
   }
 
   for (var prop in statics) {
-    if (!(prop === 'use' || prop === 'browser' || prop === 'server')) {
+    if (statics.hasOwnProperty(prop)) {
       child[prop] = statics[prop];
     }
   }
@@ -2119,6 +2223,57 @@ exports.extend = function (prototype, statics) {
 
   return child;
 };
+
+exports.setEnvSpecificKeys = function (target) {
+  for (var key in target) {
+    if (target.hasOwnProperty(key)) {
+      if (key === 'server') {
+        if (typeof window === 'undefined') {
+          merge(target, target.server);
+        }
+        delete target.server;
+      } else if (key === 'browser') {
+        if (typeof window === 'object') {
+          merge(target, target.browser);
+        }
+        delete target.browser;
+      } else if (typeof target[key] === 'object') {
+        exports.setEnvSpecificKeys(target[key]);
+      }
+    }
+  }
+
+  return target;
+};
+
+exports.pluck = function (source, keys) {
+  var plucked = {};
+
+  keys.forEach(function (key) {
+    plucked[key] = source[key];
+    delete source[key];
+  });
+
+  return plucked;
+};
+
+function merge(target, source) {
+  for (var key in source) {
+    if (source.hasOwnProperty(key)) {
+      if (key === 'server' || key === 'browser') {
+        exports.setEnvSpecificKeys(target);
+      } else if (typeof source[key] === 'object') {
+        if (typeof target[key] === 'object') {
+          merge(target[key], source[key]);
+        } else {
+          target[key] = source[key];
+        }
+      } else {
+        target[key] = source[key];
+      }
+    }
+  }
+}
 
 },{}]},{},[1])(1)
 });

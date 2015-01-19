@@ -157,6 +157,80 @@ describe('Resource', function() {
       expect(extended.test).to.be.a('function');
       expect(extended.test()).to.equal('test');
     });
+
+    it('merges environment specific keys', function () {
+      var Base = mio.Resource.extend({
+        attributes: {
+          id: {
+            primary: true,
+            browser: {
+              alias: '_id'
+            },
+            server: {
+              alias: '_id'
+            }
+          }
+        },
+        browser: {
+          attributes: {
+            id: {
+              default: false
+            },
+            updatedAt: function () {
+              return new Date();
+            }
+          }
+        },
+        server: {
+          attributes: {
+            id: {
+              default: false
+            },
+            updatedAt: function () {
+              return new Date();
+            }
+          }
+        }
+      }, {
+        server: {
+          baseUrl: '/base'
+        },
+        browser: {
+          baseUrl: '/base'
+        }
+      });
+
+      expect(Base.attributes.id).to.have.property('alias', '_id');
+      expect(Base.attributes.id).to.have.property('default', false);
+      expect(Base.attributes).to.have.property('updatedAt');
+      expect(Base.attributes.updatedAt).to.have.property('default');
+    });
+  });
+
+  describe('.before()', function () {
+    it('registers array of listeners', function () {
+      var Resource = mio.Resource.extend();
+      var hook1 = function () {};
+      var hook2 = function () {};
+
+      Resource.before('test', [hook1, hook2]);
+
+      expect(Resource.hooks.test[0]).to.equal(hook1);
+      expect(Resource.hooks.test[1]).to.equal(hook2);
+    });
+  });
+
+  describe('.on()', function () {
+    it('registers array of listeners', function () {
+      var Resource = mio.Resource.extend();
+      var listener1 = function () {};
+      var listener2 = function () {};
+
+      Resource.on('test', [listener1, listener2]);
+
+      expect(Resource.listeners.test[0]).to.equal(listener1);
+      expect(Resource.listeners.test[1]).to.equal(listener2);
+    });
   });
 
   describe('.once()', function() {
@@ -1041,12 +1115,6 @@ describe('Resource', function() {
 
       expect(url).to.equal('/users/:primary');
     });
-
-    it('throws error if no baseUrl is defined', function () {
-      expect(function () {
-        mio.Resource.extend().create().url();
-      }).to.throw(/No baseUrl defined/i);
-    });
   });
 
   describe('#isNew()', function() {
@@ -1278,12 +1346,6 @@ describe('Collection', function () {
         baseUrl: '/users'
       }).Collection.url('put');
       expect(url).to.equal('/users');
-    });
-
-    it('throws error if no baseUrl is defined', function () {
-      expect(function () {
-        mio.Resource.extend().Collection.url();
-      }).to.throw(/No Resource.baseUrl defined/i);
     });
   });
 
@@ -1659,12 +1721,6 @@ describe('Collection', function () {
         baseUrl: '/users'
       }).Collection.create().url('put');
       expect(url).to.equal('/users');
-    });
-
-    it('throws error if no baseUrl is defined', function () {
-      expect(function () {
-        mio.Resource.extend().Collection.create().url();
-      }).to.throw(/No Resource.baseUrl defined/i);
     });
   });
 
