@@ -526,12 +526,12 @@ describe('Resource', function() {
           cb();
         })
         .before('put', function(query, resource, cb) {
-          cb(null, new Resource({ id: 1 }));
+          cb(null, { id: 2 });
         });
 
       Resource.put({ id: 2 }).where({ id: 1 }).exec(function(err, model) {
         if (err) return done(err);
-        expect(model).to.have.property('id', 1);
+        expect(model).to.have.property('id', 2);
         done();
       });
     });
