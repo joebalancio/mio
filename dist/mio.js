@@ -488,7 +488,10 @@ Collection.prototype.page = function (page) {
  * @returns {Array.<module:mio.Resource>}
  */
 Collection.prototype.toJSON = function () {
-  return this.resources;
+  var array = this.resources;
+  array.size = this.resources.size;
+  array.from = this.resources.from;
+  return array;
 };
 
 /**
@@ -608,6 +611,10 @@ function Query(options) {
   if (this.query.size > this.maxSize) {
     this.query.size = this.maxSize;
   }
+
+  if (this.query.withRelated) {
+    this.withRelated(this.query.withRelated);
+  }
 }
 
 /**
@@ -635,7 +642,7 @@ function Query(options) {
  *
  * @param {Object} where
  * @param {Mixed=} value
- * @returns {module:mio.Query}
+ * @returns {module:mio.Query|Object}
  */
 Query.prototype.where = function(where, value) {
   var query = this.query;
@@ -657,14 +664,14 @@ Query.prototype.where = function(where, value) {
  * Set `query.sort` parameters.
  *
  * @param {Object} sort
- * @returns {module:mio.Query}
+ * @returns {module:mio.Query|Object}
  */
 Query.prototype.sort = function(sort) {
   var query = this.query;
 
-  query.sort = query.sort || {};
-
   if (arguments.length === 0) return query.sort;
+
+  query.sort = query.sort || {};
 
   if (typeof sort === 'object') {
     for (var key in sort) {
@@ -760,7 +767,7 @@ Query.prototype.page = function(page) {
  * ```javascript
  * // only fetches 5 of this user's posts
  * User.get(1).withRelated({
- *   posts: { limit: 5 }
+ *   posts: { size: 5 }
  * }).exec(function (err, user) {
  *   console.log(user.posts.length); // => 5
  * });
@@ -776,7 +783,7 @@ Query.prototype.withRelated = function(relations) {
     return query.withRelated;
   }
 
-  if (!query.withRelated) {
+  if (typeof query.withRelated !== 'object') {
     query.withRelated = {};
   }
 
@@ -1026,13 +1033,21 @@ Resource.extend = function (prototype, statics) {
   prototype = util.setEnvSpecificKeys(prototype || {});
   statics = util.setEnvSpecificKeys(statics || {});
 
-  var attributes = util.pluck(prototype, ['attributes']).attributes;
-  var plucked = util.pluck(statics, [
+  var pluckedPrototype = util.pluck(prototype, [
+    'attributes',
+    'collection'
+  ]);
+
+  var attributes = pluckedPrototype.attributes;
+
+  var pluckedStatics = util.pluck(statics, [
     'on',
     'before',
     'server',
     'browser',
-    'use'
+    'options',
+    'use',
+    'collection'
   ]);
 
   var child = util.extend.call(this, prototype, statics);
@@ -1053,8 +1068,16 @@ Resource.extend = function (prototype, statics) {
     }
   }
 
+  if (pluckedStatics.options) {
+    for (var key in pluckedStatics.options) {
+      if (pluckedStatics.options.hasOwnProperty(key)) {
+        child.options[key] = pluckedStatics.options[key];
+      }
+    }
+  }
+
   // define instance attributes using `Resource#attr()`
-  if (attributes) {
+  if (pluckedPrototype.attributes) {
     for (var attr in attributes) {
       if (attributes.hasOwnProperty(attr)) {
         child.attr(attr, attributes[attr]);
@@ -1064,26 +1087,29 @@ Resource.extend = function (prototype, statics) {
 
   // expose child collection
   if (!statics.collection || typeof statics.collection === 'object') {
-    child.Collection = Collection.extend({
-      Resource: child
-    }, statics.collection);
+    pluckedPrototype.collection = pluckedPrototype.collection || {};
+    pluckedPrototype.collection.Resource = child;
+    child.Collection = (this.Collection || Collection).extend(
+      pluckedPrototype.collection,
+      pluckedStatics.collection
+    );
   }
 
   // use plugins
   ['browser', 'server', 'use'].forEach(function (key) {
-    plucked[key] && plucked[key].forEach(function (plugin) {
+    pluckedStatics[key] && pluckedStatics[key].forEach(function (plugin) {
       child[key](plugin);
     });
   });
 
   // register hooks
-  for (var events in plucked.before) {
-    child.before(event, plucked.before[event]);
+  for (var events in pluckedStatics.before) {
+    child.before(event, pluckedStatics.before[event]);
   }
 
   // register event listeners
-  for (var event in plucked.on) {
-    child.on(event, plucked.on[event]);
+  for (var event in pluckedStatics.on) {
+    child.on(event, pluckedStatics.on[event]);
   }
 
   return child;
@@ -1302,6 +1328,7 @@ Resource.get = function(query, callback) {
    * @callback get
    * @memberof module:mio.Resource.get
    * @param {Error} err
+   * @param {module:mio.Resource=} resource
    */
   return this.trigger('get', new Query({ state: query }), callback);
 };
@@ -1316,13 +1343,13 @@ Resource.get = function(query, callback) {
  * @fires module:mio.Resource.before.put
  * @fires module:mio.Resource.on.put
  */
-Resource.put = function (query, rep, callback) {
+Resource.put = function (query, representation, callback) {
   if (arguments.length === 1) {
-    rep = query;
+    representation = query;
 
     return new Query({
       handler: function (query, callback) {
-        this.put(query, rep, callback);
+        this.put(query, representation, callback);
       },
       context: this
     });
@@ -1334,7 +1361,7 @@ Resource.put = function (query, rep, callback) {
    * @event put
    * @memberof module:mio.Resource.before
    * @param {module:mio.Query} query
-   * @param {Object|module:mio.Resource} representation
+   * @param {Object|module:mio.Resource} representationresentation
    * @param {module:mio.Resource.trigger.next} next
    * @param {module:mio.Resource} resource included if triggered by instance.
    * @this {module:mio.Resource}
@@ -1346,7 +1373,7 @@ Resource.put = function (query, rep, callback) {
    * @event put
    * @memberof module:mio.Resource.on
    * @param {module:mio.Query} query
-   * @param {Object|module:mio.Resource} representation
+   * @param {Object|module:mio.Resource} representationresentation
    * @param {module:mio.Resource} resource included if triggered by instance.
    * @this {module:mio.Resource}
    */
@@ -1357,8 +1384,11 @@ Resource.put = function (query, rep, callback) {
    * @callback put
    * @memberof module:mio.Resource.put
    * @param {Error} err
+   * @param {module:mio.Resource} resource
    */
-  return this.trigger('put', new Query({ state: query }), rep, callback);
+  return this.trigger('put', new Query({
+    state: query
+  }), representation, callback);
 };
 
 /**
@@ -1422,8 +1452,11 @@ Resource.patch = function (query, changes, callback) {
    * @callback patch
    * @memberof module:mio.Resource.patch
    * @param {Error} err
+   * @param {module:mio.Resource} resource
    */
-  return this.trigger('patch', new Query({ state: query }), changes, callback);
+  return this.trigger('patch', new Query({
+    state: query
+  }), changes, callback);
 };
 
 /**
@@ -1468,6 +1501,7 @@ Resource.post = function (representation, callback) {
    * @callback post
    * @memberof module:mio.Resource.post
    * @param {Error} err
+   * @param {module:mio.Resource} resource
    */
   return this.trigger('post', representation, callback);
 };
@@ -1524,7 +1558,9 @@ Resource.delete = function(query, callback) {
    * @memberof module:mio.Resource.delete
    * @param {Error} err
    */
-  return this.trigger('delete', new Query({ state: query }), callback);
+  return this.trigger('delete', new Query({
+    state: query
+  }), callback);
 };
 
 /**
@@ -1960,15 +1996,9 @@ Resource.prototype.patch = function (callback) {
  * @fires module:mio.Resource.on.post
  */
 Resource.prototype.post = function (callback) {
-  return this.trigger('post', this.changed(), function (err, representation) {
-    if (err) return callback.call(this, err);
+  var representation = this;
 
-    if (representation) {
-      this.reset(representation);
-    }
-
-    callback.apply(this, arguments);
-  });
+  return this.trigger('post', this.changed(), callback);
 };
 
 /**

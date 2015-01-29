@@ -1,6 +1,6 @@
 {
   "name": "mio",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A common model layer between client and server for building REST APIs and web applications.",
   "homepage": "https://github.com/mio/mio",
   "authors": [

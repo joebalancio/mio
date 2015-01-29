@@ -45,7 +45,7 @@
         * ["create" (resource)](#module_mio.Resource.on.event_create)
         * ["attribute" (name, options)](#module_mio.Resource.on.event_attribute)
         * ["get" (query, resource)](#module_mio.Resource.on.event_get)
-        * ["put" (query, representation, resource)](#module_mio.Resource.on.event_put)
+        * ["put" (query, representationresentation, resource)](#module_mio.Resource.on.event_put)
         * ["patch" (query, patch, resource)](#module_mio.Resource.on.event_patch)
         * ["post" (query, representation, resource)](#module_mio.Resource.on.event_post)
         * ["delete" (query, resource)](#module_mio.Resource.on.event_delete)
@@ -60,7 +60,7 @@
       * [.emit(event, ...)](#module_mio.Resource.emit) ⇒ <code>[Resource](#module_mio.Resource)</code>
       * [.before(event, hook)](#module_mio.Resource.before)
         * ["get" (query, next, resource)](#module_mio.Resource.before.event_get)
-        * ["put" (query, representation, next, resource)](#module_mio.Resource.before.event_put)
+        * ["put" (query, representationresentation, next, resource)](#module_mio.Resource.before.event_put)
         * ["patch" (query, patch, next, resource)](#module_mio.Resource.before.event_patch)
         * ["post" (query, representation, next, resource)](#module_mio.Resource.before.event_post)
         * ["delete" (query, next, resource)](#module_mio.Resource.before.event_delete)
@@ -75,8 +75,8 @@
   * [class: .Query](#module_mio.Query)
     * [new Query([options])](#new_module_mio.Query_new)
     * _instance_
-      * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[Query](#module_mio.Query)</code>
-      * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[Query](#module_mio.Query)</code>
+      * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[Query](#module_mio.Query)</code> \| <code>Object</code>
+      * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[Query](#module_mio.Query)</code> \| <code>Object</code>
       * [.paginate(paginate)](#module_mio.Query#paginate) ⇒ <code>[Query](#module_mio.Query)</code>
       * [.from(from)](#module_mio.Query#from) ⇒ <code>[Query](#module_mio.Query)</code>
       * [.size(size)](#module_mio.Query#size) ⇒ <code>[Query](#module_mio.Query)</code>
@@ -153,7 +153,7 @@
       * ["create" (resource)](#module_mio.Resource.on.event_create)
       * ["attribute" (name, options)](#module_mio.Resource.on.event_attribute)
       * ["get" (query, resource)](#module_mio.Resource.on.event_get)
-      * ["put" (query, representation, resource)](#module_mio.Resource.on.event_put)
+      * ["put" (query, representationresentation, resource)](#module_mio.Resource.on.event_put)
       * ["patch" (query, patch, resource)](#module_mio.Resource.on.event_patch)
       * ["post" (query, representation, resource)](#module_mio.Resource.on.event_post)
       * ["delete" (query, resource)](#module_mio.Resource.on.event_delete)
@@ -168,7 +168,7 @@
     * [.emit(event, ...)](#module_mio.Resource.emit) ⇒ <code>[Resource](#module_mio.Resource)</code>
     * [.before(event, hook)](#module_mio.Resource.before)
       * ["get" (query, next, resource)](#module_mio.Resource.before.event_get)
-      * ["put" (query, representation, next, resource)](#module_mio.Resource.before.event_put)
+      * ["put" (query, representationresentation, next, resource)](#module_mio.Resource.before.event_put)
       * ["patch" (query, patch, next, resource)](#module_mio.Resource.before.event_patch)
       * ["post" (query, representation, next, resource)](#module_mio.Resource.before.event_post)
       * ["delete" (query, next, resource)](#module_mio.Resource.before.event_delete)
@@ -432,6 +432,7 @@ Receives arguments passed from the last hook's `next`.
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | err | <code>Error</code> |  |
+| \[resource\] | <code>[Resource](#module_mio.Resource)</code> |  |
 
 <a name="module_mio.Resource.put"></a>
 ####Resource.put(query, representation, callback) ⇒ <code>[Resource](#module_mio.Resource)</code> \| <code>[Query](#module_mio.Query)</code>
@@ -451,6 +452,7 @@ Receives arguments passed from the last hook's `next`.
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | err | <code>Error</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> |  |
 
 <a name="module_mio.Resource.patch"></a>
 ####Resource.patch(query, changes, callback) ⇒ <code>[Resource](#module_mio.Resource)</code> \| <code>[Query](#module_mio.Query)</code>
@@ -478,6 +480,7 @@ Receives arguments passed from the last hook's `next`.
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | err | <code>Error</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> |  |
 
 <a name="module_mio.Resource.post"></a>
 ####Resource.post(representation, callback) ⇒ <code>[Resource](#module_mio.Resource)</code>
@@ -498,6 +501,7 @@ Receives arguments passed from the last hook's `next`.
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | err | <code>Error</code> |  |
+| resource | <code>[Resource](#module_mio.Resource)</code> |  |
 
 <a name="module_mio.Resource.delete"></a>
 ####Resource.delete(query, callback) ⇒ <code>[Resource](#module_mio.Resource)</code> \| <code>[query](#query)</code>
@@ -650,7 +654,7 @@ Register `listener` to be called when `event` is emitted.
   * ["create" (resource)](#module_mio.Resource.on.event_create)
   * ["attribute" (name, options)](#module_mio.Resource.on.event_attribute)
   * ["get" (query, resource)](#module_mio.Resource.on.event_get)
-  * ["put" (query, representation, resource)](#module_mio.Resource.on.event_put)
+  * ["put" (query, representationresentation, resource)](#module_mio.Resource.on.event_put)
   * ["patch" (query, patch, resource)](#module_mio.Resource.on.event_patch)
   * ["post" (query, representation, resource)](#module_mio.Resource.on.event_post)
   * ["delete" (query, resource)](#module_mio.Resource.on.event_delete)
@@ -719,13 +723,13 @@ Runs at the beginning of callback for `Resource.get` or `Resource#get`.
 | resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.on.event_put"></a>
-#####event: "put" (query, representation, resource)
+#####event: "put" (query, representationresentation, resource)
 Runs at the beginning of callback for `Resource.put` or `Resource#put`.
 
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | query | <code>[Query](#module_mio.Query)</code> |  |
-| representation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
+| representationresentation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
 | resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.on.event_patch"></a>
@@ -867,7 +871,7 @@ User.on('patch', function (query, changed) {
 
 * [.before(event, hook)](#module_mio.Resource.before)
   * ["get" (query, next, resource)](#module_mio.Resource.before.event_get)
-  * ["put" (query, representation, next, resource)](#module_mio.Resource.before.event_put)
+  * ["put" (query, representationresentation, next, resource)](#module_mio.Resource.before.event_put)
   * ["patch" (query, patch, next, resource)](#module_mio.Resource.before.event_patch)
   * ["post" (query, representation, next, resource)](#module_mio.Resource.before.event_post)
   * ["delete" (query, next, resource)](#module_mio.Resource.before.event_delete)
@@ -888,13 +892,13 @@ Runs before callback for `Resource.get` or `Resource#get`.
 | resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
 <a name="module_mio.Resource.before.event_put"></a>
-#####event: "put" (query, representation, next, resource)
+#####event: "put" (query, representationresentation, next, resource)
 Runs before callback for `Resource.put` or `Resource#put`.
 
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | query | <code>[Query](#module_mio.Query)</code> |  |
-| representation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
+| representationresentation | <code>Object</code> \| <code>[Resource](#module_mio.Resource)</code> |  |
 | next | <code>[next](#module_mio.Resource.trigger.next)</code> |  |
 | resource | <code>[Resource](#module_mio.Resource)</code> | included if triggered by instance. |
 
@@ -1026,8 +1030,8 @@ URL for that `method` is returned.
 * [class: .Query](#module_mio.Query)
   * [new Query([options])](#new_module_mio.Query_new)
   * _instance_
-    * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[Query](#module_mio.Query)</code>
-    * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[Query](#module_mio.Query)</code>
+    * [.where(where, [value])](#module_mio.Query#where) ⇒ <code>[Query](#module_mio.Query)</code> \| <code>Object</code>
+    * [.sort(sort)](#module_mio.Query#sort) ⇒ <code>[Query](#module_mio.Query)</code> \| <code>Object</code>
     * [.paginate(paginate)](#module_mio.Query#paginate) ⇒ <code>[Query](#module_mio.Query)</code>
     * [.from(from)](#module_mio.Query#from) ⇒ <code>[Query](#module_mio.Query)</code>
     * [.size(size)](#module_mio.Query#size) ⇒ <code>[Query](#module_mio.Query)</code>
@@ -1070,7 +1074,7 @@ User.Collection.get({
 });
 ```
 <a name="module_mio.Query#where"></a>
-####query.where(where, [value]) ⇒ <code>[Query](#module_mio.Query)</code>
+####query.where(where, [value]) ⇒ <code>[Query](#module_mio.Query)</code> \| <code>Object</code>
 Set `query.where` parameters individually or using a map.
 
 | Param | Type | Description |
@@ -1097,7 +1101,7 @@ User.Collection.get()
   .exec(function (err, users) { ... })
 ```
 <a name="module_mio.Query#sort"></a>
-####query.sort(sort) ⇒ <code>[Query](#module_mio.Query)</code>
+####query.sort(sort) ⇒ <code>[Query](#module_mio.Query)</code> \| <code>Object</code>
 Set `query.sort` parameters.
 
 | Param | Type | Description |
@@ -1164,7 +1168,7 @@ Relation query parameters can be specified using a map:
 ```javascript
 // only fetches 5 of this user's posts
 User.get(1).withRelated({
-  posts: { limit: 5 }
+  posts: { size: 5 }
 }).exec(function (err, user) {
   console.log(user.posts.length); // => 5
 });
