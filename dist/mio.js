@@ -48,16 +48,16 @@ function Collection (resources, options) {
 
   this.query = new Query({
     context: this,
-    handler: 'get',
+    handler: this.get,
     state: options && options.query.toJSON()
   });
 
   /**
+   * @property resources
+   * @memberof module:mio.Resource.Collection
    * @type {Array.<Resource>}
    */
-  this.resources = (resources || []).map(function (resource) {
-    return Resource.create(resource);
-  });
+  this.reset(resources);
 
   /**
    * Number of resources in the collection.
@@ -128,18 +128,16 @@ Collection.extend = function (prototype, statics) {
  * Get a collection of resources using given `query`.
  *
  * @param {module:mio.Query} query
- * @param {module:mio.Resource.get.get} callback
+ * @param {module:mio.Collection.get.get} callback
  * @returns {module:mio.Resource.Collection}
- * @fires module:mio.Resource.before.collection:get
+ * @fires module:mio.Resource.hook.collection:get
  * @fires module:mio.Resource.on.collection:get
  */
 Collection.get = function (query, callback) {
-  var Collection = this;
-
   if (arguments.length === 0) {
     return new Query({
-      handler: this.get,
-      context: this
+      context: this,
+      handler: this.get
     });
   }
 
@@ -152,7 +150,7 @@ Collection.get = function (query, callback) {
    * Runs before callback for `Resource.Collection.get`.
    *
    * @event collection:get
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {module:mio.Resource.trigger.next} next
    * @param {module:mio.Resource.Collection} collection included if triggered
@@ -172,15 +170,18 @@ Collection.get = function (query, callback) {
    */
   this.Resource.trigger(
     'collection:get',
-    new Query({ state: query }),
+    new Query({
+      context: this,
+      state: query
+    }),
     function (err, collection) {
-      if (err) return callback.call(this, err);
+      if (err) return callback.call(this.Collection, err);
 
       if (!collection) {
-        collection = new Collection([]);
+        collection = new this.Collection([]);
       }
 
-      callback.call(this, err, collection);
+      callback.apply(this.Collection, arguments);
     });
 
   return this;
@@ -191,9 +192,9 @@ Collection.get = function (query, callback) {
  *
  * @param {module:mio.Query} query
  * @param {Object} representation
- * @param {module:mio.Resource.put.put} callback
+ * @param {module:mio.Collection.put.put} callback
  * @returns {module:mio.Resource.Collection}
- * @fires module:mio.Resource.before.collection:put
+ * @fires module:mio.Resource.hook.collection:put
  * @fires module:mio.Resource.on.collection:put
  */
 Collection.put = function (query, resources, callback) {
@@ -201,10 +202,10 @@ Collection.put = function (query, resources, callback) {
     resources = query;
 
     return new Query({
+      context: this,
       handler: function (query, callback) {
         this.put(query, resources, callback);
-      },
-      context: this
+      }
     });
   }
 
@@ -212,7 +213,7 @@ Collection.put = function (query, resources, callback) {
    * Runs before callback for `Resource.Collection.put`.
    *
    * @event collection:put
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {Array.<Object|module:mio.Resource>} resources
    * @param {module:mio.Resource.trigger.next} next
@@ -234,10 +235,14 @@ Collection.put = function (query, resources, callback) {
    */
   this.Resource.trigger(
     'collection:put',
-    new Query({ state: query }),
+    new Query({
+      context: this,
+      state: query
+    }),
     resources,
-    callback
-  );
+    function () {
+      callback.apply(this.Collection, arguments);
+    });
 
   return this;
 };
@@ -247,9 +252,9 @@ Collection.put = function (query, resources, callback) {
  *
  * @param {module:mio.Query} query
  * @param {Object|Array.<Object>} changes
- * @param {module:mio.Resource.patch.patch} callback
+ * @param {module:mio.Collection.patch.patch} callback
  * @returns {module:mio.Resource.Collection}
- * @fires module:mio.Resource.before.collection:patch
+ * @fires module:mio.Resource.hook.collection:patch
  * @fires module:mio.Resource.on.collection:patch
  */
 Collection.patch = function (query, changes, callback) {
@@ -257,10 +262,10 @@ Collection.patch = function (query, changes, callback) {
     changes = query;
 
     return new Query({
+      context: this,
       handler: function (query, callback) {
         this.patch(query, changes, callback);
-      },
-      context: this
+      }
     });
   }
 
@@ -268,7 +273,7 @@ Collection.patch = function (query, changes, callback) {
    * Runs before callback for `Resource.Collection.patch`.
    *
    * @event collection:patch
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {Object|Array.<Object>} patch
    * @param {module:mio.Resource.trigger.next} next
@@ -290,10 +295,14 @@ Collection.patch = function (query, changes, callback) {
    */
   this.Resource.trigger(
     'collection:patch',
-    new Query({ state: query }),
+    new Query({
+      context: this,
+      state: query
+    }),
     changes,
-    callback
-  );
+    function () {
+      callback.apply(this.Collection, arguments);
+    });
 
   return this;
 };
@@ -302,9 +311,9 @@ Collection.patch = function (query, changes, callback) {
  * Create resources using given `representations`.
  *
  * @param {Array.<Object>} representations
- * @param {module:mio.Resource.post.post} callback
+ * @param {module:mio.Collection.post.post} callback
  * @returns {module:mio.Resource.Collection}
- * @fires module:mio.Resource.before.collection:post
+ * @fires module:mio.Resource.hook.collection:post
  * @fires module:mio.Resource.on.collection:post
  */
 Collection.post = function (representations, callback) {
@@ -313,7 +322,7 @@ Collection.post = function (representations, callback) {
    * Runs before callback for `Resource.Collection.post`.
    *
    * @event collection:post
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {Array.<Object>|Array.<module:mio.Resource>} resources
    * @param {module:mio.Resource.trigger.next} next
@@ -333,7 +342,10 @@ Collection.post = function (representations, callback) {
    * by instance.
    * @this {module:mio.Resource}
    */
-  this.Resource.trigger('collection:post', representations, callback);
+  this.Resource.trigger('collection:post', representations, function () {
+    callback.apply(this.Collection, arguments);
+  });
+
   return this;
 };
 
@@ -341,16 +353,16 @@ Collection.post = function (representations, callback) {
  * Delete resources using given `query`.
  *
  * @param {module:mio.Query} query
- * @param {module:mio.Resource.delete.delete} callback
+ * @param {module:mio.Collection.delete.delete} callback
  * @returns {module:mio.Resource.Collection}
- * @fires module:mio.Resource.before.collection:delete
+ * @fires module:mio.Resource.hook.collection:delete
  * @fires module:mio.Resource.on.collection:delete
  */
 Collection.delete = function (query, callback) {
   if (arguments.length === 0) {
     return new Query({
-      handler: this.get,
-      context: this
+      context: this,
+      handler: this.get
     });
   }
 
@@ -363,7 +375,7 @@ Collection.delete = function (query, callback) {
    * Runs before callback for `Resource.Collection.delete`.
    *
    * @event collection:delete
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {module:mio.Resource.trigger.next} next
    * @param {module:mio.Resource.Collection} collection included if triggered
@@ -383,9 +395,13 @@ Collection.delete = function (query, callback) {
    */
   this.Resource.trigger(
     'collection:delete',
-    new Query({ state: query }),
-    callback
-  );
+    new Query({
+      context: this,
+      state: query
+    }),
+    function () {
+      callback.apply(this.Collection, arguments);
+    });
 
   return this;
 };
@@ -419,6 +435,163 @@ Collection.url = function (method) {
   this.urls = urls;
 
   return method ? urls[method] : urls;
+};
+
+/**
+ * Refresh the collection instance with the most recent resource
+ * representations passed to the last hook's `next()`.
+ *
+ * @param {module:mio.Collection.get.get} callback
+ * @returns {module:mio.Collection}
+ * @fires module:mio.Resource.hook.collection:get
+ * @fires module:mio.Resource.on.collection:get
+ */
+Collection.prototype.get = function (callback) {
+  var collection = this;
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback get
+   * @memberof module:mio.Collection.get
+   * @param {Error} err
+   * @param {module:mio.Collection} collection
+   */
+  this.Resource.trigger('collection:get', this.query, function (err, collection) {
+    if (err) return callback.call(collection, err);
+
+    if (collection) {
+      collection.reset(collection);
+    }
+
+    callback.apply(collection, arguments);
+  });
+
+  return this;
+};
+
+/**
+ * Replace the collection resources using the instance representation.
+ *
+ * @param {module:mio.Collection.put.put} callback
+ * @returns {module:mio.Collection}
+ * @fires module:mio.Resource.hook.collection:put
+ * @fires module:mio.Resource.on.collection:put
+ */
+Collection.prototype.put = function (callback) {
+  var collection = this;
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback put
+   * @memberof module:mio.Collection.put
+   * @param {Error} err
+   * @param {module:mio.Collection} collection
+   */
+  this.Resource.trigger('collection:put', this.query, this, function () {
+    callback.apply(collection, arguments);
+  });
+
+  return this;
+};
+
+/**
+ * Patch the collection resources using the instance representation.
+ *
+ * @param {module:mio.Collection.patch.patch} callback
+ * @returns {module:mio.Collection}
+ * @fires module:mio.Resource.hook.collection:patch
+ * @fires module:mio.Resource.on.collection:patch
+ */
+Collection.prototype.patch = function (callback) {
+  var collection = this;
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback patch
+   * @memberof module:mio.Collection.patch
+   * @param {Error} err
+   * @param {module:mio.Collection} collection
+   */
+  this.Resource.trigger('collection:patch', this.query, this, function () {
+    callback.apply(collection, arguments);
+  });
+
+  return this;
+};
+
+/**
+ * Create resources using the instance representation.
+ *
+ * @param {module:mio.Collection.post.post} callback
+ * @returns {module:mio.Collection}
+ * @fires module:mio.Resource.hook.collection:post
+ * @fires module:mio.Resource.on.collection:post
+ */
+Collection.prototype.post = function (callback) {
+  var collection = this;
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback post
+   * @memberof module:mio.Collection.post
+   * @param {Error} err
+   * @param {module:mio.Collection} collection
+   */
+  this.Resource.trigger('collection:post', this, function () {
+    callback.apply(collection, arguments);
+  });
+
+  return this;
+};
+
+/**
+ * Delete resources in collection.
+ *
+ * @param {module:mio.Collection.post.post} callback
+ * @returns {module:mio.Collection}
+ * @fires module:mio.Resource.hook.collection:post
+ * @fires module:mio.Resource.on.collection:post
+ */
+Collection.prototype.delete = function (callback) {
+  var collection = this;
+
+  /**
+   * Receives arguments passed from the last hook's `next`.
+   *
+   * @callback delete
+   * @memberof module:mio.Collection.delete
+   * @param {Error} err
+   * @param {module:mio.Collection} collection
+   */
+  this.Resource.trigger('collection:delete', this.query, function (err) {
+    if (err) return callback.call(collection, err);
+
+    collection.reset([]);
+
+    callback.apply(collection, arguments);
+  });
+
+  return this;
+};
+
+/**
+ * Reset collection with given `resources`.
+ *
+ * @param {Array.<Resource|Object>} resources
+ * @returns {module:mio.Collection}
+ */
+Collection.prototype.reset = function (resources) {
+  var Resource = this.Resource;
+
+  this.resources = (resources || []).map(function (resource) {
+    return Resource.create(resource);
+  });
+
+  return this;
 };
 
 /**
@@ -538,7 +711,8 @@ Collection.prototype.toArray = Collection.prototype.toJSON;
 module.exports = Query;
 
 /**
- * Compose queries functionally.
+ * Queries are created by actions such as `Resource.get()` and provide a
+ * consistent query interface across plugins and other related modules.
  *
  * @example
  *
@@ -569,7 +743,6 @@ module.exports = Query;
  * @param {Function=} options.handler method to execute for Query#exec
  * @param {Object=} options.context context when executing `options.handler`
  * @memberof module:mio
- * @alias Query
  * @constructor
  */
 function Query(options) {
@@ -579,10 +752,18 @@ function Query(options) {
   this.handler = options.handler;
   this.Resource = this.context && (this.context.Resource || this.context);
 
-  if (this.Resource && this.Resource.maxSize) {
-    this.maxSize = this.Resource.maxSize;
-  } else {
-    this.maxSize = 25;
+  if (this.Resource) {
+    if (this.Resource.maxPageSize) {
+      this.maxSize = this.Resource.maxPageSize;
+    } else {
+      this.maxSize = 100;
+    }
+
+    if (this.Resource.defaultPageSize) {
+      this.defaultSize = this.Resource.defaultPageSize;
+    } else {
+      this.defaultSize = 20;
+    }
   }
 
   /**
@@ -605,7 +786,7 @@ function Query(options) {
   }
 
   if (!this.query.size) {
-    this.query.size = this.maxSize;
+    this.query.size = this.defaultSize;
   }
 
   if (this.query.size > this.maxSize) {
@@ -1041,8 +1222,8 @@ Resource.extend = function (prototype, statics) {
   var attributes = pluckedPrototype.attributes;
 
   var pluckedStatics = util.pluck(statics, [
-    'on',
-    'before',
+    'events',
+    'hooks',
     'server',
     'browser',
     'options',
@@ -1103,8 +1284,8 @@ Resource.extend = function (prototype, statics) {
   });
 
   // register hooks
-  for (var events in pluckedStatics.before) {
-    child.before(event, pluckedStatics.before[event]);
+  for (var events in pluckedStatics.hooks) {
+    child.hook(event, pluckedStatics.hooks[event]);
   }
 
   // register event listeners
@@ -1285,7 +1466,7 @@ Resource.create = function(attributes) {
  * @param {module:mio.Query} query
  * @param {module:mio.Resource.get.get} callback
  * @returns {module:mio.Resource|module:mio.Query}
- * @fires module:mio.Resource.before.get
+ * @fires module:mio.Resource.hook.get
  * @fires module:mio.Resource.on.get
  */
 Resource.get = function(query, callback) {
@@ -1295,8 +1476,8 @@ Resource.get = function(query, callback) {
 
   if (arguments.length < 2) {
     return new Query({
-      handler: this.get,
       context: this,
+      handler: this.get,
       state: query
     });
   }
@@ -1305,7 +1486,7 @@ Resource.get = function(query, callback) {
    * Runs before callback for `Resource.get` or `Resource#get`.
    *
    * @event get
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {module:mio.Resource.trigger.next} next
    * @param {module:mio.Resource} resource included if triggered by instance.
@@ -1328,9 +1509,12 @@ Resource.get = function(query, callback) {
    * @callback get
    * @memberof module:mio.Resource.get
    * @param {Error} err
-   * @param {module:mio.Resource=} resource
+   * @param {module:mio.Resource} resource
    */
-  return this.trigger('get', new Query({ state: query }), callback);
+  return this.trigger('get', new Query({
+    context: this,
+    state: query
+  }), callback);
 };
 
 /**
@@ -1340,7 +1524,7 @@ Resource.get = function(query, callback) {
  * @param {Object} representation
  * @param {module:mio.Resource.put.put} callback
  * @returns {module:mio.Resource|module:mio.Query}
- * @fires module:mio.Resource.before.put
+ * @fires module:mio.Resource.hook.put
  * @fires module:mio.Resource.on.put
  */
 Resource.put = function (query, representation, callback) {
@@ -1348,10 +1532,10 @@ Resource.put = function (query, representation, callback) {
     representation = query;
 
     return new Query({
+      context: this,
       handler: function (query, callback) {
         this.put(query, representation, callback);
-      },
-      context: this
+      }
     });
   }
 
@@ -1359,7 +1543,7 @@ Resource.put = function (query, representation, callback) {
    * Runs before callback for `Resource.put` or `Resource#put`.
    *
    * @event put
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {Object|module:mio.Resource} representationresentation
    * @param {module:mio.Resource.trigger.next} next
@@ -1387,6 +1571,7 @@ Resource.put = function (query, representation, callback) {
    * @param {module:mio.Resource} resource
    */
   return this.trigger('put', new Query({
+    context: this,
     state: query
   }), representation, callback);
 };
@@ -1408,7 +1593,7 @@ Resource.put = function (query, representation, callback) {
  * @param {Object|Array} changes
  * @param {module:mio.Resource.patch.patch} callback
  * @returns {module:mio.Resource|module:mio.Query}
- * @fires module:mio.Resource.before.patch
+ * @fires module:mio.Resource.hook.patch
  * @fires module:mio.Resource.on.patch
  */
 Resource.patch = function (query, changes, callback) {
@@ -1416,10 +1601,10 @@ Resource.patch = function (query, changes, callback) {
     changes = query;
 
     return new Query({
+      context: this,
       handler: function (query, callback) {
         this.patch(query, changes, callback);
-      },
-      context: this
+      }
     });
   }
 
@@ -1427,7 +1612,7 @@ Resource.patch = function (query, changes, callback) {
    * Runs before callback for `Resource.patch` or `Resource#patch`.
    *
    * @event patch
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {Object|Array.<Object>} patch
    * @param {module:mio.Resource.trigger.next} next
@@ -1455,6 +1640,7 @@ Resource.patch = function (query, changes, callback) {
    * @param {module:mio.Resource} resource
    */
   return this.trigger('patch', new Query({
+    context: this,
     state: query
   }), changes, callback);
 };
@@ -1467,7 +1653,7 @@ Resource.patch = function (query, changes, callback) {
  * @param {Object} representation
  * @param {module:mio.Resource.post.post} callback
  * @returns {module:mio.Resource}
- * @fires module:mio.Resource.before.post
+ * @fires module:mio.Resource.hook.post
  * @fires module:mio.Resource.on.post
  */
 Resource.post = function (representation, callback) {
@@ -1476,7 +1662,7 @@ Resource.post = function (representation, callback) {
    * Runs before callback for `Resource.post` or `Resource#post`.
    *
    * @event post
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {Object|module:mio.Resource} representation
    * @param {module:mio.Resource.trigger.next} next
@@ -1514,7 +1700,7 @@ Resource.post = function (representation, callback) {
  * @param {module:mio.Query} query
  * @param {module:mio.Resource.delete} callback
  * @returns {module:mio.Resource|query}
- * @fires module:mio.Resource.before.delete
+ * @fires module:mio.Resource.hook.delete
  * @fires module:mio.Resource.on.delete
  */
 Resource.delete = function(query, callback) {
@@ -1525,8 +1711,8 @@ Resource.delete = function(query, callback) {
 
   if (arguments.length === 0) {
     return new Query({
-      handler: this.delete,
-      context: this
+      context: this,
+      handler: this.delete
     });
   }
 
@@ -1534,7 +1720,7 @@ Resource.delete = function(query, callback) {
    * Runs before callback for `Resource.delete` or `Resource#delete`.
    *
    * @event delete
-   * @memberof module:mio.Resource.before
+   * @memberof module:mio.Resource.hook
    * @param {module:mio.Query} query
    * @param {module:mio.Resource.trigger.next} next
    * @param {module:mio.Resource} resource included if triggered by instance.
@@ -1559,6 +1745,7 @@ Resource.delete = function(query, callback) {
    * @param {Error} err
    */
   return this.trigger('delete', new Query({
+    context: this,
     state: query
   }), callback);
 };
@@ -1810,22 +1997,18 @@ Resource.prototype.emit = Resource.emit;
  * @example
  *
  * ```javascript
- * User.before('get', function (query, next) {
+ * User.hook('get', function (query, next) {
  *   // do something before save such as validation and then call next()
- * });
- *
- * User.on('patch', function (query, changed) {
- *   // do something after update
  * });
  * ```
  *
  * @param {String} event
  * @param {Function} hook
  */
-Resource.before = function(event, hook) {
+Resource.hook = Resource.before = function(event, hook) {
   if (hook instanceof Array) {
     for (var i = 0, l = hook.length; i < l; i++) {
-      this.before(event, hook[i]);
+      this.hook(event, hook[i]);
     }
   } else {
     if (!this.hooks[event]) {
@@ -1840,6 +2023,7 @@ Resource.before = function(event, hook) {
 };
 
 Resource.prototype.before = Resource.before;
+Resource.prototype.hook = Resource.hook;
 
 /**
  * Run {@link module:mio.Resource.before} hooks for given `event`.
@@ -1944,7 +2128,7 @@ Resource.prototype.trigger = Resource.trigger;
  *
  * @param {module:mio.Resource.get.get} callback
  * @returns {module:mio.Resource}
- * @fires module:mio.Resource.before.get
+ * @fires module:mio.Resource.hook.get
  * @fires module:mio.Resource.on.get
  */
 Resource.prototype.get = function (callback) {
@@ -1966,7 +2150,7 @@ Resource.prototype.get = function (callback) {
  *
  * @param {module:mio.Resource.put.put} callback
  * @returns {module:mio.Resource}
- * @fires module:mio.Resource.before.put
+ * @fires module:mio.Resource.hook.put
  * @fires module:mio.Resource.on.put
  */
 Resource.prototype.put = function (callback) {
@@ -1979,7 +2163,7 @@ Resource.prototype.put = function (callback) {
  *
  * @param {module:mio.Resource.patch.patch} callback
  * @returns {module:mio.Resource}
- * @fires module:mio.Resource.before.patch
+ * @fires module:mio.Resource.hook.patch
  * @fires module:mio.Resource.on.patch
  */
 Resource.prototype.patch = function (callback) {
@@ -1992,7 +2176,7 @@ Resource.prototype.patch = function (callback) {
  *
  * @param {postCallback} callback
  * @returns {resource}
- * @fires module:mio.Resource.before.post
+ * @fires module:mio.Resource.hook.post
  * @fires module:mio.Resource.on.post
  */
 Resource.prototype.post = function (callback) {
@@ -2006,7 +2190,7 @@ Resource.prototype.post = function (callback) {
  *
  * @param {module:mio.Resource.delete.delete} callback
  * @returns {module:mio.Resource}
- * @fires module:mio.Resource.before.delete
+ * @fires module:mio.Resource.hook.delete
  * @fires module:mio.Resource.on.delete
  */
 Resource.prototype.delete = function (callback) {
@@ -2091,24 +2275,33 @@ Resource.prototype.has = function(attr) {
 /**
  * Set given resource `attributes`.
  *
+ * Alternatively, set a key-value pair.
+ *
  * @param {Object} attributes
  * @returns {module:mio.Resource}
  * @fires module:mio.Resource.on.set
  */
 Resource.prototype.set = function (attributes) {
+  if (arguments.length === 2) {
+    var key = arguments[0];
+    var value = arguments[1];
+    attributes = {};
+    attributes[key] = value;
+  } else {
 
-  /**
-   * @event set
-   * @memberof module:mio.Resource.on
-   * @param {Resource} resource
-   * @param {Object} attributes
-   */
-  this.constructor.emit('set', this, attributes);
-  this.emit('set', attributes);
+    /**
+     * @event set
+     * @memberof module:mio.Resource.on
+     * @param {Resource} resource
+     * @param {Object} attributes
+     */
+    this.constructor.emit('set', this, attributes);
+    this.emit('set', attributes);
 
-  for (var attr in attributes) {
-    if (this.constructor.attributes[attr]) {
-      this[attr] = attributes[attr];
+    for (var attr in attributes) {
+      if (this.constructor.attributes[attr]) {
+        this[attr] = attributes[attr];
+      }
     }
   }
 
