@@ -5,23 +5,37 @@
 Mio provides a common model layer between client and server for building REST
 APIs and web applications.
 
-Mio provides a consistent API across client and server for querying,
-manipulating, and persisting data. Create a REST API server from your mio
-resources and interact with them from the browser using the same interface. No
-need for any route handling or AJAX boilerplate.
+Create a REST API server from your mio resources and interact with them from the
+browser using the same interface. *No need for any route handling or AJAX
+boilerplate.*
 
 Mio models are designed to be RESTful and avoid leaky abstractions for mapping
-to HTTP methods. For example, providing `Resource.get()` instead of `findOne()`
-and `Resource.post()` where most libraries would provide `create()`.
+to HTTP methods. For example, providing `get()` instead of `findOne()`
+and `patch()` where most libraries would provide `save()`.
 
-* Small readable core (only ~300 SLOC)
+* RESTful models and collections
 * Simple enumerable objects
-* Hooks and events before and after CRUD operations and object lifecycle
+* Hooks and events for object lifecycle
 * Backbone-style API for extending resources
 * Modular. Plugins provide storage, validation, etc.
 * Browser and node.js support
 
-## Installation
+### [API Documentation](docs/API.md)
+
+### [Plugins](https://github.com/mio/mio/wiki/Plugins/)
+
+### Guide
+
+- [Installation](#installation)
+- [Resources](#resources)
+- [Collections](#collections)
+- [Actions and Queries](#actions-and-queries)
+- [Hooks and Events](#hooks-and-events)
+- [Relations](#relations)
+- [Plugins](#plugins)
+- [REST API](#rest-api)
+
+### Installation
 
 Using [npm](https://npmjs.org/):
 
@@ -42,58 +56,107 @@ Using browser script tag and global (UMD wrapper):
 <script src="dist/mio.js"></script>
 ```
 
-## API
-
-See the full [API documentation](docs/API.md).
-
-## Community
-
-* [Plugins](https://github.com/mio/mio/wiki/Plugins/)
-* [Wiki](https://github.com/mio/mio/wiki/)
-* `##mio` on irc.freenode.net
-
-## Examples
-
-* [Resources](#resources)
-* [Queries](#queries)
-* [Plugins](#plugins)
-* [Hooks](#hooks)
-* [Relations](#relations)
-* [REST API](#rest-api)
+It is recommended to use [browserify](https://github.com/substack/node-browserify)
+when using mio in the browser and on the server. Platform-specific code can be
+wrapped in [`Resource.server()`](docs/API.md#module_mio.Resource.server) or
+[`Resource.browser()`](docs/API.md#module_mio.Resource.browser) and server code
+excluded in the client build.
 
 ### Resources
 
-Define new resources by extending the base `Resource` class. You can pass
-attribute definitions to [`.extend()`](docs/API.md#module_mio.Resource.extend)
-or use the chainable [`.attr()`](docs/API.md#module_mio.Resource.attr):
+New resources are defined by extending the base resource class using
+[`mio.Resource.extend()`](docs/API.md#module_mio.Resource.extend).
+
+```javascript
+var User = mio.Resource.extend();
+```
+
+Attributes can be defined by extending the prototype:
 
 ```javascript
 var User = mio.Resource.extend({
   attributes: {
-    id: { primary: true },
-    name: { required: true },
-    active: { default: false },
-    created: {
-      default: function() {
-        return new Date();
-      }
+    id: {
+      primary: true
     }
-  },
-  sayHello: function() {
-    return "Hello I'm " + this.name;
   }
 });
-
-var user = new User({ name: 'Mio' });
-
-user.sayHello(); // => "Hello I'm Mio"
 ```
 
-### Queries
+Attributes can also be defined using the chainable
+[`attr()`](docs/API.md#module_mio.Resource.attr) method:
 
-Query methods provide a consistent interface for fetching resources.
-Storage plugins use the asynchronous events provided for each method to fetch or
-persist resources to a database.
+```javasciprt
+var User = mio.Resource.extend();
+
+User
+  .attr('id', {
+    primary: true
+  })
+  .attr('name')
+  .attr('email');
+```
+
+Resources can be extended with prototype or static properties and methods:
+
+```javascript
+var User = mio.Resource.extend({
+  sayHello: function () {
+    return 'hello';
+  }
+}, {
+  type: 'User'
+});
+
+console.log(User.type); // => "User"
+
+var user = new User();
+
+user.sayHello(); // => "hello"
+```
+
+### Collections
+
+Each Resource has an associated collection. Actions that return multiple
+resources return instances of
+[`Resource.Collection`](docs/API.md#module_mio.Collection). Collections have
+REST actions just as resources do.
+
+For example, to fetch a collection of user resources:
+
+```javascript
+User.Collection.get().exec(function (err, users) {...});
+```
+
+Array.prototype methods are available for collections, *but a collection
+is not an array*. The array of resources is kept at `Collection#resources`.
+Methods such as `map()` return arrays instead of the collection.
+
+```javascript
+var resource1 = new Resource();
+var collection = new Resource.Collection([resource]);
+
+collection.push(new Resource());
+collection.splice(1, 1, new Resource());
+
+collection.at(0) === resource; // => true
+collection.length === 2;       // => true
+collection.indexOf(resource);  // => 0
+```
+
+### Actions and Queries
+
+Mio resource and collection methods map directly to REST actions and HTTP
+verbs. Instead of `find()` you use `get()`. Instead of `save()` you use `put()`,
+`post()`, or `patch()`.
+
+The actions `get`, `put`, `patch`, `post`, and `delete` exist for the resource
+class and instances. Collections also support a subset of these methods.
+
+Storage plugins use event [hooks](#hooks-and-events) provided for
+each method to fetch or persist resources to a database.
+
+#### Fetching
 
 Find one user:
 
@@ -123,8 +186,52 @@ User.Collection.get()
   });
 ```
 
-See the [API documentation](docs/API.md) for a complete list of query methods
-and event information.
+#### Pagination
+
+All queries are paginated using a common interface provided by the Query and
+Collection classes. Both queries and collections maintain `from` and `size`
+properties. The default and maximum page size are set by
+`Resource.defaultPageSize` and `Resource.maxPageSize` properties.
+
+See the [query](docs/API.md#module_mio.Query) documentation for more
+information.
+
+#### Creating and updating
+
+Creating or updating resources is accomplished with `put`, `patch`, and `post`:
+
+```javascript
+var user = User.create({ name: 'Bob' });
+
+user.post(function (err) {
+  // ...
+});
+```
+
+`User.create()` is just functional sugar for `new User()`.
+
+All instance actions are available as class actions:
+
+```javascript
+User.post({ name: 'Bob' }, function (err, user) {
+  // ...
+});
+```
+
+Update a resource:
+
+```javascript
+var user = User.create();
+
+user
+  .set({
+    name: 'alex'
+  }).patch(function(err) {
+    // ...
+  });
+```
+
+See the [API documentation](docs/API.md) for a complete list of actions.
 
 ### Plugins
 
@@ -149,22 +256,72 @@ User.browser(plugin);
 User.server(plugin);
 ```
 
-### Hooks
+### Hooks and Events
 
-Before and after hooks are provided for CRUD operations and resource lifecycle
-events. Hooks are asynchronous and execute in series.
+Asynchronous hooks are provided for CRUD operations and lifecycle events.
+They run in series before `get`, `put`, `patch`, `post`, and `delete` methods.
+
+Hooks are used to implement validation, persistence, and other business logic.
+
+Hooks receive a `next` function as the last argument, which must be called
+to continue firing subsequent listeners. Subsequent hooks will not be run
+if `next` receives any arguments. Arguments received by `next` are passed to
+the callback of the method that fired the event.
 
 ```javascript
-User.before('get', function (query, next) {
-  // do something before save such as validation and then call next()
-});
-
-User.on('patch', function (query, changed) {
-  // do something after update
+User.hook('get', function (query, next) {
+  // retrieve user from storage using query
+  db.getUser(query, next);
 });
 ```
 
-See the full [documentation for events](docs/API.md#module_mio.Resource.before).
+Collection hooks are prefixed with `collection:`:
+
+```javascript
+User.hook('collection:get', function (query, next) {
+  // ...
+});
+```
+
+See the full [documentation for hooks](docs/API.md#module_mio.Resource.hook).
+
+In addition to hooks, synchronous events are fired after resource actions and
+other resource events like attribute changes.
+
+```javascript
+User
+  .on('patch', function (query, changed) {
+    // do something after update
+  })
+  .on('change:name', function (user, value, prev) {
+    // ...
+  });
+```
+
+See the full [documentation for events](docs/API.md#module_mio.Resource.on).
+
+Hooks and events can also be registered when extending a resource:
+
+```javascript
+var User = mio.Resource.extend({
+  attributes: {
+    id: {
+      primary: true
+    }
+  }
+}, {
+  hooks: {
+    'post': [function (representation, next) {
+      // ...
+    }]
+  },
+  events: {
+    'initialize': [function (resource, attributes) {
+      // ...
+    }]
+  }
+});
+```
 
 ### Relations
 
@@ -186,6 +343,11 @@ Book.belongsTo('author', {
 Book.get(1).withRelated(['author']).exec(function(err, book) {
   console.log(book.author);
 });
+
+// fetch book by related author
+Boook.get().where({
+  'author.name': 'alex'
+}).exec(function(function (err, book) {...});
 ```
 
 See the [relations API](docs/API.md#module_mio.Resource.belongsTo) for more
