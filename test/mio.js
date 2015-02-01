@@ -1293,13 +1293,32 @@ describe('Query', function() {
       .exec(function() {});
   });
 
-  it('respects Resource.maxSize', function (done) {
+  it('respects Resource.defaultPageSize', function (done) {
     var Resource = mio.Resource.extend({
       attributes: {
         id: { primary: true }
       }
     }, {
-      maxSize: 101
+      defaultPageSize: 30
+    });
+
+    Resource.hook('collection:get', function (query, next) {
+      expect(query.size()).to.equal(30);
+      next();
+    });
+
+    expect(Resource).to.have.property('defaultPageSize', 30);
+
+    Resource.Collection.get().exec(done);
+  });
+
+  it('respects Resource.maxPageSize', function (done) {
+    var Resource = mio.Resource.extend({
+      attributes: {
+        id: { primary: true }
+      }
+    }, {
+      maxPageSize: 101
     });
 
     Resource.hook('collection:get', function (query, next) {
@@ -1307,9 +1326,9 @@ describe('Query', function() {
       next();
     });
 
-    expect(Resource).to.have.property('maxSize', 101);
+    expect(Resource).to.have.property('maxPageSize', 101);
 
-    Resource.Collection.get().exec(done);
+    Resource.Collection.get().size(200).exec(done);
   });
 
   describe('#exec()', function () {
