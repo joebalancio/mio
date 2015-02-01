@@ -1390,6 +1390,9 @@ describe('Collection', function () {
   describe('.get()', function() {
     it('finds collection of models using query', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:get', function (query, next) {
+        next(null, new Resource.Collection());
+      });
       Resource.Collection.get(function(err, collection) {
         if (err) return done(err);
         expect(collection).to.be.an.instanceOf(Resource.Collection);
@@ -1704,6 +1707,332 @@ describe('Collection', function () {
         });
 
       Resource.Collection.delete(function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('#get()', function() {
+    it('finds collection of models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:get', function (query, next) {
+        next(null, new Resource.Collection());
+      });
+      Resource.Collection.create().get(function(err, collection) {
+        if (err) return done(err);
+        expect(collection).to.be.an.instanceOf(Resource.Collection);
+        Resource.get({ id: 1 }, function(err, collection) {
+          done();
+        });
+      });
+    });
+
+    it("emits collection hooks", function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:get', function(query, cb) {
+          cb();
+        })
+        .hook('collection:get', function(query, cb) {
+          cb(null, new Resource.Collection([new Resource({ id: 1 })]));
+        });
+
+      Resource.Collection.create().get(function(err, collection) {
+        if (err) return done(err);
+        expect(collection).to.have.property('length', 1);
+        expect(collection.at(0)).to.have.property('constructor', Resource);
+        done();
+      });
+    });
+
+    it('emits "hook:collection:get" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:get', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.create().get({ id: 1 }, function(err, collection) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:get" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:get', function(query) {
+        done();
+      });
+      Resource.Collection.create().get(function(err, collection) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource.hook('collection:get', function(query, cb) {
+        cb(new Error('test'));
+      });
+
+      Resource.Collection.create().get(function(err, collection) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('#put()', function() {
+    it('updates models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.create([{ id: 2 }]).put(function(err) {
+        done();
+      });
+    });
+
+    it('triggers "collection:put" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:put', function(query, changes, cb) {
+          cb();
+        })
+        .hook('collection:put', function(query, changes, cb) {
+          cb();
+        });
+
+      Resource.Collection.create().put(function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "hook:collection:put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:put', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.create().put(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:put" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:put', function() {
+        done();
+      });
+      Resource.Collection.create().put(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:put', function(query, changes, cb) {
+          cb();
+        })
+        .hook('collection:put', function(query, changes, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.create().put(function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('#patch()', function() {
+    it('updates models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.create().patch(function(err) {
+        done();
+      });
+    });
+
+    it('triggers "collection:patch" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:patch', function(query, changes, cb) {
+          cb();
+        })
+        .hook('collection:patch', function(query, changes, cb) {
+          cb();
+        });
+
+      Resource.Collection.create().patch(function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "hook:collection:patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:patch', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.create().patch(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:patch" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:patch', function() {
+        done();
+      });
+      Resource.Collection.create().patch(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:patch', function(query, changes, cb) {
+          cb();
+        })
+        .hook('collection:patch', function(query, changes, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.create().patch(function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('#post()', function() {
+    it('updates models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.create([{ id: 2 }]).post(function(err) {
+        done();
+      });
+    });
+
+    it('triggers "collection:post" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:post', function(resources, cb) {
+          cb();
+        })
+        .hook('collection:post', function(resources, cb) {
+          cb();
+        });
+
+      Resource.Collection.create().post(function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "hook:collection:post" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:post', function(resources) {
+        expect(resources).to.be.an.instanceOf(Resource.Collection);
+        done();
+      });
+      Resource.Collection.create([{ id: 1 }, { id: 2 }]).post(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:post" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:post', function() {
+        done();
+      });
+      Resource.Collection.create([{ id: 1 }, { id: 2 }]).post(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:post', function(resources, cb) {
+          cb();
+        })
+        .hook('collection:post', function(resources, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.create().post(function(err) {
+        expect(err).to.have.property('message', 'test')
+        done();
+      });
+    });
+  });
+
+  describe('#delete()', function() {
+    it('deletes models using query', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.Collection.create().delete(function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('triggers "collection:delete" hooks', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:delete', function(query, cb) {
+          cb();
+        })
+        .hook('collection:delete', function(query, cb) {
+          cb();
+        });
+
+      Resource.Collection.create().delete(function(err) {
+        if (err) return done(err);
+        done();
+      });
+    });
+
+    it('emits "hook:collection:delete" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.hook('collection:delete', function(query) {
+        expect(query).to.be.an('object');
+        done();
+      });
+      Resource.Collection.create().delete(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('emits "collection:delete" event', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+      Resource.on('collection:delete', function() {
+        done();
+      });
+      Resource.Collection.create().delete(function(err) {
+        if (err) return done(err);
+      });
+    });
+
+    it('passes error from adapter to callback', function(done) {
+      var Resource = mio.Resource.extend().attr('id', { primary: true });
+
+      Resource
+        .hook('collection:delete', function(query, cb) {
+          cb();
+        })
+        .hook('collection:delete', function(query, cb) {
+          cb(new Error('test'));
+        });
+
+      Resource.Collection.create().delete(function(err) {
         expect(err).to.have.property('message', 'test')
         done();
       });
