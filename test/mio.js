@@ -207,13 +207,13 @@ describe('Resource', function() {
     });
   });
 
-  describe('.before()', function () {
+  describe('.hook()', function () {
     it('registers array of listeners', function () {
       var Resource = mio.Resource.extend();
       var hook1 = function () {};
       var hook2 = function () {};
 
-      Resource.before('test', [hook1, hook2]);
+      Resource.hook('test', [hook1, hook2]);
 
       expect(Resource.hooks.test[0]).to.equal(hook1);
       expect(Resource.hooks.test[1]).to.equal(hook2);
@@ -257,13 +257,13 @@ describe('Resource', function() {
       });
 
       Resource
-        .before('test', function (next) {
+        .hook('test', function (next) {
           next(new Error('should stop hook execution'));
         })
-        .before('post', function (changed, next) {
+        .hook('post', function (changed, next) {
           next(new Error('should stop hook execution'));
         })
-        .before('post', function (changed, next) {
+        .hook('post', function (changed, next) {
           done(new Error("second hook should not be called"));
         });
 
@@ -328,7 +328,7 @@ describe('Resource', function() {
       var User = mio.Resource.extend();
       var Post = mio.Resource.extend();
 
-      User.before('get', function(query, callback) {
+      User.hook('get', function(query, callback) {
         callback(null, {foo: 'bar'});
       });
 
@@ -461,10 +461,10 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('get', function(query, cb) {
+        .hook('get', function(query, cb) {
           cb();
         })
-        .before('get', function(query, cb) {
+        .hook('get', function(query, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -475,9 +475,9 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:get" event', function(done) {
+    it('emits "hook:get" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('get', function(query) {
+      Resource.hook('get', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -494,7 +494,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('get', function(query, cb) {
+      Resource.hook('get', function(query, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -506,7 +506,7 @@ describe('Resource', function() {
     it('passes error from adapter to callback', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('get', function(query, cb) {
+      Resource.hook('get', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -522,10 +522,10 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('put', function(query, resource, cb) {
+        .hook('put', function(query, resource, cb) {
           cb();
         })
-        .before('put', function(query, resource, cb) {
+        .hook('put', function(query, resource, cb) {
           cb(null, { id: 2 });
         });
 
@@ -536,9 +536,9 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:put" event', function(done) {
+    it('emits "hook:put" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('put', function(query, resource) {
+      Resource.hook('put', function(query, resource) {
         expect(query).to.be.an('object');
         done();
       });
@@ -555,7 +555,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('put', function(query, resource, cb) {
+      Resource.hook('put', function(query, resource, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -567,7 +567,7 @@ describe('Resource', function() {
     it('passes error from adapter to callback', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('put', function(query, resource, cb) {
+      Resource.hook('put', function(query, resource, cb) {
         cb(new Error('test'));
       });
 
@@ -583,10 +583,10 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('patch', function(query, resource, cb) {
+        .hook('patch', function(query, resource, cb) {
           cb();
         })
-        .before('patch', function(query, resource, cb) {
+        .hook('patch', function(query, resource, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -597,9 +597,9 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:patch" event', function(done) {
+    it('emits "hook:patch" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('patch', function(query, resource) {
+      Resource.hook('patch', function(query, resource) {
         expect(query).to.be.an('object');
         done();
       });
@@ -616,7 +616,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('patch', function(query, resource, cb) {
+      Resource.hook('patch', function(query, resource, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -628,7 +628,7 @@ describe('Resource', function() {
     it('passes error from adapter to callback', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('patch', function(query, resource, cb) {
+      Resource.hook('patch', function(query, resource, cb) {
         cb(new Error('test'));
       });
 
@@ -644,10 +644,10 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('post', function(resource, cb) {
+        .hook('post', function(resource, cb) {
           cb();
         })
-        .before('post', function(resource, cb) {
+        .hook('post', function(resource, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -658,9 +658,9 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:post" event', function(done) {
+    it('emits "hook:post" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('post', function(resource) {
+      Resource.hook('post', function(resource) {
         expect(resource).to.be.an('object');
         done();
       });
@@ -677,7 +677,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('post', function(resource, cb) {
+      Resource.hook('post', function(resource, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -689,7 +689,7 @@ describe('Resource', function() {
     it('passes error from adapter to callback', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('post', function(resource, cb) {
+      Resource.hook('post', function(resource, cb) {
         cb(new Error('test'));
       });
 
@@ -705,10 +705,10 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('delete', function(query, cb) {
+        .hook('delete', function(query, cb) {
           cb();
         })
-        .before('delete', function(query, cb) {
+        .hook('delete', function(query, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -722,7 +722,7 @@ describe('Resource', function() {
     it('returns chainable query builder', function (done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('delete', function (query, next) {
+      Resource.hook('delete', function (query, next) {
         expect(query).to.be.an('object');
         expect(query).to.have.property('query');
         expect(query.query).to.have.property('where');
@@ -733,9 +733,9 @@ describe('Resource', function() {
       Resource.delete().where({ id: 1 }).exec(done);
     });
 
-    it('emits "before:delete" event', function(done) {
+    it('emits "hook:delete" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('delete', function(query) {
+      Resource.hook('delete', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -752,7 +752,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('delete', function(query, cb) {
+      Resource.hook('delete', function(query, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -764,7 +764,7 @@ describe('Resource', function() {
     it('passes error from adapter to callback', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('delete', function(query, cb) {
+      Resource.hook('delete', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -790,10 +790,10 @@ describe('Resource', function() {
       var resource = new Resource({ id: 1 });
 
       Resource
-        .before('get', function(query, cb) {
+        .hook('get', function(query, cb) {
           cb();
         })
-        .before('get', function(query, cb) {
+        .hook('get', function(query, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -804,11 +804,11 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:get" event', function(done) {
+    it('emits "hook:get" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var resource = new Resource({ id: 1 });
 
-      Resource.before('get', function(query) {
+      Resource.hook('get', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -827,7 +827,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('get', function(query, cb) {
+      Resource.hook('get', function(query, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -840,7 +840,7 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var resource = new Resource({ id: 1 });
 
-      Resource.before('get', function(query, cb) {
+      Resource.hook('get', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -857,10 +857,10 @@ describe('Resource', function() {
       var resource = new Resource({ id: 1 });
 
       Resource
-        .before('put', function(query, resource, cb) {
+        .hook('put', function(query, resource, cb) {
           cb();
         })
-        .before('put', function(query, resource, cb) {
+        .hook('put', function(query, resource, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -871,11 +871,11 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:put" event', function(done) {
+    it('emits "hook:put" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var resource = new Resource({ id: 1 });
 
-      Resource.before('put', function(query, resource) {
+      Resource.hook('put', function(query, resource) {
         expect(query).to.be.an('object');
         done();
       });
@@ -894,7 +894,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('put', function(query, resource, cb) {
+      Resource.hook('put', function(query, resource, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -907,7 +907,7 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var resource = new Resource({ id: 1 });
 
-      Resource.before('put', function(query, resource, cb) {
+      Resource.hook('put', function(query, resource, cb) {
         cb(new Error('test'));
       });
 
@@ -924,10 +924,10 @@ describe('Resource', function() {
       var resource = new Resource({ id: 1 });
 
       Resource
-        .before('patch', function(query, resource, cb) {
+        .hook('patch', function(query, resource, cb) {
           cb();
         })
-        .before('patch', function(query, resource, cb) {
+        .hook('patch', function(query, resource, cb) {
           cb(null, new Resource({ id: 1 }));
         });
 
@@ -938,11 +938,11 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:patch" event', function(done) {
+    it('emits "hook:patch" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var resource = new Resource({ id: 1 });
 
-      Resource.before('patch', function(query, resource) {
+      Resource.hook('patch', function(query, resource) {
         expect(query).to.be.an('object');
         done();
       });
@@ -961,7 +961,7 @@ describe('Resource', function() {
         done();
       });
 
-      Resource.before('patch', function(query, resource, cb) {
+      Resource.hook('patch', function(query, resource, cb) {
         cb(null, new Resource({ id: 1 }));
       });
 
@@ -974,7 +974,7 @@ describe('Resource', function() {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var resource = new Resource({ id: 1 });
 
-      Resource.before('patch', function(query, resource, cb) {
+      Resource.hook('patch', function(query, resource, cb) {
         cb(new Error('test'));
       });
 
@@ -989,11 +989,11 @@ describe('Resource', function() {
     it('triggers "post" hooks', function(done) {
       var Resource = mio.Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('post', function(changed, cb, model) {
+        .hook('post', function(changed, cb, model) {
           expect(changed).to.have.property('id', 1);
           cb();
         })
-        .before('post', function(changed, cb, model) {
+        .hook('post', function(changed, cb, model) {
           expect(changed).to.have.property('id', 1);
           cb(null, model);
         });
@@ -1009,7 +1009,7 @@ describe('Resource', function() {
     it("passes error from adapter to callback", function(done) {
       var Resource = mio.Resource.extend()
         .attr('id', { primary: true })
-        .before('post', function(changed, cb) {
+        .hook('post', function(changed, cb) {
           cb(new Error("test"));
         });
 
@@ -1021,10 +1021,10 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:post" event', function(done) {
+    it('emits "hook:post" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
       var called = false;
-      Resource.before('post', function(changed, next, model) {
+      Resource.hook('post', function(changed, next, model) {
         called = true;
         expect(model).to.have.property('constructor', Resource);
         expect(changed).to.be.an('object');
@@ -1049,10 +1049,10 @@ describe('Resource', function() {
     it('triggers "delete" hooks', function(done) {
       var Resource = mio.Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('delete', function(model, cb) {
+        .hook('delete', function(model, cb) {
           cb();
         })
-        .before('delete', function(model, cb) {
+        .hook('delete', function(model, cb) {
           cb();
         });
       var model = Resource.create({ id: 1 });
@@ -1065,7 +1065,7 @@ describe('Resource', function() {
     it("passes error from adapter to callback", function(done) {
       var Resource = mio.Resource.extend()
         .attr('id', { primary: true, required: true })
-        .before('delete', function(model, cb) {
+        .hook('delete', function(model, cb) {
           cb(new Error('test'));
         });
       var model = Resource.create({ id: 1 });
@@ -1075,14 +1075,14 @@ describe('Resource', function() {
       });
     });
 
-    it('emits "before:delete" event', function(done) {
+    it('emits "hook:delete" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('delete', function(query, next, model) {
+      Resource.hook('delete', function(query, next, model) {
         expect(model).to.have.property('constructor', Resource);
         next();
       });
       var model = Resource.create({ id: 1 });
-      model.before('delete', function() {
+      model.hook('delete', function() {
         done();
       }).delete(function(err) { });
     });
@@ -1274,7 +1274,7 @@ describe('Query', function() {
 
   it('modifies query', function(done) {
     var Resource = mio.Resource.extend().attr('id', { primary: true });
-    Resource.before('collection:get', function(query, next) {
+    Resource.hook('collection:get', function(query, next) {
       expect(query.query).to.have.keys([
         'from',
         'page',
@@ -1291,6 +1291,25 @@ describe('Query', function() {
       .from(10)
       .size(10)
       .exec(function() {});
+  });
+
+  it('respects Resource.maxSize', function (done) {
+    var Resource = mio.Resource.extend({
+      attributes: {
+        id: { primary: true }
+      }
+    }, {
+      maxSize: 101
+    });
+
+    Resource.hook('collection:get', function (query, next) {
+      expect(query.size()).to.equal(101);
+      next();
+    });
+
+    expect(Resource).to.have.property('maxSize', 101);
+
+    Resource.Collection.get().exec(done);
   });
 
   describe('#exec()', function () {
@@ -1365,10 +1384,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:get', function(query, cb) {
+        .hook('collection:get', function(query, cb) {
           cb();
         })
-        .before('collection:get', function(query, cb) {
+        .hook('collection:get', function(query, cb) {
           cb(null, [new Resource({ id: 1 })]);
         });
 
@@ -1380,9 +1399,9 @@ describe('Collection', function () {
       });
     });
 
-    it('emits "before:collection:get" event', function(done) {
+    it('emits "hook:collection:get" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('collection:get', function(query) {
+      Resource.hook('collection:get', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -1404,7 +1423,7 @@ describe('Collection', function () {
     it('passes error from adapter to callback', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
-      Resource.before('collection:get', function(query, cb) {
+      Resource.hook('collection:get', function(query, cb) {
         cb(new Error('test'));
       });
 
@@ -1427,10 +1446,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:put', function(query, changes, cb) {
+        .hook('collection:put', function(query, changes, cb) {
           cb();
         })
-        .before('collection:put', function(query, changes, cb) {
+        .hook('collection:put', function(query, changes, cb) {
           cb();
         });
 
@@ -1440,9 +1459,9 @@ describe('Collection', function () {
       });
     });
 
-    it('emits "before:collection:put" event', function(done) {
+    it('emits "hook:collection:put" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('collection:put', function(query) {
+      Resource.hook('collection:put', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -1465,10 +1484,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:put', function(query, changes, cb) {
+        .hook('collection:put', function(query, changes, cb) {
           cb();
         })
-        .before('collection:put', function(query, changes, cb) {
+        .hook('collection:put', function(query, changes, cb) {
           cb(new Error('test'));
         });
 
@@ -1491,10 +1510,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:patch', function(query, changes, cb) {
+        .hook('collection:patch', function(query, changes, cb) {
           cb();
         })
-        .before('collection:patch', function(query, changes, cb) {
+        .hook('collection:patch', function(query, changes, cb) {
           cb();
         });
 
@@ -1504,9 +1523,9 @@ describe('Collection', function () {
       });
     });
 
-    it('emits "before:collection:patch" event', function(done) {
+    it('emits "hook:collection:patch" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('collection:patch', function(query) {
+      Resource.hook('collection:patch', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -1529,10 +1548,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:patch', function(query, changes, cb) {
+        .hook('collection:patch', function(query, changes, cb) {
           cb();
         })
-        .before('collection:patch', function(query, changes, cb) {
+        .hook('collection:patch', function(query, changes, cb) {
           cb(new Error('test'));
         });
 
@@ -1555,10 +1574,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:post', function(resources, cb) {
+        .hook('collection:post', function(resources, cb) {
           cb();
         })
-        .before('collection:post', function(resources, cb) {
+        .hook('collection:post', function(resources, cb) {
           cb();
         });
 
@@ -1568,9 +1587,9 @@ describe('Collection', function () {
       });
     });
 
-    it('emits "before:collection:post" event', function(done) {
+    it('emits "hook:collection:post" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('collection:post', function(resources) {
+      Resource.hook('collection:post', function(resources) {
         expect(resources).to.be.an('array');
         done();
       });
@@ -1593,10 +1612,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:post', function(resources, cb) {
+        .hook('collection:post', function(resources, cb) {
           cb();
         })
-        .before('collection:post', function(resources, cb) {
+        .hook('collection:post', function(resources, cb) {
           cb(new Error('test'));
         });
 
@@ -1620,10 +1639,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:delete', function(query, cb) {
+        .hook('collection:delete', function(query, cb) {
           cb();
         })
-        .before('collection:delete', function(query, cb) {
+        .hook('collection:delete', function(query, cb) {
           cb();
         });
 
@@ -1633,9 +1652,9 @@ describe('Collection', function () {
       });
     });
 
-    it('emits "before:collection:delete" event', function(done) {
+    it('emits "hook:collection:delete" event', function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
-      Resource.before('collection:delete', function(query) {
+      Resource.hook('collection:delete', function(query) {
         expect(query).to.be.an('object');
         done();
       });
@@ -1658,10 +1677,10 @@ describe('Collection', function () {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
       Resource
-        .before('collection:delete', function(query, cb) {
+        .hook('collection:delete', function(query, cb) {
           cb();
         })
-        .before('collection:delete', function(query, cb) {
+        .hook('collection:delete', function(query, cb) {
           cb(new Error('test'));
         });
 
