@@ -140,6 +140,49 @@ describe('Resource', function() {
       expect(extended.attributes).to.have.property('id');
     });
 
+    it('extends attributes', function() {
+      var Base = mio.Resource.extend({
+        attributes: {
+          id: { primary: true },
+          createdAt: {
+            default: function () {
+              return new Date();
+            }
+          }
+        }
+      }, {
+        description: "test",
+        use: [function(){}],
+        browser: [function(){}],
+        server: [function(){}]
+      });
+      var Extended = Base.extend({
+        attributes: {
+          id: { required: true },
+          updatedAt: {
+            required: true,
+            default: function () {
+              return new Date();
+            }
+          }
+        }
+      });
+      expect(Extended).to.have.property('description', 'test');
+      var extended = new Extended();
+      expect(extended).to.be.instanceOf(mio.Resource);
+      expect(extended).to.be.instanceOf(Base);
+      expect(extended.attributes).to.have.property('id');
+      expect(Extended.attributes).to.have.property('id');
+      expect(Extended.attributes.id).to.have.property('primary', true);
+      expect(Extended.attributes.id).to.have.property('required', true);
+      expect(Extended.attributes).to.have.property('createdAt');
+      expect(Extended.attributes.createdAt).to.have.property('default');
+      expect(Extended.attributes.createdAt.default).to.be.a('function');
+      expect(Extended.attributes).to.have.property('updatedAt');
+      expect(Extended.attributes.updatedAt).to.have.property('required', true);
+      expect(Extended.attributes.updatedAt.default).to.be.a('function');
+    });
+
     it('extends model prototype', function() {
       var Base = mio.Resource.extend({
         attributes: {
@@ -287,14 +330,6 @@ describe('Resource', function() {
       expect(function() {
         Resource.attr('_id', { primary: true });
       }).to.throw('Primary attribute already exists: id');
-    });
-
-    it('throws error if defining existing key', function() {
-      var Resource = mio.Resource.extend();
-      Resource.attr('id', { primary: true });
-      expect(function() {
-        Resource.attr('id');
-      }).to.throw('id attribute already exists');
     });
 
     it('emits "attribute" event', function(done) {
