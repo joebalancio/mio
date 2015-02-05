@@ -1333,11 +1333,9 @@ Resource.extend = function (prototype, statics) {
 Resource.attr = function(name, options) {
   this.attributes = this.attributes || Object.create(null);
 
-  if (this.attributes[name]) {
-    throw new Error(name + " attribute already exists");
-  }
-
-  if (options === null || typeof options !== 'object') {
+  if (typeof options === 'undefined') {
+    options = {};
+  } else if (typeof options !== 'object') {
     options = {
       'default': options
     };
@@ -1352,7 +1350,7 @@ Resource.attr = function(name, options) {
     this.primaryKey = name;
   }
 
-  this.attributes[name] = options;
+  this.attributes[name] = util.merge(this.attributes[name], options);
 
   /**
    * @event attribute
@@ -1909,14 +1907,6 @@ Resource.hasMany = function (attr, params) {
 };
 
 /**
- *
- * @param {String} attr name of the attribute populated with target resource
- * @param {Object} params additional parameters passed to `.attr()`
- * @param {Boolean} params.nested whether to always include (default: false)
- * @returns {module:mio.Resource}
- */
-
-/**
  * Register `listener` to be called when `event` is emitted.
  *
  * @param {String} event
@@ -2400,7 +2390,14 @@ Resource.prototype.toJSON = function () {
 };
 
 },{"./collection":2,"./query":3,"./util":5}],5:[function(require,module,exports){
-exports.extend = function (prototype, statics) {
+module.exports = {
+  extend: extend,
+  setEnvSpecificKeys: setEnvSpecificKeys,
+  pluck: pluck,
+  merge: merge
+};
+
+function extend(prototype, statics) {
   var parent = this;
   var child;
 
@@ -2447,7 +2444,7 @@ exports.extend = function (prototype, statics) {
   return child;
 };
 
-exports.setEnvSpecificKeys = function (target) {
+function setEnvSpecificKeys(target) {
   for (var key in target) {
     if (target.hasOwnProperty(key)) {
       if (key === 'server') {
@@ -2461,7 +2458,7 @@ exports.setEnvSpecificKeys = function (target) {
         }
         delete target.browser;
       } else if (typeof target[key] === 'object') {
-        exports.setEnvSpecificKeys(target[key]);
+        setEnvSpecificKeys(target[key]);
       }
     }
   }
@@ -2469,7 +2466,7 @@ exports.setEnvSpecificKeys = function (target) {
   return target;
 };
 
-exports.pluck = function (source, keys) {
+function pluck(source, keys) {
   var plucked = {};
 
   keys.forEach(function (key) {
@@ -2481,10 +2478,12 @@ exports.pluck = function (source, keys) {
 };
 
 function merge(target, source) {
+  target = target || {};
+
   for (var key in source) {
     if (source.hasOwnProperty(key)) {
       if (key === 'server' || key === 'browser') {
-        exports.setEnvSpecificKeys(target);
+        setEnvSpecificKeys(target);
       } else if (typeof source[key] === 'object') {
         if (typeof target[key] === 'object') {
           merge(target[key], source[key]);
@@ -2496,6 +2495,8 @@ function merge(target, source) {
       }
     }
   }
+
+  return target;
 }
 
 },{}]},{},[1])(1)
