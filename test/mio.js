@@ -1440,6 +1440,24 @@ describe('Collection', function () {
       });
     });
 
+    it('returns empty collection if none received', function (done) {
+      var Resource = mio.Resource.extend({
+        attributes: {
+          id: {
+            primary: true
+          }
+        }
+      });
+
+      Resource.Collection.get(function (err, collection) {
+        expect(err).to.not.exist();
+        expect(collection).to.be.an('object');
+        expect(collection).to.be.an.instanceOf(Resource.Collection);
+        expect(collection).to.have.property('length', 0);
+        done();
+      });
+    });
+
     it("emits collection hooks", function(done) {
       var Resource = mio.Resource.extend().attr('id', { primary: true });
 
