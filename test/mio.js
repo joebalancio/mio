@@ -1369,7 +1369,10 @@ describe('Query', function() {
   describe('#exec()', function () {
     it('throws error if no handler is defined', function () {
       expect(function () {
-        (new mio.Query).exec();
+        var Resource = mio.Resource.extend();
+        (new mio.Query({
+          context: Resource
+        })).exec();
       }).to.throw(/no handler defined/);
     });
   });
