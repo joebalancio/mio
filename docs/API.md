@@ -73,9 +73,9 @@
         * [callback: .next](#module_mio.Resource.trigger.next) → <code>function</code>
       * [.url([method])](#module_mio.Resource.url) ⇒ <code>Object</code> \| <code>String</code>
   * [class: .Query](#module_mio.Query)
-    * [new Query([options])](#new_module_mio.Query_new)
+    * [new Query(settings)](#new_module_mio.Query_new)
   * [class: .Resource.Collection](#module_mio.Resource.Collection)
-    * [new Collection(resources)](#new_module_mio.Resource.Collection_new)
+    * [new Collection(resources, [options])](#new_module_mio.Resource.Collection_new)
     * _instance_
       * [.length](#module_mio.Resource.Collection#length) → <code>Number</code>
       * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
@@ -1020,16 +1020,16 @@ URL for that `method` is returned.
 <a name="module_mio.Query"></a>
 ###class: mio.Query
 <a name="new_module_mio.Query_new"></a>
-####new Query([options])
+####new Query(settings)
 Queries are created by actions such as `Resource.get()` and provide a
 consistent query interface across plugins and other related modules.
 
 | Param | Type | Description |
 | ----- | ---- | ----------- |
-| \[options\] | <code>Object</code> |  |
-| \[options.state\] | <code>Object</code> | set initial query state |
-| \[options.handler\] | <code>function</code> | method to execute for Query#exec |
-| \[options.context\] | <code>Object</code> | context when executing `options.handler` |
+| settings | <code>Object</code> |  |
+| settings.context | <code>[Resource](#module_mio.Resource)</code> \| <code>[Resource.Collection](#module_mio.Resource.Collection)</code> |  |
+| \[settings.handler\] | <code>function</code> | method to execute for Query#exec |
+| \[settings.state\] | <code>Object</code> | set initial query state |
 
 **Example**  
 ```javascript
@@ -1057,7 +1057,7 @@ User.Collection.get({
 ###class: mio.Resource.Collection
 
 * [class: .Resource.Collection](#module_mio.Resource.Collection)
-  * [new Collection(resources)](#new_module_mio.Resource.Collection_new)
+  * [new Collection(resources, [options])](#new_module_mio.Resource.Collection_new)
   * _instance_
     * [.length](#module_mio.Resource.Collection#length) → <code>Number</code>
     * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
@@ -1084,7 +1084,7 @@ User.Collection.get({
     * [.url([method])](#module_mio.Resource.Collection.url) ⇒ <code>Object</code> \| <code>String</code>
 
 <a name="new_module_mio.Resource.Collection_new"></a>
-####new Collection(resources)
+####new Collection(resources, [options])
 A collection is the interface for working with multiple resources, and
 exposes the same set of HTTP verbs as `Resource`.
 
@@ -1095,6 +1095,8 @@ Methods such as `map` return arrays instead of the collection.
 | Param | Type | Description |
 | ----- | ---- | ----------- |
 | resources | <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code> |  |
+| \[options\] | <code>Object</code> |  |
+| \[options.query\] | <code>[Query](#module_mio.Query)</code> |  |
 
 **Example**  
 ```javascript

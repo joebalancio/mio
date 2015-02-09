@@ -35,6 +35,8 @@ module.exports = Collection;
  * ```
  *
  * @param {Array.<module:mio.Resource>} resources
+ * @param {Object=} options
+ * @param {module:mio.Query=} options.query
  * @memberof module:mio
  * @alias Resource.Collection
  * @class
@@ -46,11 +48,17 @@ function Collection (resources, options) {
     throw new Error("Resource is required");
   }
 
-  this.query = new Query({
-    context: this,
-    handler: this.get,
-    state: options && options.query.toJSON()
-  });
+  // Set query from `options.query` or create a new one.
+  // All collections have an associated query used to retrieve them.
+  // The query is also used to populate collection pagination parameters.
+  if (typeof options === 'object' && typeof options.query === 'object') {
+    this.query = options.query;
+  } else {
+    this.query = new Query({
+      context: this,
+      handler: this.get
+    });
+  }
 
   /**
    * @property resources
@@ -93,11 +101,11 @@ function Collection (resources, options) {
  * @param {Array.<module:mio.Resource|Object>} resources
  * @returns {module:mio.Resource.Collection}
  */
-Collection.create = function(resources) {
+Collection.create = function(resources, options) {
   if (resources instanceof this) {
     return resources;
   } else {
-    return new (this)(resources);
+    return new (this)(resources, options);
   }
 };
 
@@ -146,6 +154,11 @@ Collection.get = function (query, callback) {
     query = {};
   }
 
+  query = new Query({
+    context: this,
+    state: query
+  });
+
   /**
    * Runs before callback for `Resource.Collection.get`.
    *
@@ -170,18 +183,17 @@ Collection.get = function (query, callback) {
    */
   this.Resource.trigger(
     'collection:get',
-    new Query({
-      context: this,
-      state: query
-    }),
+    query,
     function (err, collection) {
       if (err) return callback.call(this.Collection, err);
 
-      if (!collection) {
-        collection = new this.Collection([]);
+      if (collection) {
+        callback.apply(this.Collection, arguments);
+      } else {
+        callback.call(this.Collection, err, new this.Collection([], {
+          query: query
+        }));
       }
-
-      callback.apply(this.Collection, arguments);
     });
 
   return this;
@@ -209,6 +221,11 @@ Collection.put = function (query, resources, callback) {
     });
   }
 
+  query = new Query({
+    context: this,
+    state: query
+  });
+
   /**
    * Runs before callback for `Resource.Collection.put`.
    *
@@ -235,12 +252,9 @@ Collection.put = function (query, resources, callback) {
    */
   this.Resource.trigger(
     'collection:put',
-    new Query({
-      context: this,
-      state: query
-    }),
+    query,
     resources,
-    function () {
+    function (err, collection) {
       callback.apply(this.Collection, arguments);
     });
 
@@ -269,6 +283,11 @@ Collection.patch = function (query, changes, callback) {
     });
   }
 
+  query = new Query({
+    context: this,
+    state: query
+  });
+
   /**
    * Runs before callback for `Resource.Collection.patch`.
    *
@@ -295,12 +314,9 @@ Collection.patch = function (query, changes, callback) {
    */
   this.Resource.trigger(
     'collection:patch',
-    new Query({
-      context: this,
-      state: query
-    }),
+    query,
     changes,
-    function () {
+    function (err, collection) {
       callback.apply(this.Collection, arguments);
     });
 
@@ -342,9 +358,12 @@ Collection.post = function (representations, callback) {
    * by instance.
    * @this {module:mio.Resource}
    */
-  this.Resource.trigger('collection:post', representations, function () {
-    callback.apply(this.Collection, arguments);
-  });
+  this.Resource.trigger(
+    'collection:post',
+    representations,
+    function (err, collection) {
+      callback.apply(this.Collection, arguments);
+    });
 
   return this;
 };
@@ -738,32 +757,34 @@ module.exports = Query;
  * });
  * ```
  *
- * @param {Object=} options
- * @param {Object=} options.state set initial query state
- * @param {Function=} options.handler method to execute for Query#exec
- * @param {Object=} options.context context when executing `options.handler`
+ * @param {Object} settings
+ * @param {module:mio.Resource|module:mio.Resource.Collection} settings.context
+ * @param {Function=} settings.handler method to execute for Query#exec
+ * @param {Object=} settings.state set initial query state
  * @memberof module:mio
  * @constructor
  */
-function Query(options) {
-  options = options || {};
+function Query(settings) {
+  settings = settings || {};
 
-  this.context = options.context;
-  this.handler = options.handler;
+  this.context = settings.context;
+  this.handler = settings.handler;
   this.Resource = this.context && (this.context.Resource || this.context);
 
-  if (this.Resource) {
-    if (this.Resource.maxPageSize) {
-      this.maxSize = this.Resource.maxPageSize;
-    } else {
-      this.maxSize = 100;
-    }
+  if (!this.Resource) {
+    throw new Error('Query requires a Resource or Collection.');
+  }
 
-    if (this.Resource.defaultPageSize) {
-      this.defaultSize = this.Resource.defaultPageSize;
-    } else {
-      this.defaultSize = 20;
-    }
+  if (this.Resource.maxPageSize) {
+    this.maxSize = this.Resource.maxPageSize;
+  } else {
+    this.maxSize = 100;
+  }
+
+  if (this.Resource.defaultPageSize) {
+    this.defaultSize = this.Resource.defaultPageSize;
+  } else {
+    this.defaultSize = 20;
   }
 
   /**
@@ -775,7 +796,7 @@ function Query(options) {
    * @property {Number} size
    * @property {String|Array.<String>} withRelated
    */
-  this.query = options.state || {};
+  this.query = settings.state || {};
 
   if (!this.query.where) {
     this.query.where = {};
@@ -832,6 +853,8 @@ Query.prototype.where = function(where, value) {
 
   if (value) {
     query.where[where] = value;
+  } else if (typeof where === 'string') {
+    return query.where[where];
   } else {
     for (var key in where) {
       query.where[key] = where[key];
@@ -2194,7 +2217,9 @@ Resource.prototype.delete = function (callback) {
  * @private
  */
 Resource.prototype.primaryKeyQuery = function () {
-  var query = new Query();
+  var query = new Query({
+    context: this
+  });
 
   if (this.primary) {
     query.where(this.constructor.primaryKey, this.primary);
