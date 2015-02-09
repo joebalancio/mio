@@ -1,17 +1,12 @@
-# mio [![Build Status](https://img.shields.io/travis/mio/mio.svg?style=flat)](http://travis-ci.org/mio/mio) [![Coverage Status](https://img.shields.io/coveralls/mio/mio.svg?style=flat)](https://coveralls.io/r/mio/mio?branch=master) [![Bower version](https://img.shields.io/bower/v/mio.svg?style=flat)](http://badge.fury.io/bo/mio) [![NPM version](https://img.shields.io/npm/v/mio.svg?style=flat)](http://badge.fury.io/js/mio) [![Dependency Status](https://img.shields.io/david/mio/mio.svg?style=flat)](http://david-dm.org/mio/mio)
+# mio [![Build Status](https://img.shields.io/travis/mio/mio.svg?style=flat)](http://travis-ci.org/mio/mio) [![Coverage Status](https://img.shields.io/coveralls/mio/mio.svg?style=flat)](https://coveralls.io/r/mio/mio?branch=master) [![NPM version](https://img.shields.io/npm/v/mio.svg?style=flat)](http://badge.fury.io/js/mio) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mio/mio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) [![Tips](https://img.shields.io/gratipay/alexmingoia.svg?style=flat)](https://www.gratipay.com/alexmingoia/)
 
-> RESTful resources for both client and server.
+Create a REST API and interact with it in the browser using the same interface.
+*No need for any route handling or AJAX boilerplate.*
 
 Mio provides a common model layer between client and server for building REST
-APIs and web applications.
-
-Create a REST API server from your mio resources and interact with them from the
-browser using the same interface. *No need for any route handling or AJAX
-boilerplate.*
-
-Mio models are designed to be RESTful and avoid leaky abstractions for mapping
-to HTTP methods. For example, providing `get()` instead of `findOne()`
-and `patch()` where most libraries would provide `save()`.
+APIs and web applications. REST is a first-class citizen with Mio's API, where
+`get()` is used instead of `findOne()`, and `patch()` where most libraries
+would provide `save()`.
 
 * RESTful models and collections
 * Simple enumerable objects
