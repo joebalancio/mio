@@ -78,6 +78,9 @@
     * [new Collection(resources, [options])](#new_module_mio.Resource.Collection_new)
     * _instance_
       * [.length](#module_mio.Resource.Collection#length) → <code>Number</code>
+      * [.from](#module_mio.Resource.Collection#from) → <code>Number</code>
+      * [.size](#module_mio.Resource.Collection#size) → <code>Number</code>
+      * [.total](#module_mio.Resource.Collection#total) → <code>Number</code>
       * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
       * [.get(callback)](#module_mio.Resource.Collection#get) ⇒ <code>module:mio.Collection</code>
       * [.put(callback)](#module_mio.Resource.Collection#put) ⇒ <code>module:mio.Collection</code>
@@ -1060,6 +1063,9 @@ User.Collection.get({
   * [new Collection(resources, [options])](#new_module_mio.Resource.Collection_new)
   * _instance_
     * [.length](#module_mio.Resource.Collection#length) → <code>Number</code>
+    * [.from](#module_mio.Resource.Collection#from) → <code>Number</code>
+    * [.size](#module_mio.Resource.Collection#size) → <code>Number</code>
+    * [.total](#module_mio.Resource.Collection#total) → <code>Number</code>
     * [.toArray](#module_mio.Resource.Collection#toArray) ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>
     * [.get(callback)](#module_mio.Resource.Collection#get) ⇒ <code>module:mio.Collection</code>
     * [.put(callback)](#module_mio.Resource.Collection#put) ⇒ <code>module:mio.Collection</code>
@@ -1113,6 +1119,19 @@ collection.indexOf(resource);  // => 0
 <a name="module_mio.Resource.Collection#length"></a>
 ####resource.Collection.length → <code>Number</code>
 Number of resources in the collection.
+
+<a name="module_mio.Resource.Collection#from"></a>
+####resource.Collection.from → <code>Number</code>
+Query offset for collection.
+
+<a name="module_mio.Resource.Collection#size"></a>
+####resource.Collection.size → <code>Number</code>
+Query limit for collection.
+
+<a name="module_mio.Resource.Collection#total"></a>
+####resource.Collection.total → <code>Number</code>
+Number of resources in the database for this collection's query. Only
+included if `query.withCount()` was used.
 
 <a name="module_mio.Resource.Collection#toArray"></a>
 ####resource.Collection.toArray ⇒ <code>[Array.&lt;Resource&gt;](#module_mio.Resource)</code>

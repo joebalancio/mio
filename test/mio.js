@@ -1366,6 +1366,15 @@ describe('Query', function() {
     Resource.Collection.get().size(200).exec(done);
   });
 
+  describe('#withCount()', function () {
+    it('adds withCount: true to query', function () {
+      var Resource = mio.Resource.extend();
+
+      var query = Resource.Collection.get().withCount();
+      expect(query.query.withCount).to.equal(true);
+    })
+  })
+
   describe('#exec()', function () {
     it('throws error if no handler is defined', function () {
       expect(function () {
