@@ -1,7 +1,7 @@
 {
   "name": "mio",
   "description": "A common model layer between client and server for building REST APIs and web applications.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "repo": "mio/mio",
   "keywords": [
     "REST",
