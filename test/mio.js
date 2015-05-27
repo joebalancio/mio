@@ -1366,6 +1366,36 @@ describe('Query', function() {
     Resource.Collection.get().size(200).exec(done);
   });
 
+  it('has default from and size parameters of 0', function (done) {
+    var Resource = mio.Resource.extend({
+      attributes: {
+        id: { primary: true }
+      }
+    });
+
+    Resource.hook('collection:get', function (query, next) {
+      expect(query.size()).to.equal(0);
+      next();
+    });
+
+    Resource.Collection.get().exec(done);
+  });
+
+  it('has default page parameter of 1', function (done) {
+    var Resource = mio.Resource.extend({
+      attributes: {
+        id: { primary: true }
+      }
+    });
+
+    Resource.hook('collection:get', function (query, next) {
+      expect(query.page()).to.equal(1);
+      next();
+    });
+
+    Resource.Collection.get().exec(done);
+  });
+
   describe('#withCount()', function () {
     it('adds withCount: true to query', function () {
       var Resource = mio.Resource.extend();
