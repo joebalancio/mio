@@ -1190,6 +1190,15 @@ describe('Resource', function() {
       expect(model).to.not.have.property('age');
     });
 
+    it('sets value using (key, value) for defined attributes', function() {
+      var Resource = mio.Resource.extend()
+        .attr('id', { primary: true })
+        .attr('name');
+      var model = Resource.create().set('name', 'joeb');
+      expect(model.name).to.equal('joeb');
+      expect(model).to.not.have.property('age');
+    });
+
     it('emits "setting" event', function(done) {
       var Resource = mio.Resource.extend()
         .attr('id', { primary: true })
